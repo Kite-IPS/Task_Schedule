@@ -12,6 +12,7 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        <Route path='/' element={<Root/>}/>
         <Route path='/login' element={<Login/>}/>
 
         <Route element={<PrivateRoute allowedRoles={["SuperAdmin"]}/>}>
@@ -34,3 +35,22 @@ const App = () => {
 }
 
 export default App
+
+const Root = () => {
+  const token = localStorage.getItem('token');
+  if(token){
+    const role = localStorage.getItem('role');
+    if(role.toLowerCase() === "superadmin"){
+      window.location.href = '/superadmin/dashboard';
+    }else if(role.toLowerCase() === "admin"){
+      window.location.href = '/admin/dashboard';
+    }else if(role.toLowerCase() === "faculty"){
+      window.location.href = '/faculty/dashboard';
+    }else{
+      window.location.href = '/login';
+    }
+  }else{
+    window.location.href = '/login';
+  }
+  return null;
+}
