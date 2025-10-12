@@ -406,7 +406,7 @@ const Table = ({ data = [] }) => {
         </div>
 
         {/* Results Summary and Pagination */}
-        <div className="mt-6">
+        <div className="mt-6 items-center flex justify-center">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4">
             {/* Pagination Controls */}
             {sortedData.length > 0 && (
