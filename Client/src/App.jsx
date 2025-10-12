@@ -6,6 +6,7 @@ import FacultyDashboard from './Pages/Faculty/FacultyDashboard';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import PrivateRoute from './Routes/PrivateRoute';
 import Assignment from './Pages/Faculty/Assignment';
+import Users from './Pages/Admin/Users';
 import CreateUser from './Pages/SuperAdmin/CreateUser';
 
 const App = () => {
@@ -22,6 +23,7 @@ const App = () => {
 
         <Route element={<PrivateRoute allowedRoles={["Admin"]}/>}>
           <Route path='/admin/dashboard' element={<AdminDashboard/>}/>
+          <Route path='/admin/users' element={<Users/>}/>
         </Route>
 
         <Route element={<PrivateRoute allowedRoles={["Faculty"]}/>}>

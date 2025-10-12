@@ -5,6 +5,11 @@ const Header = () => {
         role : "Admin",
         name : "Yogesh"
     }
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        window.location.href = '/login';
+    }
   return (
     <div className='w-full h-[60px] md:h-[80px] bg-blue-500 text-white flex items-center justify-center'>
         <div className='w-[90%] md:w-[80%] flex items-center justify-between'>
@@ -18,7 +23,9 @@ const Header = () => {
                     <h2 className='text-xs md:text-sm font-bold'>
                         {user.name}
                     </h2>
-                    <button className='px-4 py-2 bg-red-300 border-2 border-red-500 text-red-500 rounded-[8px] flex items-center gap-1 cursor-pointer hover:bg-red-500 hover:text-white duration-300'>
+                    <button className='px-4 py-2 bg-red-300 border-2 border-red-500 text-red-500 rounded-[8px] flex items-center gap-1 cursor-pointer hover:bg-red-500 hover:text-white duration-300'
+                    onClick={handleLogout}
+                    >
                         Logout <LogOut />
                     </button>
                 </div>
