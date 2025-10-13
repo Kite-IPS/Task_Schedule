@@ -11,14 +11,14 @@ const AdminDashboard = () => {
     <BaseLayout>
       <div className="flex gap-1 items-center my-4 w-[90%] md:w-[80%] mx-auto">
         <button
-          className="hover:text-blue-500 text-black cursor-pointer"
+          className="hover:text-blue-500 cursor-pointer"
           onClick={() => navigate("/admin/dashboard")}
         >
           <House />
         </button>
         <span>{">"}</span>
         <button
-          className="hover:text-blue-500 text-black cursor-pointer"
+          className="hover:text-blue-500 cursor-pointer"
           onClick={() => navigate("/admin/dashboard")}
         >
           Dashboard

@@ -15,7 +15,7 @@ const Header = () => {
     }
 
     return (
-        <div className='w-full bg-blue-500 text-white flex items-center justify-center px-4 py-4 md:py-5'>
+        <div className='w-full bg-red-500 text-white flex items-center justify-center px-4 py-4 md:py-5'>
             <div className='w-full max-w-7xl flex items-center justify-between gap-4'>
                 <h1 className='text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold whitespace-nowrap'>
                     Task Sedular
@@ -30,7 +30,7 @@ const Header = () => {
                             {user.name}
                         </h2>
                         <button 
-                            className='px-3 sm:px-4 py-2 bg-red-300 border-2 border-red-500 text-red-500 rounded-lg flex items-center gap-1 cursor-pointer hover:bg-red-500 hover:text-white transition-colors duration-300 text-xs sm:text-sm font-medium flex-shrink-0'
+                            className='px-3 sm:px-4 py-2 bg-red-300 border-2 hover:border-white border-red-500 text-red-500 rounded-lg flex items-center gap-1 cursor-pointer hover:bg-red-500 hover:text-white transition-colors duration-300 text-xs sm:text-sm font-medium flex-shrink-0'
                             onClick={handleLogout}
                         >
                             <span className='hidden sm:inline'>Logout</span>

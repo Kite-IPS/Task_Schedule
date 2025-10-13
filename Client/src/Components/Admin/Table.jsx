@@ -139,7 +139,7 @@ const Table = ({ data = [] }) => {
         <div className="mb-6 flex items-center gap-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-sm font-medium"
+            className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition shadow-sm font-medium"
           >
             <Filter className="w-4 h-4" />
             {showFilters ? "Hide Filters" : "Show Filters"}
@@ -169,7 +169,7 @@ const Table = ({ data = [] }) => {
                 <select
                   value={filters.dept}
                   onChange={(e) => handleFilterChange("dept", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white transition"
                 >
                   <option value="">All Departments</option>
                   {uniqueDepts.map((dept) => (
@@ -187,7 +187,7 @@ const Table = ({ data = [] }) => {
                 <select
                   value={filters.status}
                   onChange={(e) => handleFilterChange("status", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white transition"
                 >
                   <option value="">All Status</option>
                   {uniqueStatuses.map((status) => (
@@ -207,7 +207,7 @@ const Table = ({ data = [] }) => {
                   onChange={(e) =>
                     handleFilterChange("priority", e.target.value)
                   }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white transition"
                 >
                   <option value="">All Priorities</option>
                   {uniquePriorities.map((priority) => (
@@ -227,7 +227,7 @@ const Table = ({ data = [] }) => {
                   onChange={(e) =>
                     handleFilterChange("assignee", e.target.value)
                   }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white transition"
                 >
                   <option value="">All Assignees</option>
                   {uniqueAssignees.map((assignee) => (
@@ -242,13 +242,13 @@ const Table = ({ data = [] }) => {
         )}
 
         {/* Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-blue-600 to-blue-700">
+              <thead className="bg-gradient-to-r from-red-600 to-red-700">
                 <tr>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-blue-800 transition"
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-red-800 transition"
                     onClick={() => handleSort("id")}
                   >
                     <div className="flex items-center gap-2">
@@ -256,7 +256,7 @@ const Table = ({ data = [] }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-blue-800 transition"
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-red-800 transition"
                     onClick={() => handleSort("title")}
                   >
                     <div className="flex items-center gap-2">
@@ -264,7 +264,7 @@ const Table = ({ data = [] }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-blue-800 transition"
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-red-800 transition"
                     onClick={() => handleSort("description")}
                   >
                     <div className="flex items-center gap-2">
@@ -272,7 +272,7 @@ const Table = ({ data = [] }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-blue-800 transition"
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-red-800 transition"
                     onClick={() => handleSort("dept")}
                   >
                     <div className="flex items-center gap-2">
@@ -280,7 +280,7 @@ const Table = ({ data = [] }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-blue-800 transition"
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-red-800 transition"
                     onClick={() => handleSort("status")}
                   >
                     <div className="flex items-center gap-2">
@@ -288,7 +288,7 @@ const Table = ({ data = [] }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-blue-800 transition"
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-red-800 transition"
                     onClick={() => handleSort("assignee")}
                   >
                     <div className="flex items-center gap-2">
@@ -296,7 +296,7 @@ const Table = ({ data = [] }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-blue-800 transition"
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-red-800 transition"
                     onClick={() => handleSort("priority")}
                   >
                     <div className="flex items-center gap-2">
@@ -304,7 +304,7 @@ const Table = ({ data = [] }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-blue-800 transition"
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-red-800 transition"
                     onClick={() => handleSort("updated_at")}
                   >
                     <div className="flex items-center gap-2">
@@ -318,7 +318,7 @@ const Table = ({ data = [] }) => {
                   paginatedData.map((item, index) => (
                     <tr
                       key={item.id}
-                      className="hover:bg-blue-50 transition-colors"
+                      className="hover:bg-red-50 transition-colors"
                     >
                       <td className="px-6 py-4 text-sm font-semibold text-gray-800">
                         {(currentPage - 1) * itemsPerPage + index + 1}
@@ -332,7 +332,7 @@ const Table = ({ data = [] }) => {
                           item.description.split(" ").length > 10 && (
                             <button
                               onClick={() => toggleReadMore(item.id)}
-                              className="ml-2 text-blue-600 hover:text-blue-800 font-semibold"
+                              className="ml-2 text-red-600 hover:text-red-800 font-semibold"
                             >
                               {expandedRows[item.id]
                                 ? "Read Less"
@@ -429,7 +429,7 @@ const Table = ({ data = [] }) => {
                         onClick={() => setCurrentPage(page)}
                         className={`px-4 py-2 rounded-lg transition text-sm font-semibold border ${
                           currentPage === page
-                            ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                            ? "bg-red-600 text-white border-red-600 shadow-md"
                             : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
                         }`}
                       >
