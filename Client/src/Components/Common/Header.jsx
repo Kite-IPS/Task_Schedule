@@ -18,7 +18,7 @@ const Header = () => {
         <div className='w-full bg-red-500 text-white flex items-center justify-center px-4 py-4 md:py-5'>
             <div className='w-full max-w-7xl flex items-center justify-between gap-4'>
                 <h1 className='text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold whitespace-nowrap'>
-                    Task Sedular
+                    Task Schedular
                 </h1>
 
                 {user && (

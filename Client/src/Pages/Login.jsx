@@ -73,10 +73,6 @@ const Login = () => {
       setError('Please enter your password.')
       return false
     }
-    if (cleanPassword.length < 6) {
-      setError('Password must be at least 6 characters.')
-      return false
-    }
     setError('')
     return true
   }
