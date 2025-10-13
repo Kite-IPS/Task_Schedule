@@ -2,14 +2,19 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../Utils/axiosInstance'
 import { API_PATH } from '../Utils/apiPath'
+import { Lock, Mail, Eye, EyeOff, Shield, Zap, Star, Heart, Sparkles } from 'lucide-react';
+
 
 const Login = () => {
   const [email, setEmail] = useState('') 
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [remember, setRemember] = useState(false)
   const navigate = useNavigate()
+  const [showImage, setShowImage] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true)
+
 
   // Add CSS animations
   useEffect(() => {
@@ -24,25 +29,84 @@ const Login = () => {
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
       }
-      @keyframes float1 {
-        0%, 100% { transform: translateY(0px) translateX(0px); }
-        25% { transform: translateY(-20px) translateX(10px); }
-        50% { transform: translateY(-10px) translateX(-10px); }
-        75% { transform: translateY(-30px) translateX(5px); }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
       }
-      @keyframes float2 {
-        0%, 100% { transform: translateY(0px) translateX(0px); }
-        33% { transform: translateY(-15px) translateX(-8px); }
-        66% { transform: translateY(-25px) translateX(12px); }
+      @keyframes floatRotate {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-30px) rotate(180deg); }
       }
-      @keyframes float3 {
-        0%, 100% { transform: translateY(0px) translateX(0px); }
-        50% { transform: translateY(-18px) translateX(-15px); }
+      @keyframes pulse {
+        0%, 100% { opacity: 0.6; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.05); }
+      }
+      @keyframes slideInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-50px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes slideInRight {
+        from {
+          opacity: 0;
+          transform: translateX(50px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      /* Media queries for responsive design */
+      @media (max-width: 1024px) {
+        .image-section {
+          display: none !important;
+        }
+        .form-section {
+          max-width: 500px !important;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .login-card {
+          padding: 2rem 1.5rem !important;
+        }
+        .login-title {
+          font-size: 1.75rem !important;
+        }
+        .content-wrapper {
+          padding: 1rem !important;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .login-card {
+          padding: 1.75rem 1.25rem !important;
+        }
+        .login-title {
+          font-size: 1.5rem !important;
+        }
+        .login-subtitle {
+          font-size: 0.9rem !important;
+        }
+        .password-input {
+          padding-right: 3rem !important;
+        }
       }
     `
     document.head.appendChild(style)
     return () => document.head.removeChild(style)
   }, [])
+
 
   // Check if user is already logged in
   useEffect(() => {
@@ -52,14 +116,31 @@ const Login = () => {
     }
   }, [navigate])
 
+  // Toggle image section based on viewport width so mobile doesn't render the image
+  useEffect(() => {
+    const onResize = () => {
+      try {
+        setShowImage(window.innerWidth >= 1024)
+      } catch (e) {
+        // ignore (server-side or restricted env)
+      }
+    }
+    onResize()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+
   const sanitize = {
     email: (s) => String(s || '').trim().toLowerCase().replace(/[^a-z0-9@._+-]/gi, ''),
     password: (s) => String(s || '').trim(),
   }
 
+
   const validate = () => {
     const cleanEmail = sanitize.email(email)
     const cleanPassword = sanitize.password(password)
+
 
     if (!cleanEmail) {
       setError('Please enter your email.')
@@ -77,49 +158,49 @@ const Login = () => {
     return true
   }
 
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)
     setError('')
 
+
     try {
-      // Step 1: Login and get token
       const loginRes = await axiosInstance.post(API_PATH.AUTH.LOGIN, {
         email: sanitize.email(email),
         password: sanitize.password(password),
       })
 
+
       if (!loginRes.data || !loginRes.data.token) {
         throw new Error('Invalid response from server')
       }
 
-      const token = loginRes.data.token
 
-      // Step 2: Store token temporarily to make authenticated request
+      const token = loginRes.data.token
       const storageKey = remember ? 'token' : null
       if (storageKey) {
         localStorage.setItem('token', token)
       }
 
-      // Update axios instance with new token for the next request
-      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
-      // Step 3: Fetch user details from /info/ endpoint
+      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`
       const userRes = await axiosInstance.get(API_PATH.AUTH.INFO)
+
 
       if (!userRes.data) {
         throw new Error('Failed to fetch user information')
       }
 
-      const userDetails = userRes.data
 
-      // Step 4: Store user data and token
+      const userDetails = userRes.data
       const userData = {
         ...userDetails,
         token: token,
         email: sanitize.email(email),
       }
+
 
       try {
         const storageValue = JSON.stringify(userData)
@@ -135,16 +216,16 @@ const Login = () => {
         return
       }
 
-      // Step 5: Clear form and redirect
+
       setEmail('')
       setPassword('')
       setError('')
       navigate('/dashboard')
     } catch (err) {
-      // Clear auth headers on error
       delete axiosInstance.defaults.headers.common['Authorization']
       localStorage.removeItem('token')
       sessionStorage.removeItem('token')
+
 
       if (err.response?.data?.detail) {
         setError(err.response.data.detail)
@@ -160,148 +241,361 @@ const Login = () => {
     }
   }
 
+
   return (
     <div style={styles.container}>
-      {/* Floating background elements */}
-      <div style={styles.floatingElements}>
-        <div style={{...styles.floatingCircle, ...styles.circle1}}></div>
-        <div style={{...styles.floatingCircle, ...styles.circle2}}></div>
-        <div style={{...styles.floatingCircle, ...styles.circle3}}></div>
-        <div style={{...styles.floatingCircle, ...styles.circle4}}></div>
+      {/* Background Gradient */}
+      <div style={styles.backgroundOverlay}></div>
+
+
+      {/* Floating Icons */}
+      <div style={styles.floatingIcons}>
+        <div style={{...styles.iconWrapper, ...styles.icon1}}>
+          <Shield style={styles.icon} size={32} />
+        </div>
+        <div style={{...styles.iconWrapper, ...styles.icon2}}>
+          <Zap style={styles.icon} size={28} />
+        </div>
+        <div style={{...styles.iconWrapper, ...styles.icon3}}>
+          <Star style={styles.icon} size={24} />
+        </div>
+        <div style={{...styles.iconWrapper, ...styles.icon4}}>
+          <Heart style={styles.icon} size={30} />
+        </div>
+        <div style={{...styles.iconWrapper, ...styles.icon5}}>
+          <Sparkles style={styles.icon} size={26} />
+        </div>
+        <div style={{...styles.iconWrapper, ...styles.icon6}}>
+          <Lock style={styles.icon} size={28} />
+        </div>
       </div>
 
-      <div style={styles.card}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Welcome</h1>
-          <p style={styles.subtitle}>Sign in to your account</p>
-        </div>
 
-        <form onSubmit={handleSubmit} style={styles.form} aria-label="login-form">
-          <div style={styles.fieldGroup}>
-            <label style={styles.label} htmlFor="email">
-              Email Address
-            </label>
-            <input
-              id="email"
-              className='text-gray-900'
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{
-                ...styles.input,
-                ...(email ? styles.inputFilled : {})
-              }}
-              placeholder="Enter your email"
-              autoComplete="email"
-              disabled={loading}
-            />
-          </div>
-
-          <div style={styles.fieldGroup}>
-            <label style={styles.label} htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              className='text-gray-900'
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                ...styles.input,
-                ...(password ? styles.inputFilled : {})
-              }}
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              disabled={loading}
-            />
-          </div>
-
-          <div style={styles.row}>
-            <label style={styles.checkboxContainer}>
-              <input 
-                type="checkbox" 
-                checked={remember} 
-                onChange={(e) => setRemember(e.target.checked)}
-                style={styles.checkbox}
-                disabled={loading}
+      {/* Main Content Container */}
+      <div style={styles.contentWrapper} className="content-wrapper">
+        {/* Left Side - Floating Image (Desktop Only) */}
+        {showImage && (
+          <div style={styles.imageSection} className="image-section">
+            <div style={styles.imageContainer}>
+              <img 
+                src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&h=700&fit=crop" 
+                alt="Workspace"
+                style={styles.image}
               />
-              <span style={styles.checkboxLabel}>Remember me</span>
-            </label>
-            <a href="#" style={styles.forgot}>Forgot password?</a>
-          </div>
-
-          {error && (
-            <div role="alert" style={styles.errorContainer}>
-              <span style={styles.errorIcon}>⚠</span>
-              <span style={styles.error}>{error}</span>
+              <div style={styles.imageBorder}></div>
             </div>
-          )}
+            
+            {/* Decorative Elements */}
+            <div style={{...styles.decorCircle, ...styles.decor1}}></div>
+            <div style={{...styles.decorCircle, ...styles.decor2}}></div>
+          </div>
+        )}
 
-          <button 
-            type="submit" 
-            style={{
-              ...styles.button,
-              ...(loading ? styles.buttonLoading : {}),
-              opacity: loading ? 0.8 : 1
-            }}
-            disabled={loading}
-          >
-            {loading ? (
-              <span style={styles.buttonContent}>
-                <span style={styles.spinner}></span>
-                Signing in...
-              </span>
-            ) : (
-              'Sign In'
-            )}
-          </button>
-        </form>
+
+        {/* Right Side - Login Form */}
+        <div style={styles.formSection} className="form-section">
+          <div style={styles.card} className="login-card">
+            <div style={styles.header}>
+              <div style={styles.iconBadge}>
+                <Lock size={24} color="#667eea" />
+              </div>
+              <h1 style={styles.title} className="login-title">Welcome Back</h1>
+              <p style={styles.subtitle} className="login-subtitle">Sign in to continue your journey</p>
+            </div>
+
+
+            <form onSubmit={handleSubmit} style={styles.form}>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label} htmlFor="email">
+                  Email Address
+                </label>
+                <div style={styles.inputWrapper}>
+                  <Mail size={18} style={styles.inputIcon} />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={styles.input}
+                    placeholder="Enter your email"
+                    autoComplete="email"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+
+              <div style={styles.fieldGroup}>
+                <label style={styles.label} htmlFor="password">
+                  Password
+                </label>
+                <div style={styles.inputWrapper}>
+                  <Lock size={18} style={styles.inputIcon} />
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={styles.passwordInput}
+                    className="password-input"
+                    placeholder="Enter your password"
+                    autoComplete="current-password"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={styles.eyeButton}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+
+              <div style={styles.row}>
+                <label style={styles.checkboxContainer}>
+                  <input 
+                    type="checkbox" 
+                    checked={remember} 
+                    onChange={(e) => setRemember(e.target.checked)}
+                    style={styles.checkbox}
+                    disabled={loading}
+                  />
+                  <span style={styles.checkboxLabel}>Remember me</span>
+                </label>
+                <a href="#" style={styles.forgot}>Forgot password?</a>
+              </div>
+
+
+              {error && (
+                <div style={styles.errorContainer}>
+                  <span style={styles.errorIcon}>⚠</span>
+                  <span style={styles.error}>{error}</span>
+                </div>
+              )}
+
+
+              <button 
+                type="submit" 
+                style={{
+                  ...styles.button,
+                  opacity: loading ? 0.8 : 1,
+                  cursor: loading ? 'not-allowed' : 'pointer'
+                }}
+                disabled={loading}
+              >
+                {loading ? (
+                  <span style={styles.buttonContent}>
+                    <span style={styles.spinner}></span>
+                    Signing in...
+                  </span>
+                ) : (
+                  'Sign In'
+                )}
+              </button>
+
+
+              <div style={styles.divider}>
+                <span style={styles.dividerText}>New to our platform?</span>
+              </div>
+
+
+              <a href="#" style={styles.signupLink}>
+                Create an account
+              </a>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
+
 
 const styles = {
   container: {
     minHeight: '100vh',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    padding: '6rem 3rem 4rem 8rem',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
-    backgroundSize: '400% 400%',
-    animation: 'gradientShift 15s ease infinite',
+    justifyContent: 'center',
+    padding: '2rem',
     position: 'relative',
     overflow: 'hidden',
+    backgroundColor: '#0a0a0a',
   },
-  card: {
-    width: '480px',
-    padding: '3rem 2.5rem',
-    borderRadius: '16px',
-    boxShadow: '0 20px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.2)',
-    background: 'rgba(255,255,255,0.95)',
+  backgroundOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(135deg, #1a0000 0%, #000000 25%, #1a0000 50%, #0a0a0a 75%, #000000 100%)',
+    backgroundSize: '400% 400%',
+    animation: 'gradientShift 15s ease infinite',
+    opacity: 1,
+    zIndex: 0,
+  },
+  floatingIcons: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none',
+    zIndex: 1,
+  },
+  iconWrapper: {
+    position: 'absolute',
+    padding: '1rem',
+    borderRadius: '50%',
+    background: 'rgba(255, 255, 255, 0.05)',
     backdropFilter: 'blur(10px)',
-    border: '1px solid rgba(255,255,255,0.3)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+  },
+  icon: {
+    color: 'rgba(255, 255, 255, 0.4)',
+  },
+  icon1: {
+    top: '10%',
+    left: '10%',
+    animation: 'float 6s ease-in-out infinite',
+  },
+  icon2: {
+    top: '20%',
+    right: '15%',
+    animation: 'floatRotate 8s ease-in-out infinite',
+    animationDelay: '1s',
+  },
+  icon3: {
+    bottom: '15%',
+    left: '8%',
+    animation: 'pulse 4s ease-in-out infinite',
+    animationDelay: '0.5s',
+  },
+  icon4: {
+    top: '60%',
+    right: '10%',
+    animation: 'float 7s ease-in-out infinite',
+    animationDelay: '2s',
+  },
+  icon5: {
+    bottom: '25%',
+    right: '20%',
+    animation: 'floatRotate 9s ease-in-out infinite',
+  },
+  icon6: {
+    top: '40%',
+    left: '5%',
+    animation: 'pulse 5s ease-in-out infinite',
+    animationDelay: '1.5s',
+  },
+  contentWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '4rem',
+    maxWidth: '1200px',
+    width: '100%',
     position: 'relative',
     zIndex: 2,
   },
+  imageSection: {
+    flex: 1,
+    display: 'block',
+    position: 'relative',
+    animation: 'slideInLeft 0.8s ease-out',
+  },
+  imageContainer: {
+    position: 'relative',
+    borderRadius: '24px',
+    overflow: 'hidden',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+    animation: 'float 6s ease-in-out infinite',
+  },
+  image: {
+    width: '100%',
+    height: 'auto',
+    display: 'block',
+    borderRadius: '24px',
+  },
+  imageBorder: {
+    position: 'absolute',
+    top: '-10px',
+    left: '-10px',
+    right: '-10px',
+    bottom: '-10px',
+    borderRadius: '24px',
+    background: 'linear-gradient(135deg, #dc2626, #991b1b, #dc2626)',
+    zIndex: -1,
+    opacity: 0.5,
+    filter: 'blur(20px)',
+  },
+  decorCircle: {
+    position: 'absolute',
+    borderRadius: '50%',
+    background: 'rgba(220, 38, 38, 0.1)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(220, 38, 38, 0.2)',
+  },
+  decor1: {
+    width: '150px',
+    height: '150px',
+    top: '-50px',
+    right: '-50px',
+    animation: 'pulse 4s ease-in-out infinite',
+  },
+  decor2: {
+    width: '100px',
+    height: '100px',
+    bottom: '-30px',
+    left: '-30px',
+    animation: 'pulse 5s ease-in-out infinite',
+    animationDelay: '1s',
+  },
+  formSection: {
+    flex: 1,
+    maxWidth: '480px',
+    width: '100%',
+    animation: 'slideInRight 0.8s ease-out',
+  },
+  card: {
+    padding: '3rem',
+    borderRadius: '24px',
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+    background: 'rgba(255, 255, 255, 0.05)',
+    backdropFilter: 'blur(20px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+    border: '1px solid rgba(255, 255, 255, 0.125)',
+  },
   header: {
     textAlign: 'center',
-    marginBottom: '2rem',
+    marginBottom: '2.5rem',
+  },
+  iconBadge: {
+    width: '60px',
+    height: '60px',
+    margin: '0 auto 1.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '16px',
+    background: 'rgba(255, 255, 255, 0.1)',
+    border: '2px solid rgba(102, 126, 234, 0.3)',
+    backdropFilter: 'blur(10px)',
   },
   title: {
     fontSize: '2rem',
     fontWeight: '700',
-    color: '#1a202c',
+    color: '#ffffff',
     margin: '0 0 0.5rem 0',
     letterSpacing: '-0.025em',
   },
   subtitle: {
     fontSize: '1rem',
-    color: '#718096',
+    color: 'rgba(255, 255, 255, 0.7)',
     margin: 0,
     fontWeight: '400',
   },
@@ -318,28 +612,66 @@ const styles = {
   label: {
     fontSize: '0.875rem',
     fontWeight: '600',
-    color: '#374151',
+    color: 'rgba(255, 255, 255, 0.9)',
     letterSpacing: '0.025em',
   },
+  inputWrapper: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: '1rem',
+    color: 'rgba(255, 255, 255, 0.5)',
+    pointerEvents: 'none',
+    zIndex: 1,
+  },
   input: {
-    padding: '0.875rem 1rem',
+    width: '100%',
+    padding: '0.875rem 1rem 0.875rem 3rem',
     fontSize: '1rem',
     borderRadius: '12px',
-    border: '2px solid #e2e8f0',
-    backgroundColor: '#ffffff',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
     transition: 'all 0.2s ease-in-out',
     outline: 'none',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    color: '#ffffff',
   },
-  inputFilled: {
-    borderColor: '#0b5fff',
-    boxShadow: '0 0 0 3px rgba(11, 95, 255, 0.1)',
+  passwordInput: {
+    width: '100%',
+    padding: '0.875rem 3.5rem 0.875rem 3rem',
+    fontSize: '1rem',
+    borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    transition: 'all 0.2s ease-in-out',
+    outline: 'none',
+    color: '#ffffff',
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: '1rem',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: 'rgba(255, 255, 255, 0.5)',
+    padding: '0.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'color 0.2s',
+    zIndex: 1,
   },
   row: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: '0.5rem',
+    marginTop: '0.25rem',
   },
   checkboxContainer: {
     display: 'flex',
@@ -350,36 +682,33 @@ const styles = {
   checkbox: {
     width: '1.125rem',
     height: '1.125rem',
-    accentColor: '#0b5fff',
+    accentColor: '#667eea',
+    cursor: 'pointer',
   },
   checkboxLabel: {
     fontSize: '0.875rem',
-    color: '#4a5568',
+    color: 'rgba(255, 255, 255, 0.8)',
     fontWeight: '500',
   },
   forgot: {
     fontSize: '0.875rem',
-    color: '#0b5fff',
+    color: 'rgba(255, 255, 255, 0.9)',
     textDecoration: 'none',
     fontWeight: '600',
     transition: 'color 0.2s ease',
   },
   button: {
-    marginTop: '1rem',
-    padding: '0.875rem 1.5rem',
+    marginTop: '0.5rem',
+    padding: '1rem 1.5rem',
     fontSize: '1rem',
     fontWeight: '600',
     borderRadius: '12px',
-    cursor: 'pointer',
-    background: 'linear-gradient(135deg, #0b5fff 0%, #1e40af 100%)',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: '#ffffff',
     border: 'none',
     transition: 'all 0.2s ease-in-out',
-    boxShadow: '0 4px 12px rgba(11, 95, 255, 0.3)',
+    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
     letterSpacing: '0.025em',
-  },
-  buttonLoading: {
-    cursor: 'not-allowed',
   },
   buttonContent: {
     display: 'flex',
@@ -399,64 +728,41 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    padding: '0.75rem 1rem',
-    backgroundColor: '#fef2f2',
-    border: '1px solid #fecaca',
-    borderRadius: '8px',
-    marginTop: '0.5rem',
+    padding: '0.875rem 1rem',
+    backgroundColor: 'rgba(220, 38, 38, 0.2)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(220, 38, 38, 0.3)',
+    borderRadius: '12px',
   },
   errorIcon: {
     fontSize: '1rem',
-    color: '#dc2626',
+    color: '#fca5a5',
   },
   error: {
     fontSize: '0.875rem',
-    color: '#dc2626',
+    color: '#fca5a5',
     fontWeight: '500',
   },
-  floatingElements: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none',
-    zIndex: 1,
+  divider: {
+    position: 'relative',
+    textAlign: 'center',
+    marginTop: '0.5rem',
   },
-  floatingCircle: {
-    position: 'absolute',
-    borderRadius: '50%',
-    background: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(10px)',
+  dividerText: {
+    fontSize: '0.875rem',
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontWeight: '500',
   },
-  circle1: {
-    width: '120px',
-    height: '120px',
-    top: '10%',
-    right: '20%',
-    animation: 'float1 8s ease-in-out infinite',
+  signupLink: {
+    textAlign: 'center',
+    fontSize: '0.9375rem',
+    color: 'rgba(255, 255, 255, 0.9)',
+    textDecoration: 'none',
+    fontWeight: '600',
+    transition: 'color 0.2s',
   },
-  circle2: {
-    width: '80px',
-    height: '80px',
-    top: '60%',
-    right: '10%',
-    animation: 'float2 6s ease-in-out infinite',
-  },
-  circle3: {
-    width: '60px',
-    height: '60px',
-    top: '30%',
-    left: '10%',
-    animation: 'float3 7s ease-in-out infinite',
-  },
-  circle4: {
-    width: '100px',
-    height: '100px',
-    bottom: '15%',
-    left: '30%',
-    animation: 'float1 9s ease-in-out infinite reverse',
-  }
 }
+
 
 export default Login
