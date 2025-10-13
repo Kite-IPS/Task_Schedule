@@ -100,7 +100,8 @@ def staff_login(request):
             'id': staff.id,
             'name': staff.name,
             'email': staff.email,
-            'department': staff.department
+            'department': staff.department,
+            'role': staff.role
         }
     })
 
@@ -112,5 +113,6 @@ def staff_info(request):
         'id': staff.id,
         'name': staff.name,
         'email': staff.email,
-        'department': staff.department
+        'department': staff.department,
+        'role': staff.role
     })
