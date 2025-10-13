@@ -163,25 +163,25 @@ const Users = () => {
       <div className="w-[90%] md:w-[80%] mx-auto py-6">
         {/* Breadcrumb */}
         <div className="flex gap-1 items-center my-4">
-          <button className="hover:text-blue-500 text-black cursor-pointer">
+          <button className="hover:text-red-500 cursor-pointer">
             <Home size={20} />
           </button>
           <span className="text-gray-600">{">"}</span>
-          <button className="hover:text-blue-500 text-black cursor-pointer" onClick={() => navigate('/admin/dashboard')}>
+          <button className="hover:text-red-500 cursor-pointer" onClick={() => navigate('/admin/dashboard')}>
             Dashboard
           </button>
           <span className="text-gray-600">{">"}</span>
-          <button className="hover:text-blue-500 text-black cursor-pointer" onClick={() => navigate('/admin/users')}>
+          <button className="hover:text-red-500 cursor-pointer" onClick={() => navigate('/admin/users')}>
             Users
           </button>
         </div>
 
         {/* Header with Create Button */}
         <div className="flex justify-between items-center my-6">
-          <h1 className="text-2xl font-bold text-gray-800">Users Management</h1>
+          <h1 className="text-2xl font-bold">Users Management</h1>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition"
+            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
           >
             <Plus size={20} />
             Create User
@@ -196,12 +196,12 @@ const Users = () => {
               placeholder="Search by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
             />
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
             >
               <option value="All">All Roles</option>
               {roles.map((role) => (
@@ -213,7 +213,7 @@ const Users = () => {
             <select
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
             >
               <option value="All">All Departments</option>
               {departments.map((dept) => (
@@ -317,7 +317,7 @@ const Users = () => {
                 onClick={() => setCurrentPage(page)}
                 className={`px-3 py-2 rounded ${
                   currentPage === page
-                    ? "bg-blue-500 text-white"
+                    ? "bg-red-500 text-white"
                     : "border border-gray-300 hover:bg-gray-100"
                 }`}
               >
@@ -365,7 +365,7 @@ const Users = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
                   placeholder="Enter user name"
                 />
               </div>
@@ -379,7 +379,7 @@ const Users = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
                   placeholder="Enter email"
                 />
               </div>
@@ -392,7 +392,7 @@ const Users = () => {
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
                 >
                   <option value="">Select Role</option>
                   {roles.map((role) => (
@@ -411,7 +411,7 @@ const Users = () => {
                   name="department"
                   value={formData.department}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
                 >
                   <option value="">Select Department</option>
                   {departments.map((dept) => (
@@ -435,7 +435,7 @@ const Users = () => {
                 onClick={
                   modalMode === "create" ? handleCreateUser : handleUpdateUser
                 }
-                className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition font-medium"
+                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition font-medium"
               >
                 {modalMode === "create" ? "Create" : "Update"}
               </button>

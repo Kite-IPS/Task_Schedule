@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../Utils/axiosInstance'
+import { API_PATH } from '../Utils/apiPath'
 
 const Login = () => {
   const [email, setEmail] = useState('') 
@@ -42,16 +44,13 @@ const Login = () => {
     return () => document.head.removeChild(style)
   }, [])
 
+  // Check if user is already logged in
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('currentUser')
-      if (stored) {
-        navigate('/dashboard')
-      }
-    } catch (e) {}
+    const currentUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser')
+    if (currentUser) {
+      navigate('/dashboard')
+    }
   }, [navigate])
-
-  useEffect(() => { }, [])
 
   const sanitize = {
     email: (s) => String(s || '').trim().toLowerCase().replace(/[^a-z0-9@._+-]/gi, ''),
@@ -66,8 +65,16 @@ const Login = () => {
       setError('Please enter your email.')
       return false
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError('Please enter a valid email address.')
+      return false
+    }
     if (!cleanPassword) {
       setError('Please enter your password.')
+      return false
+    }
+    if (cleanPassword.length < 6) {
+      setError('Password must be at least 6 characters.')
       return false
     }
     setError('')
@@ -81,49 +88,77 @@ const Login = () => {
     setError('')
 
     try {
-      // const res = await fetch('/api/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ identifier: identifier.trim(), password }),
-      // })
+      // Step 1: Login and get token
+      const loginRes = await axiosInstance.post(API_PATH.AUTH.LOGIN, {
+        email: sanitize.email(email),
+        password: sanitize.password(password),
+      })
 
-      const payloadEmail = sanitize.email(email)
-      const payloadPassword = sanitize.password(password)
-
-      // Mock response that resembles a real fetch Response with json()
-      const res = {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          user: { id: 1, name: payloadEmail.includes('@') ? payloadEmail.split('@')[0] : payloadEmail, email: payloadEmail.includes('@') ? payloadEmail : null },
-          token: 'mock-jwt-token-abc123',
-        }),
+      if (!loginRes.data || !loginRes.data.token) {
+        throw new Error('Invalid response from server')
       }
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.detail || 'Login failed')
+      const token = loginRes.data.token
+
+      // Step 2: Store token temporarily to make authenticated request
+      const storageKey = remember ? 'token' : null
+      if (storageKey) {
+        localStorage.setItem('token', token)
       }
 
-      // Parse response like a real fetch
-      const data = await res.json()
+      // Update axios instance with new token for the next request
+      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
-      // On success: save currentUser (from response) and redirect to dashboard
-      const currentUser = data?.user || { id: 1, name: payloadEmail.trim() }
+      // Step 3: Fetch user details from /info/ endpoint
+      const userRes = await axiosInstance.get(API_PATH.AUTH.INFO)
+
+      if (!userRes.data) {
+        throw new Error('Failed to fetch user information')
+      }
+
+      const userDetails = userRes.data
+
+      // Step 4: Store user data and token
+      const userData = {
+        ...userDetails,
+        token: token,
+        email: sanitize.email(email),
+      }
+
       try {
-        const storageVal = JSON.stringify({ ...currentUser, token: data?.token })
-        if (remember) localStorage.setItem('currentUser', storageVal)
-        else sessionStorage.setItem('currentUser', storageVal)
+        const storageValue = JSON.stringify(userData)
+        if (remember) {
+          localStorage.setItem('currentUser', storageValue)
+          localStorage.setItem('token', token)
+        } else {
+          sessionStorage.setItem('currentUser', storageValue)
+          sessionStorage.setItem('token', token)
+        }
       } catch (e) {
-        setError('Failed to store user data in browser.')
-        return false
+        setError('Failed to store user data.')
+        return
       }
+
+      // Step 5: Clear form and redirect
       setEmail('')
       setPassword('')
       setError('')
       navigate('/dashboard')
     } catch (err) {
-      setError(err.message || 'Login failed')
+      // Clear auth headers on error
+      delete axiosInstance.defaults.headers.common['Authorization']
+      localStorage.removeItem('token')
+      sessionStorage.removeItem('token')
+
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail)
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message)
+      } else if (err.message) {
+        setError(err.message)
+      } else {
+        setError('Login failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -152,6 +187,7 @@ const Login = () => {
             </label>
             <input
               id="email"
+              className='text-gray-900'
               name="email"
               type="email"
               value={email}
@@ -162,6 +198,7 @@ const Login = () => {
               }}
               placeholder="Enter your email"
               autoComplete="email"
+              disabled={loading}
             />
           </div>
 
@@ -171,6 +208,7 @@ const Login = () => {
             </label>
             <input
               id="password"
+              className='text-gray-900'
               name="password"
               type="password"
               value={password}
@@ -181,6 +219,7 @@ const Login = () => {
               }}
               placeholder="Enter your password"
               autoComplete="current-password"
+              disabled={loading}
             />
           </div>
 
@@ -191,6 +230,7 @@ const Login = () => {
                 checked={remember} 
                 onChange={(e) => setRemember(e.target.checked)}
                 style={styles.checkbox}
+                disabled={loading}
               />
               <span style={styles.checkboxLabel}>Remember me</span>
             </label>

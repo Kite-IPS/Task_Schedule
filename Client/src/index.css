@@ -4,6 +4,9 @@
 body{
     font-family: "Inter", sans-serif;
 }
+body{
+    @apply bg-zinc-800 text-white;
+}
 .primary-btn{
-    @apply bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition duration-300 cursor-pointer;
+    @apply bg-red-500 text-white font-semibold py-2 px-4 rounded hover:bg-red-600 transition duration-300 cursor-pointer;
 }
