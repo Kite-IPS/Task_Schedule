@@ -1,0 +1,17 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: taskscheduler
+      MYSQL_USER: django_user
+      MYSQL_PASSWORD: ranjith@2005
+      MYSQL_ROOT_PASSWORD: 12345
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+    driver: local
