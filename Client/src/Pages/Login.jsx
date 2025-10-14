@@ -219,7 +219,11 @@ const Login = () => {
           navigate('/admin/dashboard', { replace: true });
         } else if (normalizedRole === "faculty") {
           navigate('/faculty/dashboard', { replace: true });
-        } else {
+        } else if(normalizedRole === "staff"){
+          navigate('/faculty/dashboard', { replace: true });
+          // setError('Error: Invalid Role');
+        }
+        else{
           setError('Error: Invalid Role');
         }
       } else {
