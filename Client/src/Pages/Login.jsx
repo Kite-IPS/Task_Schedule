@@ -106,10 +106,10 @@ const Login = () => {
     return () => document.head.removeChild(style)
   }, [])
 
-  // Check if user is already logged in - FIXED: Only redirect after auth is loaded
+  // Check if user is already logged in
   useEffect(() => {
     if (authLoading) return;
-    
+
     if (user && user.role) {
       const userRole = user.role.toLowerCase();
       if (userRole === 'superadmin') {
@@ -168,87 +168,95 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
-    
+
     setLoading(true)
     setError('')
 
     try {
-      const loginRes = await axiosInstance.post(API_PATH.AUTH.LOGIN, {
-        email: sanitize.email(email),
-        password: sanitize.password(password),
-      })
+      const response = await axiosInstance.post(API_PATH.AUTH.LOGIN, { email, password })
 
-      if (!loginRes.data || !loginRes.data.token) {
-        throw new Error('Invalid response from server')
-      }
-
-      const token = loginRes.data.token
-      const userData = loginRes.data.staff
-
-      // Store token FIRST before setting axios header
-      if (remember) {
-        localStorage.setItem('token', token)
-        sessionStorage.removeItem('token')
-      } else {
-        sessionStorage.setItem('token', token)
-        localStorage.removeItem('token')
-      }
-
-      // Set token in axios headers
-      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-      // Update user context with complete user data
-      updateUser({
-        ...userData,
-        token: token
-      });
-
-      // Clear form
-      setEmail('')
-      setPassword('')
+      const { token } = response.data;
+      const { role } = response.data.staff;
       
-      // Navigate based on role - navigation will happen via useEffect watching user context
-      const userRole = userData.role.toLowerCase()
-      if (userRole === 'superadmin') {
-        navigate('/superadmin/dashboard', { replace: true })
-      } else if (userRole === 'admin') {
-        navigate('/admin/dashboard', { replace: true })
-      } else if (userRole === 'faculty') {
-        navigate('/faculty/dashboard', { replace: true })
-      } else {
-        setError(`Unknown role: ${userData.role}`)
-      }
+      console.table(response.data);
 
+      if (token && role) {
+        // Set token in axios headers
+        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        // Store token based on remember me
+        if (remember) {
+          localStorage.setItem("token", token);
+          localStorage.setItem("role", role.toLowerCase());
+          sessionStorage.removeItem("token");
+          sessionStorage.removeItem("role");
+        } else {
+          sessionStorage.setItem('token', token);
+          sessionStorage.setItem('role', role.toLowerCase());
+          localStorage.removeItem("token");
+          localStorage.removeItem("role");
+        }
+
+        // Update user context with the complete response data
+        const userData = {
+          ...response.data.staff,
+          token: token,
+          role: role
+        };
+        
+        updateUser(userData);
+
+        // Clear form
+        setEmail('');
+        setPassword('');
+        setError('');
+
+        // Navigate based on role
+        const normalizedRole = role.toLowerCase();
+        if (normalizedRole === "superadmin") {
+          navigate('/superadmin/dashboard', { replace: true });
+        } else if (normalizedRole === "admin") {
+          navigate('/admin/dashboard', { replace: true });
+        } else if (normalizedRole === "faculty") {
+          navigate('/faculty/dashboard', { replace: true });
+        } else {
+          setError('Error: Invalid Role');
+        }
+      } else {
+        setError('Invalid response from server');
+      }
     } catch (err) {
-      console.error('Login error:', err)
-      
+      console.error('Login error:', err);
+
       // Clear authentication on error
-      delete axiosInstance.defaults.headers.common['Authorization']
-      localStorage.removeItem('token')
-      sessionStorage.removeItem('token')
+      delete axiosInstance.defaults.headers.common['Authorization'];
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('role');
 
       // Extract error message
-      let errorMessage = 'Login failed. Please try again.'
-      
+      let errorMessage = 'Login failed. Please try again.';
+
       if (err.response?.data?.detail) {
-        errorMessage = err.response.data.detail
+        errorMessage = err.response.data.detail;
       } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message
+        errorMessage = err.response.data.message;
       } else if (err.response?.status === 401) {
-        errorMessage = 'Invalid email or password'
+        errorMessage = 'Invalid email or password';
       } else if (err.response?.status === 404) {
-        errorMessage = 'User not found'
+        errorMessage = 'User not found';
       } else if (err.message && err.message !== 'Network Error') {
-        errorMessage = err.message
+        errorMessage = err.message;
       } else if (err.code === 'ECONNABORTED') {
-        errorMessage = 'Request timeout. Please try again.'
+        errorMessage = 'Request timeout. Please try again.';
       } else if (!navigator.onLine) {
-        errorMessage = 'No internet connection'
+        errorMessage = 'No internet connection';
       }
-      
-      setError(errorMessage)
+
+      setError(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
