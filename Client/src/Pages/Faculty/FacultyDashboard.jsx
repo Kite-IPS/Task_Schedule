@@ -105,16 +105,16 @@ const FacultyDashboard = () => {
 
       {/* Stats Cards - 2 cards in first row on mobile, third card below */}
       <div className="w-[90%] md:w-[80%] mx-auto grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 my-10">
-        <div className="h-[100px] md:h-auto flex flex-col justify-center py-0 md:py-8 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl">
-          <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Total Assigned Tasks</h2>
+        <div className="h-[100px] md:h-auto flex flex-col justify-center py-0 md:py-8 px-4 md:px-10 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl">
+          <h2 className="font-semibold mb-3 text-white/80 text-[17px] md:text-xl">Total Assigned Tasks</h2>
           <p className="font-bold text-green-400 text-[18px] md:text-5xl">25</p>
         </div>
-        <div className="h-[100px] md:h-auto flex flex-col justify-center py-0 md:py-8 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl">
-          <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Completed Tasks</h2>
+        <div className="h-[100px] md:h-auto flex flex-col justify-center py-0 md:py-8 px-4 md:px-10 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl">
+          <h2 className="font-semibold mb-3 text-white/80 text-[17px] md:text-xl">Completed Tasks</h2>
           <p className="font-bold text-blue-400 text-[18px] md:text-5xl">18</p>
         </div>
-  <div className="h-[60px] md:h-auto md:pt-8 flex md:flex-col md:justify-center items-center md:items-start justify-between md:justify-start px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl col-span-2 lg:col-span-1">
-          <h2 className="font-semibold text-white/80 text-[17px] md:text-xl mb-0">Pending Tasks</h2>
+        <div className="h-[60px] md:h-auto md:pt-8 flex md:flex-col md:justify-center items-center       md:items-start justify-between md:justify-start px-4 md:px-10 text-white bg-white/5 backdrop-blur-md       border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10      transition-all shadow-lg hover:shadow-2xl col-span-2 lg:col-span-1">
+          <h2 className="font-semibold text-white/80 text-[17px] md:text-xl mb-3">Pending Tasks</h2>
           <p className="font-bold text-orange-400 text-[18px] md:text-5xl">7</p>
         </div>
       </div>
