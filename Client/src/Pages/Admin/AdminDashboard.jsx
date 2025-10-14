@@ -9,45 +9,45 @@ const AdminDashboard = () => {
 
   return (
     <BaseLayout>
-      <div className="flex gap-1 items-center my-4 w-[90%] md:w-[80%] mx-auto">
+      <div className="flex gap-1 items-center my-4 w-[90%] md:w-[80%] mx-auto text-white/70">
         <button
-          className="hover:text-blue-500 cursor-pointer"
+          className="hover:text-red-400 cursor-pointer transition-colors"
           onClick={() => navigate("/admin/dashboard")}
         >
           <House />
         </button>
         <span>{">"}</span>
         <button
-          className="hover:text-blue-500 cursor-pointer"
+          className="hover:text-red-400 cursor-pointer transition-colors"
           onClick={() => navigate("/admin/dashboard")}
         >
           Dashboard
         </button>
       </div>
-      <div className="w-[90%] md:w-[80%] mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 my-10">
-        <div className="py-10 px-4 text-white bg-gradient-to-br from-green-500 to-green-800 rounded-[8px] cursor-pointer">
-          <h2 className="text-2xl font-semibold mb-4">Total Tasks</h2>
-          <p className="text-5xl font-bold">150</p>
+      <div className="w-[90%] md:w-[80%] mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 my-10">
+        <div className="py-10 px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg">
+          <h2 className="text-xl font-semibold mb-4 text-white/80">Total Tasks</h2>
+          <p className="text-5xl font-bold text-green-400">150</p>
         </div>
-        <div className="py-10 px-4 text-white bg-gradient-to-br from-blue-500 to-blue-800 rounded-[8px] cursor-pointer">
-          <h2 className="text-2xl font-semibold mb-4">Total Completed Tasks</h2>
-          <p className="text-5xl font-bold">100</p>
+        <div className="py-10 px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg">
+          <h2 className="text-xl font-semibold mb-4 text-white/80">Total Completed Tasks</h2>
+          <p className="text-5xl font-bold text-blue-400">100</p>
         </div>
-        <div className="py-10 px-4 text-white bg-gradient-to-br from-orange-500 to-orange-800 rounded-[8px] cursor-pointer col-span-2 md:col-span-1">
-          <h2 className="text-2xl font-semibold mb-4">Total On-Going Tasks</h2>
-          <p className="text-5xl font-bold">50</p>
+        <div className="py-10 px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg col-span-2 md:col-span-1">
+          <h2 className="text-xl font-semibold mb-4 text-white/80">Total On-Going Tasks</h2>
+          <p className="text-5xl font-bold text-orange-400">50</p>
         </div>
       </div>
       <div className="w-[90%] md:w-[80%] mx-auto my-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        <h1 className="text-xl md:text-2xl font-bold">Tasks Table:</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-white">Tasks Table:</h1>
         <div className="flex items-center gap-2 w-full md:w-auto">
           <button
-            className="primary-btn flex items-center justify-center gap-1 text-xs md:text-sm w-1/2 md:w-auto px-2 md:px-4"
+            className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm w-1/2 md:w-auto"
             onClick={() => navigate("/admin/users")}
           >
             View Users <UsersRound className="w-4 h-4" />
           </button>
-          <button className="primary-btn flex items-center justify-center gap-1 text-xs md:text-sm w-1/2 md:w-auto px-2 md:px-4">
+          <button className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm w-1/2 md:w-auto">
             Export Data <Download className="w-4 h-4" />
           </button>
         </div>
