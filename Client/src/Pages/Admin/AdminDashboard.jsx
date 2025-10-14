@@ -25,17 +25,17 @@ const AdminDashboard = () => {
         </button>
       </div>
       <div className="w-[90%] md:w-[80%] mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 my-10">
-        <div className="py-10 px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg">
-          <h2 className="text-xl font-semibold mb-4 text-white/80">Total Tasks</h2>
-          <p className="text-5xl font-bold text-green-400">150</p>
+        <div className="h-[100px] md:h-auto flex flex-col justify-center py-4 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg">
+          <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Total Tasks</h2>
+          <p className="font-bold text-green-400 text-[18px] md:text-5xl">150</p>
         </div>
-        <div className="py-10 px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg">
-          <h2 className="text-xl font-semibold mb-4 text-white/80">Total Completed Tasks</h2>
-          <p className="text-5xl font-bold text-blue-400">100</p>
+        <div className="h-[100px] md:h-auto flex flex-col justify-center py-4 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg">
+          <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Total Completed Tasks</h2>
+          <p className="font-bold text-blue-400 text-[18px] md:text-5xl">100</p>
         </div>
-        <div className="py-10 px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg col-span-2 md:col-span-1">
-          <h2 className="text-xl font-semibold mb-4 text-white/80">Total On-Going Tasks</h2>
-          <p className="text-5xl font-bold text-orange-400">50</p>
+        <div className="h-[100px] md:h-auto flex flex-col justify-center py-4 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg col-span-2 md:col-span-1">
+          <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Total On-Going Tasks</h2>
+          <p className="font-bold text-orange-400 text-[18px] md:text-5xl">50</p>
         </div>
       </div>
       <div className="w-[90%] md:w-[80%] mx-auto my-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
