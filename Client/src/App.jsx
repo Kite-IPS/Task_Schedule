@@ -31,7 +31,7 @@ const App = () => {
           </Route>
           
           {/* Faculty Routes */}
-          <Route element={<PrivateRoute allowedRoles={["Faculty", "faculty"]} />}>
+          <Route element={<PrivateRoute allowedRoles={["Faculty", "faculty", "staff", "Staff"]} />}>
             <Route path='/faculty/dashboard' element={<FacultyDashboard />} />
             <Route path='/faculty/assign' element={<Assignment />} />
           </Route>

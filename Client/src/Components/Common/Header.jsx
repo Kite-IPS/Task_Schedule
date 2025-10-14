@@ -3,8 +3,8 @@ import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 const Header = () => {
     const user = {
-        role: "Admin",
-        name: "Yogesh"
+        role: localStorage.getItem("role") || sessionStorage.getItem("role"),
+        name: localStorage.getItem("userData")
     }
     const navigate = useNavigate();
     const handleLogout = () => {

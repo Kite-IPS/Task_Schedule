@@ -177,8 +177,6 @@ const Login = () => {
 
       const { token } = response.data;
       const { role } = response.data.staff;
-      
-      console.table(response.data);
 
       if (token && role) {
         // Set token in axios headers
@@ -188,11 +186,14 @@ const Login = () => {
         if (remember) {
           localStorage.setItem("token", token);
           localStorage.setItem("role", role.toLowerCase());
+          localStorage.setItem("userData",response.data.staff)
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("role");
+          sessionStorage.removeItem("userData")
         } else {
           sessionStorage.setItem('token', token);
           sessionStorage.setItem('role', role.toLowerCase());
+          sessionStorage.setItem('userData',response.data.staff)
           localStorage.removeItem("token");
           localStorage.removeItem("role");
         }
