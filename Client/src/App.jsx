@@ -19,7 +19,7 @@ const App = () => {
           <Route path='/login' element={<Login />} />
           
           {/* SuperAdmin Routes */}
-          <Route element={<PrivateRoute allowedRoles={["SuperAdmin", "superadmin"]} />}>
+          <Route element={<PrivateRoute allowedRoles={["Head of Department", "head of department","hod"]} />}>
             <Route path='/superadmin/dashboard' element={<SuperAdminDashboard />} />
             <Route path='/superadmin/create-users' element={<CreateUser />} />
           </Route>
@@ -31,7 +31,7 @@ const App = () => {
           </Route>
           
           {/* Faculty Routes */}
-          <Route element={<PrivateRoute allowedRoles={["Faculty", "faculty", "staff", "Staff"]} />}>
+          <Route element={<PrivateRoute allowedRoles={["staff", "Staff"]} />}>
             <Route path='/faculty/dashboard' element={<FacultyDashboard />} />
             <Route path='/faculty/assign' element={<Assignment />} />
           </Route>

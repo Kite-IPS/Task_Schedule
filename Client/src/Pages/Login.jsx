@@ -214,12 +214,13 @@ const Login = () => {
 
         // Navigate based on role
         const normalizedRole = role.toLowerCase();
-        if (normalizedRole === "superadmin") {
+        console.log(normalizedRole)
+        if (normalizedRole === "hod") {
           navigate('/superadmin/dashboard', { replace: true });
         } else if (normalizedRole === "admin") {
           navigate('/admin/dashboard', { replace: true });
-        } else if (normalizedRole === "faculty") {
-          navigate('/faculty/dashboard', { replace: true });
+        } else if (normalizedRole === "head of department") {
+          navigate('/superadmin/dashboard', { replace: true });
         } else if(normalizedRole === "staff"){
           navigate('/faculty/dashboard', { replace: true });
           // setError('Error: Invalid Role');
