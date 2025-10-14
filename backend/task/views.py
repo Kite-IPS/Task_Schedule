@@ -87,7 +87,7 @@ def staff_login(request):
             'error': 'Staff not found'
         }, status=status.HTTP_404_NOT_FOUND)
 
-    if not check_password(password, staff.password):
+    if (password != staff.password):
         return Response({
             'error': 'Invalid credentials'
         }, status=status.HTTP_401_UNAUTHORIZED)
