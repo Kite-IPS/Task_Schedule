@@ -68,7 +68,7 @@ const Root = () => {
     return <Navigate to="/superadmin/dashboard" replace />;
   } else if (userRole === 'admin') {
     return <Navigate to="/admin/dashboard" replace />;
-  } else if (userRole === 'faculty') {
+  } else if (userRole === 'staff') {
     return <Navigate to="/faculty/dashboard" replace />;
   }
 
