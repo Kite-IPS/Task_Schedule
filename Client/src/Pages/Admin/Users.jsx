@@ -159,29 +159,29 @@ const Users = () => {
   };
 
   return (
-    <BaseLayout className="min-h-screen bg-gray-50">
+    <BaseLayout>
       <div className="w-[90%] md:w-[80%] mx-auto py-6">
         {/* Breadcrumb */}
-        <div className="flex gap-1 items-center my-4">
-          <button className="hover:text-red-500 cursor-pointer">
+        <div className="flex gap-1 items-center my-4 text-white/70">
+          <button className="hover:text-red-400 cursor-pointer transition-colors">
             <Home size={20} />
           </button>
-          <span className="text-gray-600">{">"}</span>
-          <button className="hover:text-red-500 cursor-pointer" onClick={() => navigate('/admin/dashboard')}>
+          <span>{">"}</span>
+          <button className="hover:text-red-400 cursor-pointer transition-colors" onClick={() => navigate('/admin/dashboard')}>
             Dashboard
           </button>
-          <span className="text-gray-600">{">"}</span>
-          <button className="hover:text-red-500 cursor-pointer" onClick={() => navigate('/admin/users')}>
+          <span>{">"}</span>
+          <button className="hover:text-red-400 cursor-pointer transition-colors" onClick={() => navigate('/admin/users')}>
             Users
           </button>
         </div>
 
         {/* Header with Create Button */}
         <div className="flex justify-between items-center my-6">
-          <h1 className="text-2xl font-bold">Users Management</h1>
+          <h1 className="text-2xl font-bold text-white">Users Management</h1>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
+            className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105"
           >
             <Plus size={20} />
             Create User
@@ -189,23 +189,23 @@ const Users = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-xl shadow-lg mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <input
               type="text"
               placeholder="Search by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
+              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40 col-span-1 md:col-span-2"
             />
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
+              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
             >
-              <option value="All">All Roles</option>
+              <option value="All" className="bg-gray-900">All Roles</option>
               {roles.map((role) => (
-                <option key={role} value={role}>
+                <option key={role} value={role} className="bg-gray-900">
                   {role}
                 </option>
               ))}
@@ -213,11 +213,11 @@ const Users = () => {
             <select
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
+              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
             >
-              <option value="All">All Departments</option>
+              <option value="All" className="bg-gray-900">All Departments</option>
               {departments.map((dept) => (
-                <option key={dept} value={dept}>
+                <option key={dept} value={dept} className="bg-gray-900">
                   {dept}
                 </option>
               ))}
@@ -226,26 +226,26 @@ const Users = () => {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-100 border-b border-gray-300">
+            <thead className="bg-white/5 border-b border-white/10">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   S.No
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Name
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Role
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Department
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Email
                 </th>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-sm font-semibold text-white">
                   Action
                 </th>
               </tr>
@@ -254,35 +254,35 @@ const Users = () => {
               {paginatedUsers.map((user, index) => (
                 <tr
                   key={user.id}
-                  className="border-b border-gray-200 hover:bg-gray-50"
+                  className="border-b border-white/10 hover:bg-white/5 transition-colors"
                 >
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-white/80">
                     {startIndex + index + 1}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-white font-medium">
                     {user.name}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-white/80">
                     {user.role}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-white/80">
                     {user.department}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-white/70">
                     {user.email}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex gap-2 justify-center">
                       <button
                         onClick={() => openViewModal(user)}
-                        className="text-green-500 hover:text-green-700 transition"
-                        title="Edit"
+                        className="text-green-400 hover:text-green-300 transition p-1 hover:bg-white/5 rounded"
+                        title="View"
                       >
                         <Edit size={18} />
                       </button>
                       <button
                         onClick={() => handleDeleteUser(user.id)}
-                        className="text-red-500 hover:text-red-700 transition"
+                        className="text-red-400 hover:text-red-300 transition p-1 hover:bg-white/5 rounded"
                         title="Delete"
                       >
                         <Trash2 size={18} />
@@ -295,7 +295,7 @@ const Users = () => {
           </table>
 
           {filteredUsers.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-white/50">
               No users found. Try adjusting your filters.
             </div>
           )}
@@ -307,7 +307,7 @@ const Users = () => {
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
             >
               Previous
             </button>
@@ -315,10 +315,10 @@ const Users = () => {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`px-3 py-2 rounded ${
+                className={`px-3 py-2 rounded-lg transition-all ${
                   currentPage === page
-                    ? "bg-red-500 text-white"
-                    : "border border-gray-300 hover:bg-gray-100"
+                    ? "bg-red-600 text-white border border-red-500"
+                    : "border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white"
                 }`}
               >
                 {page}
@@ -329,7 +329,7 @@ const Users = () => {
                 setCurrentPage(Math.min(totalPages, currentPage + 1))
               }
               disabled={currentPage === totalPages}
-              className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
             >
               Next
             </button>
@@ -339,16 +339,16 @@ const Users = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-white bg-opacity-20 backdrop-blur-3xl flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-[90%] md:w-[500px] p-6">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl w-[90%] md:w-[500px] p-6">
             {/* Modal Header */}
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-bold text-white">
                 {modalMode === "create" ? "Create User" : "View/Edit User"}
               </h2>
               <button
                 onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700 transition"
+                className="text-white/70 hover:text-white transition"
               >
                 <X size={24} />
               </button>
@@ -357,7 +357,7 @@ const Users = () => {
             {/* Modal Body */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/90 mb-1">
                   Name
                 </label>
                 <input
@@ -365,13 +365,13 @@ const Users = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
+                  className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
                   placeholder="Enter user name"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/90 mb-1">
                   Email
                 </label>
                 <input
@@ -379,24 +379,24 @@ const Users = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
+                  className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
                   placeholder="Enter email"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/90 mb-1">
                   Role
                 </label>
                 <select
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
+                  className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                 >
-                  <option value="">Select Role</option>
+                  <option value="" className="bg-gray-900">Select Role</option>
                   {roles.map((role) => (
-                    <option key={role} value={role}>
+                    <option key={role} value={role} className="bg-gray-900">
                       {role}
                     </option>
                   ))}
@@ -404,18 +404,18 @@ const Users = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/90 mb-1">
                   Department
                 </label>
                 <select
                   name="department"
                   value={formData.department}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
+                  className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                 >
-                  <option value="">Select Department</option>
+                  <option value="" className="bg-gray-900">Select Department</option>
                   {departments.map((dept) => (
-                    <option key={dept} value={dept}>
+                    <option key={dept} value={dept} className="bg-gray-900">
                       {dept}
                     </option>
                   ))}
@@ -427,7 +427,7 @@ const Users = () => {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={closeModal}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition font-medium text-gray-700"
+                className="flex-1 px-4 py-2 border border-white/20 bg-white/5 rounded-lg hover:bg-white/10 transition font-medium text-white"
               >
                 Cancel
               </button>
@@ -435,7 +435,7 @@ const Users = () => {
                 onClick={
                   modalMode === "create" ? handleCreateUser : handleUpdateUser
                 }
-                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition font-medium"
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
               >
                 {modalMode === "create" ? "Create" : "Update"}
               </button>

@@ -178,49 +178,49 @@ const Assignment = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Completed":
-        return "bg-green-100 text-green-700 border border-green-300";
+        return "bg-green-500/20 text-green-300 border border-green-500/30";
       case "In Progress":
-        return "bg-blue-100 text-blue-700 border border-blue-300";
+        return "bg-blue-500/20 text-blue-300 border border-blue-500/30";
       case "Pending":
-        return "bg-yellow-100 text-yellow-700 border border-yellow-300";
+        return "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30";
       default:
-        return "bg-gray-100 text-gray-700 border border-gray-300";
+        return "bg-gray-500/20 text-gray-300 border border-gray-500/30";
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "Urgent":
-        return "bg-red-100 text-red-700 border border-red-300";
+        return "bg-red-500/20 text-red-300 border border-red-500/30";
       case "High":
-        return "bg-orange-100 text-orange-700 border border-orange-300";
+        return "bg-orange-500/20 text-orange-300 border border-orange-500/30";
       case "Medium":
-        return "bg-purple-100 text-purple-700 border border-purple-300";
+        return "bg-purple-500/20 text-purple-300 border border-purple-500/30";
       case "Low":
-        return "bg-gray-100 text-gray-700 border border-gray-300";
+        return "bg-gray-500/20 text-gray-300 border border-gray-500/30";
       default:
         return "bg-gray-100 text-gray-700 border border-gray-300";
     }
   };
 
   return (
-    <BaseLayout className="min-h-screen bg-gray-50">
+    <BaseLayout>
       <div className="w-[90%] md:w-[80%] mx-auto py-6">
         {/* Breadcrumb */}
-        <div className="flex gap-1 items-center my-4">
-          <button className="text-white hover:text-blue-500 cursor-pointer text-black">
+        <div className="flex gap-1 items-center my-4 text-white/70">
+          <button className="hover:text-red-400 cursor-pointer transition-colors">
             <Home size={20} />
           </button>
-          <span className="text-white-600">{">"}</span>
+          <span>{">"}</span>
           <button
-            className="text-white hover:text-blue-500 cursor-pointer text-black"
+            className="hover:text-red-400 cursor-pointer transition-colors"
             onClick={() => navigate("/faculty/dashboard")}
           >
             Dashboard
           </button>
-          <span className="text-white-600">{">"}</span>
+          <span>{">"}</span>
           <button
-            className="text-white hover:text-blue-500 cursor-pointer text-black"
+            className="hover:text-red-400 cursor-pointer transition-colors"
             onClick={() => navigate("/faculty/assign")}
           >
             Task Management
@@ -229,10 +229,10 @@ const Assignment = () => {
 
         {/* Header with Create Button */}
         <div className="flex justify-between items-center my-6">
-          <h1 className="text-2xl font-bold text-white-800">Task Management</h1>
+          <h1 className="text-2xl font-bold text-white">Task Management</h1>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition shadow-md"
+            className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105"
           >
             <Plus size={20} />
             Create Task
@@ -240,23 +240,23 @@ const Assignment = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-xl shadow-lg mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
               type="text"
               placeholder="Search by title or assignee..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
             />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
             >
-              <option value="All">All Status</option>
+              <option value="All" className="bg-gray-900">All Status</option>
               {statuses.map((status) => (
-                <option key={status} value={status}>
+                <option key={status} value={status} className="bg-gray-900">
                   {status}
                 </option>
               ))}
@@ -264,11 +264,11 @@ const Assignment = () => {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
             >
-              <option value="All">All Priorities</option>
+              <option value="All" className="bg-gray-900">All Priorities</option>
               {priorities.map((priority) => (
-                <option key={priority} value={priority}>
+                <option key={priority} value={priority} className="bg-gray-900">
                   {priority}
                 </option>
               ))}
@@ -277,32 +277,32 @@ const Assignment = () => {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-100 border-b border-gray-300">
+            <thead className="bg-white/5 border-b border-white/10">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   S.No
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Title
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Assignee
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Department
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Priority
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Due Date
                 </th>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-sm font-semibold text-white">
                   Action
                 </th>
               </tr>
@@ -311,18 +311,18 @@ const Assignment = () => {
               {paginatedTasks.map((task, index) => (
                 <tr
                   key={task.id}
-                  className="border-b border-gray-200 hover:bg-gray-50"
+                  className="border-b border-white/10 hover:bg-white/5 transition-colors"
                 >
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-white/80">
                     {startIndex + index + 1}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 font-medium">
+                  <td className="px-4 py-3 text-sm text-white font-medium">
                     {task.title}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-white/80">
                     {task.assignee}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-white/80">
                     {task.department}
                   </td>
                   <td className="px-4 py-3 text-sm">
@@ -343,28 +343,28 @@ const Assignment = () => {
                       {task.priority}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-white/80">
                     {task.dueDate}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex gap-2 justify-center">
                       <button
                         onClick={() => openViewModal(task)}
-                        className="text-green-500 hover:text-green-700 transition"
+                        className="text-green-400 hover:text-green-300 transition p-1 hover:bg-white/5 rounded"
                         title="View Description"
                       >
                         <Eye size={18} />
                       </button>
                       <button
                         onClick={() => openEditModal(task)}
-                        className="text-blue-500 hover:text-blue-700 transition"
+                        className="text-blue-400 hover:text-blue-300 transition p-1 hover:bg-white/5 rounded"
                         title="Edit"
                       >
                         <Edit size={18} />
                       </button>
                       <button
                         onClick={() => handleDeleteTask(task.id)}
-                        className="text-red-500 hover:text-red-700 transition"
+                        className="text-red-400 hover:text-red-300 transition p-1 hover:bg-white/5 rounded"
                         title="Delete"
                       >
                         <Trash2 size={18} />
@@ -377,7 +377,7 @@ const Assignment = () => {
           </table>
 
           {filteredTasks.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-white/50">
               No tasks found. Try adjusting your filters.
             </div>
           )}
@@ -389,7 +389,7 @@ const Assignment = () => {
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-white-700"
+              className="px-3 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
             >
               Previous
             </button>
@@ -397,10 +397,10 @@ const Assignment = () => {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`px-3 py-2 rounded ${
+                className={`px-3 py-2 rounded-lg transition-all ${
                   currentPage === page
-                    ? "bg-blue-600 text-white"
-                    : "border border-gray-300 hover:bg-gray-100 text-gray-700"
+                    ? "bg-red-600 text-white border border-red-500"
+                    : "border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white"
                 }`}
               >
                 {page}
@@ -411,7 +411,7 @@ const Assignment = () => {
                 setCurrentPage(Math.min(totalPages, currentPage + 1))
               }
               disabled={currentPage === totalPages}
-              className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-white-700"
+              className="px-3 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
             >
               Next
             </button>
@@ -421,16 +421,16 @@ const Assignment = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-[90%] md:w-[600px] p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl w-[90%] md:w-[600px] p-6 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-bold text-white">
                 {modalMode === "create" ? "Create Task" : modalMode === "view" ? "Task Details" : "Edit Task"}
               </h2>
               <button
                 onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700 transition"
+                className="text-white/70 hover:text-white transition"
               >
                 <X size={24} />
               </button>
@@ -440,47 +440,47 @@ const Assignment = () => {
             {modalMode === "view" ? (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-1">Title</h3>
-                  <p className="text-gray-800 text-base">{formData.title}</p>
+                  <h3 className="text-sm font-semibold text-white/90 mb-1">Title</h3>
+                  <p className="text-white text-base">{formData.title}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-1">Description</h3>
-                  <p className="text-gray-800 text-base leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="text-sm font-semibold text-white/90 mb-1">Description</h3>
+                  <p className="text-white text-base leading-relaxed bg-white/5 p-4 rounded-lg border border-white/10">
                     {formData.description}
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-1">Assignee</h3>
-                    <p className="text-gray-800">{formData.assignee}</p>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Assignee</h3>
+                    <p className="text-white">{formData.assignee}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-1">Department</h3>
-                    <p className="text-gray-800">{formData.department}</p>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Department</h3>
+                    <p className="text-white">{formData.department}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-1">Status</h3>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Status</h3>
                     <span className={`px-2 py-1 rounded text-xs font-medium inline-block ${getStatusColor(formData.status)}`}>
                       {formData.status}
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-1">Priority</h3>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Priority</h3>
                     <span className={`px-2 py-1 rounded text-xs font-medium inline-block ${getPriorityColor(formData.priority)}`}>
                       {formData.priority}
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-1">Due Date</h3>
-                    <p className="text-gray-800">{formData.dueDate}</p>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Due Date</h3>
+                    <p className="text-white">{formData.dueDate}</p>
                   </div>
                 </div>
                 <div className="flex justify-end mt-6">
                   <button
                     onClick={closeModal}
-                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition font-medium"
+                    className="px-4 py-2 bg-white/10 border border-white/20 hover:bg-red-600 text-white rounded-lg transition font-medium"
                   >
                     Close
                   </button>
@@ -490,7 +490,7 @@ const Assignment = () => {
               <>
               <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/90 mb-1">
                   Title *
                 </label>
                 <input
@@ -498,13 +498,13 @@ const Assignment = () => {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                  className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
                   placeholder="Enter task title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/90 mb-1">
                   Description *
                 </label>
                 <textarea
@@ -512,14 +512,14 @@ const Assignment = () => {
                   value={formData.description}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black resize-none"
+                  className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40 resize-none"
                   placeholder="Enter task description"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-white/90 mb-1">
                     Assignee *
                   </label>
                   <input
@@ -527,24 +527,24 @@ const Assignment = () => {
                     name="assignee"
                     value={formData.assignee}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
                     placeholder="Enter assignee name"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-white/90 mb-1">
                     Department *
                   </label>
                   <select
                     name="department"
                     value={formData.department}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                   >
-                    <option value="">Select Department</option>
+                    <option value="" className="bg-gray-900">Select Department</option>
                     {departments.map((dept) => (
-                      <option key={dept} value={dept}>
+                      <option key={dept} value={dept} className="bg-gray-900">
                         {dept}
                       </option>
                     ))}
@@ -554,17 +554,17 @@ const Assignment = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-white/90 mb-1">
                     Status
                   </label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                   >
                     {statuses.map((status) => (
-                      <option key={status} value={status}>
+                      <option key={status} value={status} className="bg-gray-900">
                         {status}
                       </option>
                     ))}
@@ -572,17 +572,17 @@ const Assignment = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-white/90 mb-1">
                     Priority
                   </label>
                   <select
                     name="priority"
                     value={formData.priority}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                   >
                     {priorities.map((priority) => (
-                      <option key={priority} value={priority}>
+                      <option key={priority} value={priority} className="bg-gray-900">
                         {priority}
                       </option>
                     ))}
@@ -590,7 +590,7 @@ const Assignment = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-white/90 mb-1">
                     Due Date *
                   </label>
                   <input
@@ -598,7 +598,7 @@ const Assignment = () => {
                     name="dueDate"
                     value={formData.dueDate}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                   />
                 </div>
               </div>
@@ -608,7 +608,7 @@ const Assignment = () => {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={closeModal}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition font-medium text-gray-700"
+                  className="flex-1 px-4 py-2 border border-white/20 bg-white/5 rounded-lg hover:bg-white/10 transition font-medium text-white"
                 >
                   Cancel
                 </button>
@@ -616,7 +616,7 @@ const Assignment = () => {
                   onClick={
                     modalMode === "create" ? handleCreateTask : handleUpdateTask
                   }
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition font-medium"
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
                 >
                   {modalMode === "create" ? "Create" : "Update"}
                 </button>
