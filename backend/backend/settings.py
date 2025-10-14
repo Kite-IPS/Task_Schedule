@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'task',
+    'staff',
 ]
 
 # REST Framework settings
