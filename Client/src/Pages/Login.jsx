@@ -112,8 +112,8 @@ const Login = () => {
 
     if (user && user.role) {
       const userRole = user.role.toLowerCase();
-      if (userRole === 'superadmin') {
-        navigate('/superadmin/dashboard', { replace: true });
+      if (userRole === 'hod') {
+        navigate('/hod/dashboard', { replace: true });
       } else if (userRole === 'admin') {
         navigate('/admin/dashboard', { replace: true });
       } else if (userRole === 'faculty') {
@@ -216,11 +216,11 @@ const Login = () => {
         const normalizedRole = role.toLowerCase();
         console.log(normalizedRole)
         if (normalizedRole === "hod") {
-          navigate('/superadmin/dashboard', { replace: true });
+          navigate('/hod/dashboard', { replace: true });
         } else if (normalizedRole === "admin") {
           navigate('/admin/dashboard', { replace: true });
         } else if (normalizedRole === "head of department") {
-          navigate('/superadmin/dashboard', { replace: true });
+          navigate('/hod/dashboard', { replace: true });
         } else if(normalizedRole === "staff"){
           navigate('/faculty/dashboard', { replace: true });
           // setError('Error: Invalid Role');
