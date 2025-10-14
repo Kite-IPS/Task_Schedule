@@ -1,13 +1,12 @@
 import React, { useContext } from 'react'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './Pages/Login';
-import SuperAdminDashboard from './Pages/SuperAdmin/SuperAdminDashboard';
+import HodDashboard from './Pages/Hod/HodDashboard';
 import FacultyDashboard from './Pages/Faculty/FacultyDashboard';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import PrivateRoute from './Routes/PrivateRoute';
 import Assignment from './Pages/Faculty/Assignment';
 import Users from './Pages/Admin/Users';
-import CreateUser from './Pages/SuperAdmin/CreateUser';
 import UserProvider, { UserContext } from './Context/userContext';
 
 const App = () => {
@@ -18,10 +17,9 @@ const App = () => {
           <Route path='/' element={<Root />} />
           <Route path='/login' element={<Login />} />
           
-          {/* SuperAdmin Routes */}
+          {/* Hod Routes */}
           <Route element={<PrivateRoute allowedRoles={["Head of Department", "head of department","hod"]} />}>
-            <Route path='/superadmin/dashboard' element={<SuperAdminDashboard />} />
-            <Route path='/superadmin/create-users' element={<CreateUser />} />
+            <Route path='/hod/dashboard' element={<HodDashboard />} />
           </Route>
           
           {/* Admin Routes */}
@@ -64,8 +62,8 @@ const Root = () => {
   // Redirect to appropriate dashboard based on role
   const userRole = user.role ? user.role.toLowerCase() : '';
 
-  if (userRole === 'superadmin') {
-    return <Navigate to="/superadmin/dashboard" replace />;
+  if (userRole === 'hod') {
+    return <Navigate to="/hod/dashboard" replace />;
   } else if (userRole === 'admin') {
     return <Navigate to="/admin/dashboard" replace />;
   } else if (userRole === 'staff') {

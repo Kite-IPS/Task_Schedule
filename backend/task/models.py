@@ -32,6 +32,16 @@ class Task(models.Model):
         choices=Status.choices,
         default=Status.PENDING
     )
+    class Priority(models.TextChoices):
+        LOW = 'LOW', 'Low'
+        MEDIUM = 'MEDIUM', 'Medium'
+        HIGH = 'HIGH', 'High'
+
+    priority = models.CharField(
+        max_length=10,
+        choices=Priority.choices,
+        default=Priority.MEDIUM,
+    )
     assigned_to = models.ForeignKey(
         Staff,
         on_delete=models.SET_NULL,
