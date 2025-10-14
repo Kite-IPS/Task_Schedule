@@ -178,7 +178,7 @@ const Users = () => {
 
         {/* Header with Create Button */}
         <div className="flex justify-between items-center my-6">
-          <h1 className="text-2xl font-bold text-white">Users Management</h1>
+          <h1 className="text-2xl font-bold text-[17px] text-white">Users Management</h1>
           <button
             onClick={openCreateModal}
             className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105"
