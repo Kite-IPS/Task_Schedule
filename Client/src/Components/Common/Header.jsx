@@ -1,17 +1,14 @@
 import React from 'react'
 import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { UserContext } from '../../Context/userContext';
+
 const Header = () => {
-    const user = {
-        role: localStorage.getItem("role") || sessionStorage.getItem("role"),
-        name: localStorage.getItem("userData")
-    }
+    const { user, clearUser } = useContext(UserContext);
     const navigate = useNavigate();
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('role')
+        clearUser();
         navigate('/login')
     }
 
