@@ -229,13 +229,16 @@ const Assignment = () => {
 
         {/* Header with Create Button */}
         <div className="flex justify-between items-center my-6">
-          <h1 className="text-2xl font-bold text-white">Task Management</h1>
+          {/* Mobile: text-[18px] -> Tailwind text-[18px] or text-base; keep md:text-2xl for larger screens */}
+          <h1 className="text-[18px] md:text-2xl font-bold text-white">Task Management</h1>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105"
+            className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-3 py-2 md:px-4 md:py-2 rounded-xl transition-all shadow-lg hover:scale-105 text-sm md:text-base"
           >
-            <Plus size={20} />
-            Create Task
+            {/* Make icon slightly smaller on mobile */}
+            <Plus className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Create Task</span>
+            <span className="inline sm:hidden">Create</span>
           </button>
         </div>
 
