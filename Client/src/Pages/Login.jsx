@@ -737,11 +737,12 @@ const styles = {
     fontSize: '1rem',
     fontWeight: '600',
     borderRadius: '12px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    /* use project palette: red primary, white text, subtle dark shadow */
+    background: '#dc2626', /* red-600 */
     color: '#ffffff',
     border: 'none',
-    transition: 'all 0.2s ease-in-out',
-    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+    transition: 'all 0.15s ease-in-out',
+    boxShadow: '0 6px 20px rgba(0,0,0,0.45)',
     letterSpacing: '0.025em',
   },
   buttonContent: {
