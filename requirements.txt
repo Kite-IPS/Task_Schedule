@@ -6,4 +6,3 @@ PyJWT==2.10.1
 sqlparse==0.5.3
 tzdata==2025.2
 django-cors-headers==4.9.0
-PyMySQL==1.1.1
