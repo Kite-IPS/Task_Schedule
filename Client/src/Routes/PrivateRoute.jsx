@@ -7,4 +7,4 @@ const PrivateRoute = ({ allowedRoles }) => {
   )
 }
 
-export default PrivateRoute;
+export default PrivateRoute

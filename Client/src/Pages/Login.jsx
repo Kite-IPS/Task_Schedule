@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../Utils/axiosInstance'
 import { API_PATH } from '../Utils/apiPath'
 import { Lock, Mail, Eye, EyeOff, Shield, Zap, Star, Heart, Sparkles } from 'lucide-react';
-
+import { UserContext } from '../Context/userContext';
 
 const Login = () => {
-  const [email, setEmail] = useState('') 
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -14,7 +14,7 @@ const Login = () => {
   const [remember, setRemember] = useState(false)
   const navigate = useNavigate()
   const [showImage, setShowImage] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true)
-
+  const { user, updateUser, loading: authLoading } = useContext(UserContext);
 
   // Add CSS animations
   useEffect(() => {
@@ -66,7 +66,6 @@ const Login = () => {
         to { opacity: 1; }
       }
 
-      /* Media queries for responsive design */
       @media (max-width: 1024px) {
         .image-section {
           display: none !important;
@@ -107,22 +106,29 @@ const Login = () => {
     return () => document.head.removeChild(style)
   }, [])
 
-
-  // Check if user is already logged in
+  // Check if user is already logged in - FIXED: Only redirect after auth is loaded
   useEffect(() => {
-    const currentUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser')
-    if (currentUser) {
-      navigate('/dashboard')
+    if (authLoading) return;
+    
+    if (user && user.role) {
+      const userRole = user.role.toLowerCase();
+      if (userRole === 'superadmin') {
+        navigate('/superadmin/dashboard', { replace: true });
+      } else if (userRole === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (userRole === 'faculty') {
+        navigate('/faculty/dashboard', { replace: true });
+      }
     }
-  }, [navigate])
+  }, [user, authLoading, navigate]);
 
-  // Toggle image section based on viewport width so mobile doesn't render the image
+  // Toggle image section based on viewport width
   useEffect(() => {
     const onResize = () => {
       try {
         setShowImage(window.innerWidth >= 1024)
       } catch (e) {
-        // ignore (server-side or restricted env)
+        // ignore
       }
     }
     onResize()
@@ -130,17 +136,14 @@ const Login = () => {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-
   const sanitize = {
-    email: (s) => String(s || '').trim().toLowerCase().replace(/[^a-z0-9@._+-]/gi, ''),
-    password: (s) => String(s || '').trim(),
+    email: (s) => String(s || '').trim().toLowerCase(),
+    password: (s) => String(s || ''),
   }
-
 
   const validate = () => {
     const cleanEmail = sanitize.email(email)
     const cleanPassword = sanitize.password(password)
-
 
     if (!cleanEmail) {
       setError('Please enter your email.')
@@ -154,17 +157,20 @@ const Login = () => {
       setError('Please enter your password.')
       return false
     }
+    if (cleanPassword.length < 3) {
+      setError('Password is too short.')
+      return false
+    }
     setError('')
     return true
   }
 
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
+    
     setLoading(true)
     setError('')
-
 
     try {
       const loginRes = await axiosInstance.post(API_PATH.AUTH.LOGIN, {
@@ -172,127 +178,132 @@ const Login = () => {
         password: sanitize.password(password),
       })
 
-
       if (!loginRes.data || !loginRes.data.token) {
         throw new Error('Invalid response from server')
       }
 
-
       const token = loginRes.data.token
-      const storageKey = remember ? 'token' : null
-      if (storageKey) {
+      const userData = loginRes.data.staff
+
+      // Store token FIRST before setting axios header
+      if (remember) {
         localStorage.setItem('token', token)
+        sessionStorage.removeItem('token')
+      } else {
+        sessionStorage.setItem('token', token)
+        localStorage.removeItem('token')
       }
 
-
+      // Set token in axios headers
       axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      const userRes = await axiosInstance.get(API_PATH.AUTH.INFO)
 
+      // Update user context with complete user data
+      updateUser({
+        ...userData,
+        token: token
+      });
 
-      if (!userRes.data) {
-        throw new Error('Failed to fetch user information')
-      }
-
-
-      const userDetails = userRes.data
-      const userData = {
-        ...userDetails,
-        token: token,
-        email: sanitize.email(email),
-      }
-
-
-      try {
-        const storageValue = JSON.stringify(userData)
-        if (remember) {
-          localStorage.setItem('currentUser', storageValue)
-          localStorage.setItem('token', token)
-        } else {
-          sessionStorage.setItem('currentUser', storageValue)
-          sessionStorage.setItem('token', token)
-        }
-      } catch (e) {
-        setError('Failed to store user data.')
-        return
-      }
-
-
+      // Clear form
       setEmail('')
       setPassword('')
-      setError('')
-      navigate('/dashboard')
+      
+      // Navigate based on role - navigation will happen via useEffect watching user context
+      const userRole = userData.role.toLowerCase()
+      if (userRole === 'superadmin') {
+        navigate('/superadmin/dashboard', { replace: true })
+      } else if (userRole === 'admin') {
+        navigate('/admin/dashboard', { replace: true })
+      } else if (userRole === 'faculty') {
+        navigate('/faculty/dashboard', { replace: true })
+      } else {
+        setError(`Unknown role: ${userData.role}`)
+      }
+
     } catch (err) {
+      console.error('Login error:', err)
+      
+      // Clear authentication on error
       delete axiosInstance.defaults.headers.common['Authorization']
       localStorage.removeItem('token')
       sessionStorage.removeItem('token')
 
-
+      // Extract error message
+      let errorMessage = 'Login failed. Please try again.'
+      
       if (err.response?.data?.detail) {
-        setError(err.response.data.detail)
+        errorMessage = err.response.data.detail
       } else if (err.response?.data?.message) {
-        setError(err.response.data.message)
-      } else if (err.message) {
-        setError(err.message)
-      } else {
-        setError('Login failed. Please try again.')
+        errorMessage = err.response.data.message
+      } else if (err.response?.status === 401) {
+        errorMessage = 'Invalid email or password'
+      } else if (err.response?.status === 404) {
+        errorMessage = 'User not found'
+      } else if (err.message && err.message !== 'Network Error') {
+        errorMessage = err.message
+      } else if (err.code === 'ECONNABORTED') {
+        errorMessage = 'Request timeout. Please try again.'
+      } else if (!navigator.onLine) {
+        errorMessage = 'No internet connection'
       }
+      
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <div style={styles.spinner}></div>
+        <p style={styles.loadingText}>Loading...</p>
+      </div>
+    )
+  }
 
   return (
     <div style={styles.container}>
-      {/* Background Gradient */}
       <div style={styles.backgroundOverlay}></div>
 
-
-      {/* Floating Icons */}
       <div style={styles.floatingIcons}>
-        <div style={{...styles.iconWrapper, ...styles.icon1}}>
+        <div style={{ ...styles.iconWrapper, ...styles.icon1 }}>
           <Shield style={styles.icon} size={32} />
         </div>
-        <div style={{...styles.iconWrapper, ...styles.icon2}}>
+        <div style={{ ...styles.iconWrapper, ...styles.icon2 }}>
           <Zap style={styles.icon} size={28} />
         </div>
-        <div style={{...styles.iconWrapper, ...styles.icon3}}>
+        <div style={{ ...styles.iconWrapper, ...styles.icon3 }}>
           <Star style={styles.icon} size={24} />
         </div>
-        <div style={{...styles.iconWrapper, ...styles.icon4}}>
+        <div style={{ ...styles.iconWrapper, ...styles.icon4 }}>
           <Heart style={styles.icon} size={30} />
         </div>
-        <div style={{...styles.iconWrapper, ...styles.icon5}}>
+        <div style={{ ...styles.iconWrapper, ...styles.icon5 }}>
           <Sparkles style={styles.icon} size={26} />
         </div>
-        <div style={{...styles.iconWrapper, ...styles.icon6}}>
+        <div style={{ ...styles.iconWrapper, ...styles.icon6 }}>
           <Lock style={styles.icon} size={28} />
         </div>
       </div>
 
-
-      {/* Main Content Container */}
       <div style={styles.contentWrapper} className="content-wrapper">
-        {/* Left Side - Floating Image (Desktop Only) */}
         {showImage && (
           <div style={styles.imageSection} className="image-section">
             <div style={styles.imageContainer}>
-              <img 
-                src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&h=700&fit=crop" 
+              <img
+                src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&h=700&fit=crop"
                 alt="Workspace"
                 style={styles.image}
               />
               <div style={styles.imageBorder}></div>
             </div>
-            
-            {/* Decorative Elements */}
-            <div style={{...styles.decorCircle, ...styles.decor1}}></div>
-            <div style={{...styles.decorCircle, ...styles.decor2}}></div>
+
+            <div style={{ ...styles.decorCircle, ...styles.decor1 }}></div>
+            <div style={{ ...styles.decorCircle, ...styles.decor2 }}></div>
           </div>
         )}
 
-
-        {/* Right Side - Login Form */}
         <div style={styles.formSection} className="form-section">
           <div style={styles.card} className="login-card">
             <div style={styles.header}>
@@ -302,7 +313,6 @@ const Login = () => {
               <h1 style={styles.title} className="login-title">Welcome Back</h1>
               <p style={styles.subtitle} className="login-subtitle">Sign in to continue your journey</p>
             </div>
-
 
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.fieldGroup}>
@@ -324,7 +334,6 @@ const Login = () => {
                   />
                 </div>
               </div>
-
 
               <div style={styles.fieldGroup}>
                 <label style={styles.label} htmlFor="password">
@@ -348,27 +357,28 @@ const Login = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     style={styles.eyeButton}
+                    disabled={loading}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
 
-
               <div style={styles.row}>
                 <label style={styles.checkboxContainer}>
-                  <input 
-                    type="checkbox" 
-                    checked={remember} 
+                  <input
+                    type="checkbox"
+                    checked={remember}
                     onChange={(e) => setRemember(e.target.checked)}
                     style={styles.checkbox}
                     disabled={loading}
                   />
                   <span style={styles.checkboxLabel}>Remember me</span>
                 </label>
-                <a href="#" style={styles.forgot}>Forgot password?</a>
+                <a href="#" style={styles.forgot} onClick={(e) => e.preventDefault()}>
+                  Forgot password?
+                </a>
               </div>
-
 
               {error && (
                 <div style={styles.errorContainer}>
@@ -377,9 +387,8 @@ const Login = () => {
                 </div>
               )}
 
-
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 style={{
                   ...styles.button,
                   opacity: loading ? 0.8 : 1,
@@ -389,7 +398,7 @@ const Login = () => {
               >
                 {loading ? (
                   <span style={styles.buttonContent}>
-                    <span style={styles.spinner}></span>
+                    <span style={styles.buttonSpinner}></span>
                     Signing in...
                   </span>
                 ) : (
@@ -397,13 +406,11 @@ const Login = () => {
                 )}
               </button>
 
-
               <div style={styles.divider}>
                 <span style={styles.dividerText}>New to our platform?</span>
               </div>
 
-
-              <a href="#" style={styles.signupLink}>
+              <a href="#" style={styles.signupLink} onClick={(e) => e.preventDefault()}>
                 Create an account
               </a>
             </form>
@@ -414,8 +421,21 @@ const Login = () => {
   )
 }
 
-
 const styles = {
+  loadingContainer: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0a0a0a',
+    color: '#ffffff',
+  },
+  loadingText: {
+    marginTop: '1rem',
+    fontSize: '1rem',
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
   container: {
     minHeight: '100vh',
     display: 'flex',
@@ -717,12 +737,21 @@ const styles = {
     gap: '0.5rem',
   },
   spinner: {
+    width: '40px',
+    height: '40px',
+    border: '3px solid rgba(255, 255, 255, 0.3)',
+    borderTop: '3px solid #ffffff',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  },
+  buttonSpinner: {
     width: '1rem',
     height: '1rem',
     border: '2px solid rgba(255,255,255,0.3)',
     borderTop: '2px solid #ffffff',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
+    display: 'inline-block',
   },
   errorContainer: {
     display: 'flex',
@@ -761,8 +790,8 @@ const styles = {
     textDecoration: 'none',
     fontWeight: '600',
     transition: 'color 0.2s',
+    display: 'block',
   },
 }
-
 
 export default Login

@@ -1,7 +1,5 @@
 import axios from "axios";
 import { BASE_URL } from "./apiPath";
-
-
 const axiosInstance = axios.create({
     baseURL: BASE_URL,
     timeout: 10000,
@@ -10,14 +8,11 @@ const axiosInstance = axios.create({
         Accept: "application/json",
     },
 });
-
-
-
 axiosInstance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            config.headers.Authorization = `Bearer ${ token }`;
         }
         return config;
     },
@@ -25,7 +20,6 @@ axiosInstance.interceptors.request.use(
         return Promise.reject(error);
     }
 );
-
 axiosInstance.interceptors.response.use(
     (response) => {
         return response;
@@ -33,6 +27,7 @@ axiosInstance.interceptors.response.use(
     (error) => {
         if (error.response && error.response.status === 401) {
             localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
             if (window.location.pathname !== '/login') {
                 window.location.href = '/login';
             }
@@ -40,5 +35,4 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(error);
     }
 );
-
 export default axiosInstance;
