@@ -7,6 +7,7 @@ const Table = ({ data = [] }) => {
     status: "",
     priority: "",
     assignee: "",
+    createdDate: "",
   });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [showFilters, setShowFilters] = useState(false);
@@ -19,6 +20,11 @@ const Table = ({ data = [] }) => {
   const uniqueStatuses = [...new Set(data.map((item) => item.status))];
   const uniquePriorities = [...new Set(data.map((item) => item.priority))];
   const uniqueAssignees = [...new Set(data.map((item) => item.assignee))];
+  const uniqueCreatedDates = [...new Set(data.map((item) => {
+    if (!item.created_at) return null;
+    const date = new Date(item.created_at);
+    return `${date.getDate()}-${date.toLocaleString("en-US", { month: "long" })}-${date.getFullYear()}`;
+  }).filter(Boolean))].sort((a, b) => new Date(b) - new Date(a));
 
   const toggleReadMore = (id) => {
     setExpandedRows((prev) => ({
@@ -39,11 +45,17 @@ const Table = ({ data = [] }) => {
   // Filter data
   const filteredData = useMemo(() => {
     return data.filter((item) => {
+      const itemCreatedDate = item.created_at ? (() => {
+        const date = new Date(item.created_at);
+        return `${date.getDate()}-${date.toLocaleString("en-US", { month: "long" })}-${date.getFullYear()}`;
+      })() : null;
+      
       return (
         (filters.dept === "" || item.dept === filters.dept) &&
         (filters.status === "" || item.status === filters.status) &&
         (filters.priority === "" || item.priority === filters.priority) &&
-        (filters.assignee === "" || item.assignee === filters.assignee)
+        (filters.assignee === "" || item.assignee === filters.assignee) &&
+        (filters.createdDate === "" || itemCreatedDate === filters.createdDate)
       );
     });
   }, [data, filters]);
@@ -82,6 +94,7 @@ const Table = ({ data = [] }) => {
       status: "",
       priority: "",
       assignee: "",
+      createdDate: "",
     });
     setCurrentPage(1);
   };
@@ -161,7 +174,7 @@ const Table = ({ data = [] }) => {
             <h3 className="text-lg font-semibold text-white mb-4">
               Filter Options
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
               <div>
                 <label className="block text-sm font-semibold text-white/90 mb-2">
                   Department
@@ -237,6 +250,26 @@ const Table = ({ data = [] }) => {
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-white/90 mb-2">
+                  Created Date
+                </label>
+                <select
+                  value={filters.createdDate}
+                  onChange={(e) =>
+                    handleFilterChange("createdDate", e.target.value)
+                  }
+                  className="w-full px-4 py-2.5 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
+                >
+                  <option value="" className="bg-gray-900">All Dates</option>
+                  {uniqueCreatedDates.map((date) => (
+                    <option key={date} value={date} className="bg-gray-900">
+                      {date}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         )}
@@ -304,6 +337,22 @@ const Table = ({ data = [] }) => {
                     </div>
                   </th>
                   <th
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    onClick={() => handleSort("created_at")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Created Date <SortIcon columnKey="created_at" />
+                    </div>
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    onClick={() => handleSort("completed_at")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Completed Date <SortIcon columnKey="completed_at" />
+                    </div>
+                  </th>
+                  <th
                     className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-red-800 transition"
                     onClick={() => handleSort("updated_at")}
                   >
@@ -365,6 +414,44 @@ const Table = ({ data = [] }) => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-white/70 font-medium">
+                        {item.created_at ? (() => {
+                          const date = new Date(item.created_at);
+
+                          const day = date.getDate();
+                          const month = date.toLocaleString("en-US", {
+                            month: "long",
+                          });
+                          const year = date.getFullYear();
+
+                          let hours = date.getHours();
+                          let minutes = date.getMinutes();
+                          const ampm = hours >= 12 ? "P.M" : "A.M";
+                          hours = hours % 12 || 12;
+                          minutes = minutes.toString().padStart(2, "0");
+
+                          return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
+                        })() : "-"}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-white/70 font-medium">
+                        {item.completed_at ? (() => {
+                          const date = new Date(item.completed_at);
+
+                          const day = date.getDate();
+                          const month = date.toLocaleString("en-US", {
+                            month: "long",
+                          });
+                          const year = date.getFullYear();
+
+                          let hours = date.getHours();
+                          let minutes = date.getMinutes();
+                          const ampm = hours >= 12 ? "P.M" : "A.M";
+                          hours = hours % 12 || 12;
+                          minutes = minutes.toString().padStart(2, "0");
+
+                          return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
+                        })() : "-"}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-white/70 font-medium">
                         {(() => {
                           const date = new Date(item.updated_at);
 
@@ -387,7 +474,7 @@ const Table = ({ data = [] }) => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="px-6 py-12 text-center">
+                    <td colSpan="10" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <X className="w-12 h-12 text-white/40 mb-3" />
                         <p className="text-white/70 font-medium text-lg">
