@@ -6,16 +6,23 @@ from django.utils import timezone
 class Task(models.Model):
     """Main task model with hierarchical delegation support"""
     
+    PRIORITY_CHOICES = [
+        ('urgent', 'Urgent'),
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low'),
+    ]
+    
     STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('on-going', 'On-going'),
         ('completed', 'Completed'),
-        ('over-due', 'Over-due'),
+        ('overdue', 'Overdue'),
     ]
     
     title = models.CharField(max_length=255)
     description = models.TextField()
-    priority = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     due_date = models.DateTimeField()
     
     created_by = models.ForeignKey(
@@ -41,6 +48,7 @@ class Task(models.Model):
         indexes = [
             models.Index(fields=['-created_at']),
             models.Index(fields=['priority']),
+            models.Index(fields=['status']),
             models.Index(fields=['due_date']),
             models.Index(fields=['created_by']),
         ]
@@ -50,9 +58,9 @@ class Task(models.Model):
     
     def update_status(self):
         """Auto-update status based on due date"""
-        if self.priority != 'completed' and timezone.now() > self.due_date:
-            self.priority = 'over-due'
-            self.save(update_fields=['priority'])
+        if self.status != 'completed' and timezone.now() > self.due_date:
+            self.status = 'overdue'
+            self.save(update_fields=['status'])
 
 
 class TaskAssignment(models.Model):

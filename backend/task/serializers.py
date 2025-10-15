@@ -12,7 +12,7 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'id', 'title', 'description', 'department', 'assignee',
-            'priority', 'due_date', 'created_by', 'created_at'
+            'priority', 'status', 'due_date', 'created_by', 'created_at'
         ]
     
     def get_department(self, obj):
@@ -33,7 +33,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'id', 'title', 'description', 'department', 'assignee',
-            'priority', 'due_date', 'created_by', 'created_at',
+            'priority', 'status', 'due_date', 'created_by', 'created_at',
             'history', 'attachments'
         ]
     
@@ -71,7 +71,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'title', 'description', 'department', 'assignee',
-            'priority', 'due_date', 'attachment'
+            'priority', 'status', 'due_date', 'attachment'
         ]
     
     def validate_assignee(self, value):
@@ -123,7 +123,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         # Create task
         task = Task.objects.create(**validated_data)
         
-        # Create assignments - all users are validated at this point
+        # Create assignments
         from staff.models import User
         for email in assignees:
             user = User.objects.get(email=email)

@@ -20,7 +20,7 @@ def dashboard_view(request):
     user = request.user
     
     # Get tasks based on role
-    if user.role == 'admin':
+    if user.role == 'admin' or user.is_superuser:
         tasks = Task.objects.all()
     elif user.role == 'hod':
         tasks = Task.objects.filter(
@@ -31,10 +31,10 @@ def dashboard_view(request):
             assignments__assignee=user
         ).distinct()
     
-    # Calculate stats
+    # Calculate stats based on status (not priority)
     total_tasks = tasks.count()
-    completed_tasks = tasks.filter(priority='completed').count()
-    ongoing_tasks = tasks.filter(priority='on-going').count()
+    completed_tasks = tasks.filter(status='completed').count()
+    ongoing_tasks = tasks.filter(status='pending').count()  # pending = ongoing
     
     return Response({
         'total_task': total_tasks,
