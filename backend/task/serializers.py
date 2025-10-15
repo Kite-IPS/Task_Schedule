@@ -4,7 +4,6 @@ from .models import Task, TaskAssignment, TaskHistory, TaskAttachment
 from staff.serializers import UserSerializer
 
 class TaskSerializer(serializers.ModelSerializer):
-    created_by = UserSerializer(read_only=True)
     department = serializers.SerializerMethodField()
     assignee = serializers.SerializerMethodField()
     
@@ -12,7 +11,7 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'id', 'title', 'description', 'department', 'assignee',
-            'priority', 'status', 'due_date', 'created_by', 'created_at'
+            'priority', 'status', 'due_date', 'created_at', 'completed_at'
         ]
     
     def get_department(self, obj):

@@ -6,17 +6,72 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axiosInstance from "../../Utils/axiosInstance";
 import { API_PATH } from "../../Utils/apiPath";
+import ExcelJS from 'exceljs';
 
 
 const HodDashboard = () => {
   const navigate = useNavigate();
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     total_task: 0,
     completed_task: 0,
     ongoing_task: 0
   });
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // Export to Excel function
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Tasks');
+
+    // Define columns
+    worksheet.columns = [
+      { header: 'S.No', key: 'sno', width: 5 },
+      { header: 'Title', key: 'title', width: 20 },
+      { header: 'Description', key: 'description', width: 30 },
+      { header: 'Assignee(s)', key: 'assignee', width: 25 },
+      { header: 'Department', key: 'department', width: 20 },
+      { header: 'Status', key: 'status', width: 10 },
+      { header: 'Priority', key: 'priority', width: 10 },
+      { header: 'Due Date', key: 'dueDate', width: 12 },
+      { header: 'Created Date', key: 'createdDate', width: 12 },
+      { header: 'Completed Date', key: 'completedDate', width: 12 }
+    ];
+
+    // Add data rows
+    tasks.forEach((task, index) => {
+      worksheet.addRow({
+        sno: index + 1,
+        title: task.title,
+        description: task.description,
+        assignee: task.assignee,
+        department: Array.isArray(task.dept) ? task.dept.join(', ') : task.dept,
+        status: task.status,
+        priority: task.priority,
+        dueDate: task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-',
+        createdDate: task.created_at ? new Date(task.created_at).toLocaleDateString() : '-',
+        completedDate: task.completed_at ? new Date(task.completed_at).toLocaleDateString() : '-'
+      });
+    });
+
+    // Style the header row
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE6E6FA' }
+    };
+
+    // Generate and download the file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tasks_report.xlsx';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -31,14 +86,14 @@ const HodDashboard = () => {
           title: task.title,
           description: task.description,
           assignee: task.assignee && task.assignee.length > 0 
-            ? (task.assignee[0].full_name) 
+            ? task.assignee.map(a => a.full_name || a.email).join(', ') // Join all assignees
             : 'Unassigned',
           dept: task.department,
           status: task.status.charAt(0).toUpperCase() + task.status.slice(1), // Capitalize status
           priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1), // Capitalize priority
           dueDate: task.due_date,
           created_at: task.created_at,
-          created_by: task.created_by ? (task.created_by.full_name) : 'Unknown' // Convert created_by to string
+          completed_at: task.completed_at // Add completed date
         }));
         setTasks(transformedTasks);
 
@@ -107,7 +162,10 @@ const HodDashboard = () => {
         <div className="w-[90%] md:w-[80%] mx-auto my-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 ">
           <h1 className="text-xl md:text-2xl font-bold text-white">Tasks Table:</h1>
           <div className="flex items-center gap-2 w-full md:w-auto flex-row">
-            <button className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm w-auto">
+            <button 
+              onClick={exportToExcel}
+              className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm w-auto"
+            >
               Export Data <Download className="w-4 h-4" />
             </button>
           </div>
