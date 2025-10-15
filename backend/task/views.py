@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from .utils import send_task_assignment_email
 from django.db.models import Q, Count
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from .models import Task, TaskAssignment
 from .serializers import TaskSerializer, TaskDetailSerializer, TaskCreateSerializer
 from .permissions import IsAdmin, IsHOD, IsAdminOrHOD
@@ -108,7 +109,7 @@ def get_task(request, task_id):
             status=status.HTTP_404_NOT_FOUND
         )
 
-
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsAdminOrHOD])
 def create_task(request):
