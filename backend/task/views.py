@@ -175,6 +175,15 @@ def update_task(request, task_id):
             task.priority = request.data['priority']
             changes['priority'] = {'old': old_values['priority'], 'new': task.priority}
         
+        if 'status' in request.data and task.status != request.data['status']:
+            old_values['status'] = task.status
+            task.status = request.data['status']
+            changes['status'] = {'old': old_values['status'], 'new': task.status}
+
+            if task.status == 'completed' and not task.completed_at:
+                task.completed_at = timezone.now()
+            elif task.status != 'completed' and task.completed_at:
+                task.completed_at = None
         # Only save and create history if something changed
         if changes:
             task.save()
