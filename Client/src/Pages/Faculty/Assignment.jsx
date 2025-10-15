@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Edit, Trash2, X, Home, Eye } from "lucide-react";
 import BaseLayout from "../../Components/Layouts/BaseLayout";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../Utils/axiosInstance";
+import { API_PATH } from "../../Utils/apiPath";
 
 const Assignment = () => {
   const [tasks, setTasks] = useState([
@@ -46,21 +48,48 @@ const Assignment = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
   const [selectedTask, setSelectedTask] = useState(null);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     assignee: "",
-    department: "",
-    status: "Pending",
-    priority: "Medium",
+    status: "pending",
+    priority: "medium",
     dueDate: "",
   });
 
-  const statuses = ["Pending", "In Progress", "Completed"];
-  const priorities = ["Low", "Medium", "High", "Urgent"];
-  const departments = ["CSE", "IT", "ECE", "EEE", "MECH"];
+  const statuses = [
+    { code: "pending", name: "Pending" },
+    { code: "completed", name: "Completed" },
+    { code: "overdue", name: "Overdue" }
+  ];
+  const priorities = [
+    { code: "low", name: "Low" },
+    { code: "medium", name: "Medium" },
+    { code: "high", name: "High" },
+    { code: "urgent", name: "Urgent" }
+  ];
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setUsersLoading(true);
+      try {
+        const response = await axiosInstance.get(API_PATH.USER.ALL);
+        setUsers(response.data.users || []);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setUsers([]);
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   useMemo(() => {
     let filtered = tasks.filter((task) => {
@@ -93,9 +122,8 @@ const Assignment = () => {
       title: "",
       description: "",
       assignee: "",
-      department: "",
-      status: "Pending",
-      priority: "Medium",
+      status: "pending",
+      priority: "medium",
       dueDate: "",
     });
     setSelectedTask(null);
@@ -122,9 +150,8 @@ const Assignment = () => {
       title: "",
       description: "",
       assignee: "",
-      department: "",
-      status: "Pending",
-      priority: "Medium",
+      status: "pending",
+      priority: "medium",
       dueDate: "",
     });
     setSelectedTask(null);
@@ -135,20 +162,68 @@ const Assignment = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCreateTask = () => {
+  const handleCreateTask = async () => {
     if (
       formData.title &&
       formData.description &&
       formData.assignee &&
-      formData.department &&
       formData.dueDate
     ) {
-      const newTask = {
-        id: Math.max(...tasks.map((t) => t.id), 0) + 1,
-        ...formData,
-      };
-      setTasks([...tasks, newTask]);
-      closeModal();
+      setCreateLoading(true);
+      try {
+        // Get the selected user's department
+        const selectedUser = users.find(user => user.email === formData.assignee);
+        const userDepartment = selectedUser?.department;
+
+        if (!userDepartment) {
+          alert("Selected user doesn't have a department assigned. Please select a different user.");
+          setCreateLoading(false);
+          return;
+        }
+
+        const taskData = {
+          title: formData.title,
+          description: formData.description,
+          assignee: [formData.assignee], // Backend expects array of emails
+          department: [userDepartment], // Use assignee's department
+          priority: formData.priority || 'medium',
+          status: formData.status || 'pending',
+          due_date: formData.dueDate
+        };
+
+        const response = await axiosInstance.post(API_PATH.TASK.CREATE, taskData);
+        
+        console.log("Task created successfully:", response.data);
+        
+        // Add the new task to local state with the response data
+        const newTask = {
+          id: response.data.id,
+          title: response.data.title,
+          description: response.data.description,
+          assignee: formData.assignee, // Display format for UI
+          department: userDepartment.toUpperCase(), // Display format for UI (from assignee)
+          status: response.data.status || formData.status,
+          priority: response.data.priority || formData.priority,
+          dueDate: formData.dueDate,
+        };
+        
+        setTasks([...tasks, newTask]);
+        closeModal();
+        
+        // Show success message
+        alert("Task created successfully!");
+        
+      } catch (error) {
+        console.error("Error creating task:", error);
+        const errorMessage = error.response?.data?.detail || 
+                           error.response?.data?.message || 
+                           error.response?.data?.error ||
+                           error.message ||
+                           "Unknown error occurred";
+        alert("Error creating task: " + errorMessage);
+      } finally {
+        setCreateLoading(false);
+      }
     } else {
       alert("Please fill all required fields");
     }
@@ -159,7 +234,6 @@ const Assignment = () => {
       formData.title &&
       formData.description &&
       formData.assignee &&
-      formData.department &&
       formData.dueDate
     ) {
       setTasks(tasks.map((t) => (t.id === selectedTask.id ? formData : t)));
@@ -259,8 +333,8 @@ const Assignment = () => {
             >
               <option value="All" className="bg-gray-900">All Status</option>
               {statuses.map((status) => (
-                <option key={status} value={status} className="bg-gray-900">
-                  {status}
+                <option key={status.code} value={status.name} className="bg-gray-900">
+                  {status.name}
                 </option>
               ))}
             </select>
@@ -271,8 +345,8 @@ const Assignment = () => {
             >
               <option value="All" className="bg-gray-900">All Priorities</option>
               {priorities.map((priority) => (
-                <option key={priority} value={priority} className="bg-gray-900">
-                  {priority}
+                <option key={priority.code} value={priority.name} className="bg-gray-900">
+                  {priority.name}
                 </option>
               ))}
             </select>
@@ -459,7 +533,9 @@ const Assignment = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-white/90 mb-1">Department</h3>
-                    <p className="text-white">{formData.department}</p>
+                    <p className="text-white">
+                      {users.find(user => user.email === formData.assignee)?.department?.toUpperCase() || 'Not assigned'}
+                    </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
@@ -520,39 +596,29 @@ const Assignment = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-1">
-                    Assignee *
-                  </label>
-                  <input
-                    type="text"
-                    name="assignee"
-                    value={formData.assignee}
-                    onChange={handleInputChange}
-                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
-                    placeholder="Enter assignee name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-1">
-                    Department *
-                  </label>
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                  >
-                    <option value="" className="bg-gray-900">Select Department</option>
-                    {departments.map((dept) => (
-                      <option key={dept} value={dept} className="bg-gray-900">
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-white/90 mb-1">
+                  Assignee *
+                </label>
+                <select
+                  name="assignee"
+                  value={formData.assignee}
+                  onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
+                  className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                  disabled={usersLoading}
+                >
+                  <option value="" className="bg-gray-900">
+                    {usersLoading ? "Loading users..." : "Select Assignee"}
+                  </option>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.email} className="bg-gray-900">
+                      {user.name} ({user.email}) - {user.role} {user.department && `- ${user.department.toUpperCase()}`}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-white/60 mt-1">
+                  Department will be automatically set based on the assignee's department
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -567,8 +633,8 @@ const Assignment = () => {
                     className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                   >
                     {statuses.map((status) => (
-                      <option key={status} value={status} className="bg-gray-900">
-                        {status}
+                      <option key={status.code} value={status.code} className="bg-gray-900">
+                        {status.name}
                       </option>
                     ))}
                   </select>
@@ -585,8 +651,8 @@ const Assignment = () => {
                     className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                   >
                     {priorities.map((priority) => (
-                      <option key={priority} value={priority} className="bg-gray-900">
-                        {priority}
+                      <option key={priority.code} value={priority.code} className="bg-gray-900">
+                        {priority.name}
                       </option>
                     ))}
                   </select>
@@ -619,9 +685,14 @@ const Assignment = () => {
                   onClick={
                     modalMode === "create" ? handleCreateTask : handleUpdateTask
                   }
-                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
+                  disabled={modalMode === "create" ? createLoading : false}
+                  className={`flex-1 px-4 py-2 text-white rounded-lg transition font-medium ${
+                    modalMode === "create" && createLoading
+                      ? 'bg-gray-600 cursor-not-allowed'
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
                 >
-                  {modalMode === "create" ? "Create" : "Update"}
+                  {modalMode === "create" ? (createLoading ? "Creating..." : "Create") : "Update"}
                 </button>
               </div>
               </>

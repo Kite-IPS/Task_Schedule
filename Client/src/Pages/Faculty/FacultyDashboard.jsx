@@ -15,20 +15,37 @@ const FacultyDashboard = () => {
     ongoing_task: 0
   });
   const [loading, setLoading] = useState(true);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     assignee: "",
-    department: "",
-    status: "Pending",
-    priority: "Medium",
+    status: "pending",
+    priority: "medium",
     dueDate: "",
   });
 
 
-  const statuses = ["Pending", "In Progress", "Completed"];
-  const priorities = ["Low", "Medium", "High", "Urgent"];
-  const departments = ["CSE", "IT", "ECE", "EEE", "MECH"];
+  const statuses = [
+    { code: "pending", name: "Pending" },
+    { code: "completed", name: "Completed" },
+    { code: "overdue", name: "Overdue" }
+  ];
+  const priorities = [
+    { code: "low", name: "Low" },
+    { code: "medium", name: "Medium" },
+    { code: "high", name: "High" },
+    { code: "urgent", name: "Urgent" }
+  ];
+  const departments = [
+    { code: "cse", name: "Computer Science" },
+    { code: "ece", name: "Electronics" }, 
+    { code: "mech", name: "Mechanical" },
+    { code: "civil", name: "Civil" },
+    { code: "eee", name: "Electrical" }
+  ];
 
 
   // Mock data for recent activities
@@ -52,7 +69,21 @@ const FacultyDashboard = () => {
       }
     };
 
+    const fetchUsers = async () => {
+      setUsersLoading(true);
+      try {
+        const response = await axiosInstance.get(API_PATH.USER.ALL);
+        setUsers(response.data.users || []);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setUsers([]);
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
     fetchDashboardStats();
+    fetchUsers();
   }, []);
 
 
@@ -61,9 +92,8 @@ const FacultyDashboard = () => {
       title: "",
       description: "",
       assignee: "",
-      department: "",
-      status: "Pending",
-      priority: "Medium",
+      status: "pending",
+      priority: "medium",
       dueDate: "",
     });
     setIsModalOpen(true);
@@ -76,9 +106,8 @@ const FacultyDashboard = () => {
       title: "",
       description: "",
       assignee: "",
-      department: "",
-      status: "Pending",
-      priority: "Medium",
+      status: "pending",
+      priority: "medium",
       dueDate: "",
     });
   };
@@ -90,18 +119,59 @@ const FacultyDashboard = () => {
   };
 
 
-  const handleCreateTask = () => {
+
+
+  const handleCreateTask = async () => {
     if (
       formData.title &&
       formData.description &&
       formData.assignee &&
-      formData.department &&
       formData.dueDate
     ) {
-      // TODO: API call to create task
-      console.log("Creating task:", formData);
-      closeModal();
-      // Show success message or refresh data
+      setCreateLoading(true);
+      try {
+        // Get the selected user's department
+        const selectedUser = users.find(user => user.email === formData.assignee);
+        const userDepartment = selectedUser?.department;
+
+        if (!userDepartment) {
+          alert("Selected user doesn't have a department assigned. Please select a different user.");
+          setCreateLoading(false);
+          return;
+        }
+
+        const taskData = {
+          title: formData.title,
+          description: formData.description,
+          assignee: [formData.assignee], // Backend expects array of emails
+          department: [userDepartment], // Use assignee's department
+          priority: formData.priority || 'medium',
+          status: formData.status || 'pending',
+          due_date: formData.dueDate
+        };
+
+        const response = await axiosInstance.post(API_PATH.TASK.CREATE, taskData);
+        
+        console.log("Task created successfully:", response.data);
+        closeModal();
+        
+        // Show success message
+        alert("Task created successfully!");
+        
+        // Optionally refresh the dashboard stats
+        // You could call fetchDashboardStats() here if needed
+        
+      } catch (error) {
+        console.error("Error creating task:", error);
+        const errorMessage = error.response?.data?.detail || 
+                           error.response?.data?.message || 
+                           error.response?.data?.error ||
+                           error.message ||
+                           "Unknown error occurred";
+        alert("Error creating task: " + errorMessage);
+      } finally {
+        setCreateLoading(false);
+      }
     } else {
       alert("Please fill all required fields");
     }
@@ -251,40 +321,29 @@ const FacultyDashboard = () => {
               </div>
 
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-white/90 mb-2">
-                    Assignee <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="assignee"
-                    value={formData.assignee}
-                    onChange={handleInputChange}
-                    className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white placeholder-white/40 transition-all duration-200"
-                    placeholder="Enter assignee name"
-                  />
-                </div>
-
-
-                <div>
-                  <label className="block text-sm font-semibold text-white/90 mb-2">
-                    Department <span className="text-red-400">*</span>
-                  </label>
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white transition-all duration-200"
-                  >
-                    <option value="" className="bg-gray-900">Select Department</option>
-                    {departments.map((dept) => (
-                      <option key={dept} value={dept} className="bg-gray-900">
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-white/90 mb-2">
+                  Assignee <span className="text-red-400">*</span>
+                </label>
+                <select
+                  name="assignee"
+                  value={formData.assignee}
+                  onChange={handleInputChange}
+                  className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white transition-all duration-200"
+                  disabled={usersLoading}
+                >
+                  <option value="" className="bg-gray-900">
+                    {usersLoading ? "Loading users..." : "Select Assignee"}
+                  </option>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.email} className="bg-gray-900">
+                      {user.name} ({user.email}) - {user.role} {user.department && `- ${user.department.toUpperCase()}`}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-white/60 mt-1">
+                  * Department will be automatically set based on the assignee's department
+                </p>
               </div>
 
 
@@ -300,8 +359,8 @@ const FacultyDashboard = () => {
                     className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white transition-all duration-200"
                   >
                     {statuses.map((status) => (
-                      <option key={status} value={status} className="bg-gray-900">
-                        {status}
+                      <option key={status.code} value={status.code} className="bg-gray-900">
+                        {status.name}
                       </option>
                     ))}
                   </select>
@@ -319,8 +378,8 @@ const FacultyDashboard = () => {
                     className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white transition-all duration-200"
                   >
                     {priorities.map((priority) => (
-                      <option key={priority} value={priority} className="bg-gray-900">
-                        {priority}
+                      <option key={priority.code} value={priority.code} className="bg-gray-900">
+                        {priority.name}
                       </option>
                     ))}
                   </select>
@@ -353,9 +412,14 @@ const FacultyDashboard = () => {
               </button>
               <button
                 onClick={handleCreateTask}
-                className="w-full sm:flex-1 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                disabled={createLoading}
+                className={`w-full sm:flex-1 px-5 py-2.5 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl ${
+                  createLoading 
+                    ? 'bg-gray-600 cursor-not-allowed' 
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
               >
-                Create Task
+                {createLoading ? 'Creating...' : 'Create Task'}
               </button>
             </div>
           </div>

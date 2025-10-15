@@ -5,6 +5,9 @@ export const API_PATH = {
         LOGIN:"/api/auth/login/",
         INFO:'/api/auth/info/'
     },
+    USER:{
+        ALL:'/api/auth/users/'
+    },
     TASK:{
         DASHBOARD:'/api/dashboard/',
         ALL:'/api/tasks/',
