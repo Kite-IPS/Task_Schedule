@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axiosInstance from "../../Utils/axiosInstance";
 import { API_PATH } from "../../Utils/apiPath";
-// import { data } from "../../DevSample/sample";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -32,15 +31,61 @@ const AdminDashboard = () => {
     const fetchAllTasks = async () => {
       try {
         const response = await axiosInstance.get(API_PATH.TASK.ALL);
-        setData(response.data);
+        
+        // Transform API data to match Table component expectations
+        if (response.data.tasks && Array.isArray(response.data.tasks)) {
+          const transformedData = response.data.tasks.map(task => ({
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            dept: task.department, // Map department to dept
+            status: formatStatus(task.status), // Format status to Title Case
+            assignee: formatAssignees(task.assignee), // Extract assignee names
+            priority: formatPriority(task.priority), // Format priority to Title Case
+            created_at: task.created_at,
+            completed_at: task.completed_at || null,
+            dueDate: task.due_date // Map due_date to dueDate
+          }));
+          setData(transformedData);
+        } else if (Array.isArray(response.data)) {
+          setData(response.data);
+        } else {
+          console.error('Unexpected data structure:', response.data);
+          setData([]);
+        }
       } catch (error) {
         console.error('Error Fetching In Getting all tasks:', error);
+        setData([]);
       }
     };
 
     fetchDashboardStats();
     fetchAllTasks();
   }, []);
+
+  // Helper function to format status (pending -> Pending, in_progress -> In Progress)
+  const formatStatus = (status) => {
+    if (!status) return '';
+    return status
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  // Helper function to format priority (urgent -> Urgent)
+  const formatPriority = (priority) => {
+    if (!priority) return '';
+    return priority.charAt(0).toUpperCase() + priority.slice(1).toLowerCase();
+  };
+
+  // Helper function to extract assignee names
+  const formatAssignees = (assignees) => {
+    if (!assignees) return '';
+    if (Array.isArray(assignees)) {
+      return assignees.map(a => a.full_name || a.email).join(', ');
+    }
+    return assignees;
+  };
 
   return (
     <BaseLayout>
@@ -94,6 +139,9 @@ const AdminDashboard = () => {
         </div>
       </div>
       <div className="w-[90%] md:w-[80%] mx-auto my-4">
+        <div className="mb-2 text-white/50 text-sm">
+          Total tasks loaded: {data.length}
+        </div>
         <Table data={data} />
       </div>
     </BaseLayout>
