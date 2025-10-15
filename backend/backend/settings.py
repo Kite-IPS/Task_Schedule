@@ -27,6 +27,18 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Replace with your SMTP server
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = ''  # Replace with your email
+EMAIL_HOST_PASSWORD = ''  # Replace with your email password or app password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Frontend URL for email links
+FRONTEND_URL = 'http://localhost:5173'  # Replace with your frontend URL
+
 
 # Application definition
 

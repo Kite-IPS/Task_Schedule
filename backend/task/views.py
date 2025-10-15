@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from .utils import send_task_assignment_email
 from django.db.models import Q, Count
 from django.utils import timezone
 from .models import Task, TaskAssignment
@@ -121,10 +122,57 @@ def create_task(request):
     # Set created_by
     task = serializer.save(created_by=request.user)
     
+    # Send email notifications to assigned staff and their HODs
+    for assignment in task.assignments.all():
+        send_task_assignment_email(task, assignment.assignee)
+    
     return Response(
         TaskDetailSerializer(task).data,
         status=status.HTTP_201_CREATED
     )
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def update_task(request, task_id):
+    """Update task details (Admin only)"""
+    try:
+        task = Task.objects.get(id=task_id)
+        
+        # Update fields
+        if 'title' in request.data:
+            task.title = request.data['title']
+        if 'description' in request.data:
+            task.description = request.data['description']
+        if 'deadline' in request.data:
+            task.deadline = request.data['deadline']
+        if 'priority' in request.data:
+            task.priority = request.data['priority']
+        
+        task.save()
+        return Response(TaskDetailSerializer(task).data)
+        
+    except Task.DoesNotExist:
+        return Response(
+            {'error': 'Task not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def delete_task(request, task_id):
+    """Delete task (Admin only)"""
+    try:
+        task = Task.objects.get(id=task_id)
+        task.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+        
+    except Task.DoesNotExist:
+        return Response(
+            {'error': 'Task not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
 
 @api_view(['GET'])

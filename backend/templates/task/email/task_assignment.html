@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { padding: 20px; }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>New Task Assignment</h2>
+        <p>Hello {{ assignee.get_full_name }},</p>
+        <p>You have been assigned a new task:</p>
+        
+        <h3>{{ task.title }}</h3>
+        <p><strong>Description:</strong> {{ task.description }}</p>
+        <p><strong>Deadline:</strong> {{ task.deadline|date:"F j, Y, g:i a" }}</p>
+        <p><strong>Priority:</strong> {{ task.priority }}</p>
+        
+        <p>
+            <a href="{{ task_url }}" class="button">View Task</a>
+        </p>
+        
+        <p>Please start working on this task as soon as possible.</p>
+        
+        <p>Best regards,<br>Task Management System</p>
+    </div>
+</body>
+</html>
