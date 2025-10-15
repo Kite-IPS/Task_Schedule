@@ -41,8 +41,8 @@ class User(AbstractUser):
         ('cse', 'Computer Science'),
         ('ece', 'Electronics'),
         ('mech', 'Mechanical'),
-        ('civil', 'Civil'),
-        ('eee', 'Electrical'),
+        ('it', 'Information Technology'),
+        ('csbs', 'Computer Science & Business Systems'),
     ]
     
     username = None  # Remove username field
