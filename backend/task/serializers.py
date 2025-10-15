@@ -16,10 +16,16 @@ class TaskSerializer(serializers.ModelSerializer):
         ]
     
     def get_department(self, obj):
-        return list(obj.assignments.values_list('department', flat=True).distinct())
+        departments = obj.assignments.values_list('department', flat=True).distinct()
+        return list(departments)
     
     def get_assignee(self, obj):
-        return list(obj.assignments.values_list('assignee__email', flat=True))
+        assignments = obj.assignments.select_related('assignee').all()
+        return [{
+            'email': assignment.assignee.email,
+            'full_name': assignment.assignee.get_full_name(),
+            'department': assignment.department
+        } for assignment in assignments]
 
 
 class TaskDetailSerializer(serializers.ModelSerializer):

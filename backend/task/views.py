@@ -55,20 +55,18 @@ def get_all_tasks(request):
     if user.role == 'admin':
         tasks = Task.objects.all()
     elif user.role == 'hod':
-        print(f"HOD User: {user.email}")
-        print(f"HOD Department: {user.department}")  # Check if None
+        # Get all staff in the HOD's department
+        from staff.models import User
+        department_staff = User.objects.filter(department=user.department, role='staff')
         
-        # Check all task assignments
-        all_assignments = TaskAssignment.objects.all()
-        print(f"Total assignments: {all_assignments.count()}")
-        print(f"Unique departments in assignments: {list(all_assignments.values_list('department', flat=True).distinct())}")
-        
-        # Filter tasks
+        # Get tasks where any of the department staff are assigned
         tasks = Task.objects.filter(
-            assignments__department=user.department
+            assignments__assignee__in=department_staff
         ).distinct()
         
-        print(f"Tasks found for HOD: {tasks.count()}")
+        print(f"HOD Department: {user.department}")
+        print(f"Department Staff Count: {department_staff.count()}")
+        print(f"Tasks found for HOD's department: {tasks.count()}")
     else:  # staff
         tasks = Task.objects.filter(
             assignments__assignee=user
