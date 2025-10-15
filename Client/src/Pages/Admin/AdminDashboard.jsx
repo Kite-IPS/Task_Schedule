@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axiosInstance from "../../Utils/axiosInstance";
 import { API_PATH } from "../../Utils/apiPath";
+// import { data } from "../../DevSample/sample";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const AdminDashboard = () => {
     ongoing_task: 0
   });
   const [loading, setLoading] = useState(true);
+  const [data, setData] = useState([]);
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
@@ -27,7 +29,17 @@ const AdminDashboard = () => {
       }
     };
 
+    const fetchAllTasks = async () => {
+      try {
+        const response = await axiosInstance.get(API_PATH.TASK.ALL);
+        setData(response.data);
+      } catch (error) {
+        console.error('Error Fetching In Getting all tasks:', error);
+      }
+    };
+
     fetchDashboardStats();
+    fetchAllTasks();
   }, []);
 
   return (

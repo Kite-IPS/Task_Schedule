@@ -2,6 +2,9 @@ import React, { useState, useMemo } from "react";
 import { ChevronUp, ChevronDown, Filter, X } from "lucide-react";
 
 const Table = ({ data = [] }) => {
+  // Safety check: ensure data is an array
+  const safeData = Array.isArray(data) ? data : [];
+
   const [filters, setFilters] = useState({
     dept: "",
     status: "",
@@ -15,12 +18,18 @@ const Table = ({ data = [] }) => {
   const [expandedRows, setExpandedRows] = useState({});
   const itemsPerPage = 5;
 
+  // Helper function to get department as string
+  const getDeptString = (dept) => {
+    if (Array.isArray(dept)) return dept.join(', ');
+    return dept || '';
+  };
+
   // Get unique values for filter options
-  const uniqueDepts = [...new Set(data.map((item) => item.dept))];
-  const uniqueStatuses = [...new Set(data.map((item) => item.status))];
-  const uniquePriorities = [...new Set(data.map((item) => item.priority))];
-  const uniqueAssignees = [...new Set(data.map((item) => item.assignee))];
-  const uniqueCreatedDates = [...new Set(data.map((item) => {
+  const uniqueDepts = [...new Set(safeData.map((item) => getDeptString(item.dept)))].filter(Boolean);
+  const uniqueStatuses = [...new Set(safeData.map((item) => item.status))].filter(Boolean);
+  const uniquePriorities = [...new Set(safeData.map((item) => item.priority))].filter(Boolean);
+  const uniqueAssignees = [...new Set(safeData.map((item) => item.assignee))].filter(Boolean);
+  const uniqueCreatedDates = [...new Set(safeData.map((item) => {
     if (!item.created_at) return null;
     const date = new Date(item.created_at);
     return `${date.getDate()}-${date.toLocaleString("en-US", { month: "long" })}-${date.getFullYear()}`;
@@ -44,29 +53,37 @@ const Table = ({ data = [] }) => {
 
   // Filter data
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
+    return safeData.filter((item) => {
       const itemCreatedDate = item.created_at ? (() => {
         const date = new Date(item.created_at);
         return `${date.getDate()}-${date.toLocaleString("en-US", { month: "long" })}-${date.getFullYear()}`;
       })() : null;
       
+      const itemDept = getDeptString(item.dept);
+      
       return (
-        (filters.dept === "" || item.dept === filters.dept) &&
+        (filters.dept === "" || itemDept === filters.dept) &&
         (filters.status === "" || item.status === filters.status) &&
         (filters.priority === "" || item.priority === filters.priority) &&
         (filters.assignee === "" || item.assignee === filters.assignee) &&
         (filters.createdDate === "" || itemCreatedDate === filters.createdDate)
       );
     });
-  }, [data, filters]);
+  }, [safeData, filters]);
 
   // Sort data
   const sortedData = useMemo(() => {
     let sorted = [...filteredData];
     if (sortConfig.key) {
       sorted.sort((a, b) => {
-        const aValue = a[sortConfig.key];
-        const bValue = b[sortConfig.key];
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        // Handle dept specially since it might be an array
+        if (sortConfig.key === 'dept') {
+          aValue = getDeptString(aValue);
+          bValue = getDeptString(bValue);
+        }
 
         if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
@@ -390,7 +407,7 @@ const Table = ({ data = [] }) => {
                           )}
                       </td>
                       <td className="px-6 py-4 text-sm text-white/80 font-medium">
-                        {item.dept.join(', ')}
+                        {getDeptString(item.dept)}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span
@@ -452,7 +469,7 @@ const Table = ({ data = [] }) => {
                         })() : "-"}
                       </td>
                       <td className="px-6 py-4 text-sm text-white/70 font-medium">
-                        {(() => {
+                        {item.updated_at ? (() => {
                           const date = new Date(item.updated_at);
 
                           const day = date.getDate();
@@ -468,7 +485,7 @@ const Table = ({ data = [] }) => {
                           minutes = minutes.toString().padStart(2, "0");
 
                           return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
-                        })()}
+                        })() : "-"}
                       </td>
                     </tr>
                   ))
