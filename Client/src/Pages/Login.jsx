@@ -306,8 +306,8 @@ const Login = () => {
           <div style={styles.imageSection} className="image-section">
             <div style={styles.imageContainer}>
               <img
-                src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&h=700&fit=crop"
-                alt="Workspace"
+                src="/TaskSchLogo.png"
+                alt="Task Scheduler Logo"
                 style={styles.image}
               />
               <div style={styles.imageBorder}></div>
@@ -324,7 +324,7 @@ const Login = () => {
               <div style={styles.iconBadge}>
                 <Lock size={24} color="#667eea" />
               </div>
-              <h1 style={styles.title} className="login-title">Welcome Back</h1>
+              <h1 style={styles.title} className="login-title">Welcome</h1>
               <p style={styles.subtitle} className="login-subtitle">Sign in to continue your journey</p>
             </div>
 
@@ -389,9 +389,9 @@ const Login = () => {
                   />
                   <span style={styles.checkboxLabel}>Remember me</span>
                 </label>
-                <a href="#" style={styles.forgot} onClick={(e) => e.preventDefault()}>
+                {/* <a href="#" style={styles.forgot} onClick={(e) => e.preventDefault()}>
                   Forgot password?
-                </a>
+                </a> */}
               </div>
 
               {error && (
@@ -420,13 +420,13 @@ const Login = () => {
                 )}
               </button>
 
-              <div style={styles.divider}>
+              {/* <div style={styles.divider}>
                 <span style={styles.dividerText}>New to our platform?</span>
               </div>
 
               <a href="#" style={styles.signupLink} onClick={(e) => e.preventDefault()}>
                 Create an account
-              </a>
+              </a> */}
             </form>
           </div>
         </div>
@@ -737,11 +737,12 @@ const styles = {
     fontSize: '1rem',
     fontWeight: '600',
     borderRadius: '12px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    /* use project palette: red primary, white text, subtle dark shadow */
+    background: '#dc2626', /* red-600 */
     color: '#ffffff',
     border: 'none',
-    transition: 'all 0.2s ease-in-out',
-    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+    transition: 'all 0.15s ease-in-out',
+    boxShadow: '0 6px 20px rgba(0,0,0,0.45)',
     letterSpacing: '0.025em',
   },
   buttonContent: {

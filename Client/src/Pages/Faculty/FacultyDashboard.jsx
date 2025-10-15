@@ -105,33 +105,33 @@ const FacultyDashboard = () => {
 
       {/* Stats Cards - 2 cards in first row on mobile, third card below */}
       <div className="w-[90%] md:w-[80%] mx-auto grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 my-10">
-        <div className="py-8 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl">
-          <h2 className="text-base md:text-xl font-semibold mb-2 md:mb-4 text-white/80">Total Assigned Tasks</h2>
-          <p className="text-3xl md:text-5xl font-bold text-green-400">25</p>
+        <div className="h-[100px] md:h-auto flex flex-col justify-center py-0 md:py-8 px-4 md:px-10 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl">
+          <h2 className="font-semibold mb-3 text-white/80 text-[17px] md:text-xl">Total Assigned Tasks</h2>
+          <p className="font-bold text-green-400 text-[18px] md:text-5xl">25</p>
         </div>
-        <div className="py-8 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl">
-          <h2 className="text-base md:text-xl font-semibold mb-2 md:mb-4 text-white/80">Completed Tasks</h2>
-          <p className="text-3xl md:text-5xl font-bold text-blue-400">18</p>
+        <div className="h-[100px] md:h-auto flex flex-col justify-center py-0 md:py-8 px-4 md:px-10 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl">
+          <h2 className="font-semibold mb-3 text-white/80 text-[17px] md:text-xl">Completed Tasks</h2>
+          <p className="font-bold text-blue-400 text-[18px] md:text-5xl">18</p>
         </div>
-        <div className="py-8 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl col-span-2 lg:col-span-1">
-          <h2 className="text-base md:text-xl font-semibold mb-2 md:mb-4 text-white/80">Pending Tasks</h2>
-          <p className="text-3xl md:text-5xl font-bold text-orange-400">7</p>
+        <div className="h-[60px] md:h-auto md:pt-8 flex md:flex-col md:justify-center items-center       md:items-start justify-between md:justify-start px-4 md:px-10 text-white bg-white/5 backdrop-blur-md       border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10      transition-all shadow-lg hover:shadow-2xl col-span-2 lg:col-span-1">
+          <h2 className="font-semibold text-white/80 text-[17px] md:text-xl mb-3">Pending Tasks</h2>
+          <p className="font-bold text-orange-400 text-[18px] md:text-5xl">7</p>
         </div>
       </div>
 
 
       {/* Action Buttons - Equal width on mobile, centered on desktop */}
       <div className="w-[90%] md:w-[80%] mx-auto my-8">
-        <div className="flex flex-col sm:flex-row justify-center gap-4 md:gap-6">
+        <div className="flex flex-row justify-center items-center gap-4 md:gap-6 flex-wrap md:flex-nowrap">
           <button
-            className="w-full sm:w-auto bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-medium text-base md:text-lg shadow-lg hover:shadow-xl hover:scale-105"
+            className="w-auto bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-medium text-base md:text-lg shadow-lg hover:shadow-xl hover:scale-105"
             onClick={openCreateModal}
           >
             <Plus className="w-5 h-5" />
             Create Task
           </button>
           <button
-            className="w-full sm:w-auto bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-medium text-base md:text-lg shadow-lg hover:shadow-xl hover:scale-105"
+            className="w-auto bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-medium text-base md:text-lg shadow-lg hover:shadow-xl hover:scale-105"
             onClick={() => navigate("/faculty/assign")}
           >
             <Eye className="w-5 h-5" />
