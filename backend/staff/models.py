@@ -38,11 +38,16 @@ class User(AbstractUser):
     ]
     
     DEPARTMENT_CHOICES = [
-        ('cse', 'Computer Science'),
-        ('ece', 'Electronics'),
-        ('mech', 'Mechanical'),
-        ('it', 'Information Technology'),
-        ('csbs', 'Computer Science & Business Systems'),
+        ('CSE', 'Computer Science'),
+        ('ECE', 'Electronics'),
+        ('MECH', 'Mechanical'),
+        ('IT', 'Information Technology'),
+        ('CSBS', 'Computer Science & Business Systems'),
+        ('AIML', 'Artifical Intelligence and Machine Learning'),
+        ('AIDS', 'Artifical Intelligence and Data Science'),
+        ('CYS', 'CyberSecurity'),
+        ('OFFICE', 'Kite Office'),
+        ('IQSC', 'iqsc')
     ]
     
     username = None  # Remove username field

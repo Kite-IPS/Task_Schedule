@@ -25,7 +25,7 @@ const Users = () => {
     password: "",
   });
 
-  const roles = ["admin", "Officer staff", "user"];
+  const roles = ["admin", "staff", "hod"];
   const departments = ["CSE", "IT", "AIDS", "MECH", "ECE", "AIML", "CYS", "RA", "OFFICE", "IQSC", "OTHERS"];
 
   const navigate = useNavigate();
@@ -430,7 +430,7 @@ const Users = () => {
                 </label>
                 <select
                   name="role"
-                  value={formData.role}
+                  value={formData.role.toLowerCase()}
                   onChange={handleInputChange}
                   className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                 >
