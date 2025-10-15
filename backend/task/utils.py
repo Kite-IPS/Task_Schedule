@@ -119,13 +119,20 @@ def send_task_assignment_email(task, assignee):
         
         # Email to staff
         html_message = get_task_assignment_html(task, assignee)
+        print(f"Sending email to {assignee.email}")
+        print(f"From email: {settings.DEFAULT_FROM_EMAIL}")
+        print(f"Using SMTP settings:")
+        print(f"Host: {settings.EMAIL_HOST}")
+        print(f"Port: {settings.EMAIL_PORT}")
+        print(f"User: {settings.EMAIL_HOST_USER}")
+        
         send_mail(
             subject=subject,
             message='',  # HTML-only email
             html_message=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[assignee.email],
-            fail_silently=True
+            fail_silently=False  # Changed to False to see errors
         )
 
         # Email to HOD
