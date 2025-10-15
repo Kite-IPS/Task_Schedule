@@ -28,19 +28,13 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # Email settings
-if DEBUG:
-    # Use console backend for development
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    # Use SMTP for production
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'  # Replace with your SMTP server
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = 'ipstech@gmail.com'  # Replace with your email
-    EMAIL_HOST_PASSWORD = 'cvfg qqcl ekjh eblr'  # Replace with your email password or app password
-
-DEFAULT_FROM_EMAIL = 'noreply@taskschedule.com'  # Default sender address
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ipstech@gmail.com'
+EMAIL_HOST_PASSWORD = 'cvfg qqcl ekjh eblr'  # Your Gmail App Password
+DEFAULT_FROM_EMAIL = 'ipstech@gmail.com'
 
 # Frontend URL for email links
 FRONTEND_URL = 'http://localhost:5173'  # Replace with your frontend URL

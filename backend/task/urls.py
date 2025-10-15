@@ -12,4 +12,7 @@ urlpatterns = [
     path('tasks/generate-pdf/', views.generate_task_pdf, name='generate-task-pdf'),
     path('tasks/<int:task_id>/update/', views.update_task, name='update-task'),
     path('tasks/<int:task_id>/delete/', views.delete_task, name='delete-task'),
+    
+    # Test email
+    path('test-email/', views.test_email, name='test-email'),
 ]

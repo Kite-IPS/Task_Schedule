@@ -2,6 +2,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
+from staff.models import User  # Import User model for HOD lookup
 
 def get_task_assignment_html(task, assignee):
     return f"""
@@ -12,7 +13,7 @@ def get_task_assignment_html(task, assignee):
         
         <h3>{task.title}</h3>
         <p><strong>Description:</strong> {task.description}</p>
-        <p><strong>Deadline:</strong> {task.deadline.strftime('%B %d, %Y, %I:%M %p')}</p>
+        <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
         <p><strong>Priority:</strong> {task.priority}</p>
         
         <p>
@@ -38,7 +39,7 @@ def get_task_assignment_hod_html(task, staff_name):
         
         <h3>{task.title}</h3>
         <p><strong>Description:</strong> {task.description}</p>
-        <p><strong>Deadline:</strong> {task.deadline.strftime('%B %d, %Y, %I:%M %p')}</p>
+        <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
         <p><strong>Priority:</strong> {task.priority}</p>
         
         <p>
@@ -65,7 +66,7 @@ def get_deadline_reminder_html(task, assignee, hours_left):
         
         <h3>{task.title}</h3>
         <p><strong>Description:</strong> {task.description}</p>
-        <p><strong>Deadline:</strong> {task.deadline.strftime('%B %d, %Y, %I:%M %p')}</p>
+        <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
         <p><strong>Priority:</strong> {task.priority}</p>
         
         <p>
@@ -94,7 +95,7 @@ def get_overdue_html(task, assignee):
         
         <h3>{task.title}</h3>
         <p><strong>Description:</strong> {task.description}</p>
-        <p><strong>Deadline:</strong> {task.deadline.strftime('%B %d, %Y, %I:%M %p')}</p>
+        <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
         <p><strong>Priority:</strong> {task.priority}</p>
         
         <p>
@@ -128,18 +129,24 @@ def send_task_assignment_email(task, assignee):
         )
 
         # Email to HOD
-        if assignee.department and assignee.department.hod:
-            hod = assignee.department.hod
-            if hod.email:  # Check if HOD has an email
-                hod_html_message = get_task_assignment_hod_html(task, assignee.get_full_name())
-                send_mail(
-                    subject=f'Task Assignment Notification: {task.title}',
-                    message='',  # HTML-only email
-                    html_message=hod_html_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[hod.email],
-                    fail_silently=True
-                )
+        if assignee.department:  # If staff has a department assigned
+            # Find HOD for this department
+            try:
+                hod = User.objects.filter(department=assignee.department, role='hod').first()
+                if hod and hod.email:
+                    hod_html_message = get_task_assignment_hod_html(task, assignee.get_full_name())
+                    send_mail(
+                        subject=f'Task Assignment Notification: {task.title}',
+                        message='',  # HTML-only email
+                        html_message=hod_html_message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[hod.email],
+                        fail_silently=True
+                    )
+            except Exception as e:
+                if settings.DEBUG:
+                    print(f"Error sending HOD notification: {str(e)}")
+                # Continue even if HOD notification fails
     except Exception as e:
         if settings.DEBUG:
             print(f"Error sending task assignment email: {str(e)}")
@@ -149,7 +156,7 @@ def send_deadline_reminder_email(task, assignee):
     """Send deadline reminder email to staff"""
     try:
         subject = f'Deadline Reminder: {task.title}'
-        time_left = task.deadline - timezone.now()
+        time_left = task.due_date - timezone.now()
         hours_left = int(time_left.total_seconds() / 3600)
 
         html_message = get_deadline_reminder_html(task, assignee, hours_left)
