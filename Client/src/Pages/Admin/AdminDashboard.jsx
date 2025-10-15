@@ -1,11 +1,34 @@
 import BaseLayout from "../../Components/Layouts/BaseLayout";
 import Table from "../../Components/Admin/Table";
-import { data } from "../../DevSample/sample";
 import { Download, House, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axiosInstance from "../../Utils/axiosInstance";
+import { API_PATH } from "../../Utils/apiPath";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    total_task: 0,
+    completed_task: 0,
+    ongoing_task: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const response = await axiosInstance.get(API_PATH.TASK.DASHBOARD);
+        setStats(response.data);
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardStats();
+  }, []);
 
   return (
     <BaseLayout>
@@ -27,15 +50,21 @@ const AdminDashboard = () => {
       <div className="w-[90%] md:w-[80%] mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 my-10">
         <div className="h-[100px] md:h-auto flex flex-col justify-center py-4 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg">
           <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Total Tasks</h2>
-          <p className="font-bold text-green-400 text-[18px] md:text-5xl">150</p>
+          <p className="font-bold text-green-400 text-[18px] md:text-5xl">
+            {loading ? '...' : stats.total_task}
+          </p>
         </div>
         <div className="h-[100px] md:h-auto flex flex-col justify-center py-4 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg">
           <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Total Completed Tasks</h2>
-          <p className="font-bold text-blue-400 text-[18px] md:text-5xl">100</p>
+          <p className="font-bold text-blue-400 text-[18px] md:text-5xl">
+            {loading ? '...' : stats.completed_task}
+          </p>
         </div>
         <div className="h-[100px] md:h-auto flex flex-col justify-center py-4 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg col-span-2 md:col-span-1">
           <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Total On-Going Tasks</h2>
-          <p className="font-bold text-orange-400 text-[18px] md:text-5xl">50</p>
+          <p className="font-bold text-orange-400 text-[18px] md:text-5xl">
+            {loading ? '...' : stats.ongoing_task}
+          </p>
         </div>
       </div>
       <div className="w-[90%] md:w-[80%] mx-auto my-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">

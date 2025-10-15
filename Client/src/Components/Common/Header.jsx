@@ -21,10 +21,12 @@ const Header = () => {
 
                 {user && (
                     <div className='flex items-center gap-2 sm:gap-3 md:gap-5 flex-wrap justify-end'>
-                        <h2 className='text-xs sm:text-sm font-semibold hidden sm:block text-white/80'>
+                        {/* Show role on mobile at 14px; keep same on larger screens */}
+                        <h2 className='text-[14px] sm:text-[16px] font-semibold text-white/80'>
                             Role: <span className='text-white'>{user.role}</span>
                         </h2>
-                        <h2 className='text-xs sm:text-sm font-bold whitespace-nowrap'>
+                        {/* Hide username on xs, show on sm+ */}
+                        <h2 className='hidden sm:block text-sm font-bold whitespace-nowrap lg:text-[16px]'>
                             {user.name}
                         </h2>
                         <button 
