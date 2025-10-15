@@ -22,10 +22,11 @@ const Users = () => {
     role: "",
     department: "",
     email: "",
+    password: "",
   });
 
   const roles = ["admin", "Officer staff", "user"];
-  const departments = ["IT", "HR", "Sales", "Marketing", "Finance"];
+  const departments = ["CSE", "IT", "AIDS", "MECH", "ECE", "AIML", "CYS", "RA", "OFFICE", "IQSC", "OTHERS"];
 
   const navigate = useNavigate();
 
@@ -77,7 +78,7 @@ const Users = () => {
   // Modal functions
   const openCreateModal = () => {
     setModalMode("create");
-    setFormData({ name: "", role: "", department: "", email: "" });
+    setFormData({ name: "", role: "", department: "", email: "", password: "" });
     setSelectedUser(null);
     setIsModalOpen(true);
   };
@@ -91,7 +92,7 @@ const Users = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setFormData({ name: "", role: "", department: "", email: "" });
+    setFormData({ name: "", role: "", department: "", email: "", password: "" });
     setSelectedUser(null);
   };
 
@@ -104,24 +105,24 @@ const Users = () => {
     if (
       formData.name &&
       formData.role &&
-      formData.email
+      formData.email &&
+      formData.password
     ) {
       try {
-        // If you have a CREATE endpoint, use it here
-        // const response = await axiosInstance.post(API_PATH.USER.CREATE, formData);
-        // For now, adding locally
-        const newUser = {
-          id: Math.max(...users.map((u) => u.id), 0) + 1,
-          ...formData,
-        };
+        const response = await axiosInstance.post(API_PATH.USER.CREATE, formData);
+        
+        // Add the new user to local state
+        const newUser = response.data.user || response.data;
         setUsers([...users, newUser]);
+        
+        alert('User created successfully!');
         closeModal();
       } catch (error) {
         console.error('Error creating user:', error);
-        alert('Failed to create user');
+        alert(error.response?.data?.message || 'Failed to create user. Please try again.');
       }
     } else {
-      alert("Please fill required fields (Name, Role, and Email)");
+      alert("Please fill all required fields (Name, Email, Role, and Password)");
     }
   };
 
@@ -406,6 +407,22 @@ const Users = () => {
                   placeholder="Enter email"
                 />
               </div>
+
+              {modalMode === "create" && (
+                <div>
+                  <label className="block text-sm font-medium text-white/90 mb-1">
+                    Password <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
+                    placeholder="Enter password"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-white/90 mb-1">
