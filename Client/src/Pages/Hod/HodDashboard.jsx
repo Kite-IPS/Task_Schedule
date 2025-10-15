@@ -1,7 +1,7 @@
 import Table from "../../Components/Admin/Table";
 import { data } from "../../DevSample/sample";
 import BaseLayout from '../../Components/Layouts/BaseLayout'
-import { Download, House, UsersRound } from 'lucide-react';
+import { Download, House, UsersRound, Eye, X } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axiosInstance from "../../Utils/axiosInstance";
@@ -18,6 +18,9 @@ const HodDashboard = () => {
     completed_task: 0,
     ongoing_task: 0
   });
+
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
 
   // Export to Excel function
   const exportToExcel = async () => {
@@ -71,6 +74,17 @@ const HodDashboard = () => {
     a.download = 'tasks_report.xlsx';
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  // View task modal functions
+  const openViewModal = (task) => {
+    setSelectedTask(task);
+    setIsViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedTask(null);
   };
 
   useEffect(() => {
@@ -183,9 +197,95 @@ const HodDashboard = () => {
               <p className="text-white/70">No tasks found</p>
             </div>
           ) : (
-            <Table data={tasks} />
+            <Table data={tasks} onView={openViewModal} />
           )}
         </div>
+        {/* View Task Modal */}
+        {isViewModalOpen && selectedTask && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl w-[90%] md:w-[600px] p-6 max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-white">Task Details</h2>
+                <button
+                  onClick={closeViewModal}
+                  className="text-white/70 hover:text-white cursor-pointer transition"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-white/90 mb-1">Title</h3>
+                  <p className="text-white text-base">{selectedTask.title}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white/90 mb-1">Description</h3>
+                  <p className="text-white text-base leading-relaxed bg-white/5 p-4 rounded-lg border border-white/10">
+                    {selectedTask.description}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Assignee</h3>
+                    <p className="text-white">{selectedTask.assignee}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Department</h3>
+                    <p className="text-white">
+                      {Array.isArray(selectedTask.dept) ? selectedTask.dept.join(', ') : selectedTask.dept}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Status</h3>
+                    <span className={`px-2 py-1 rounded text-xs font-medium inline-block ${
+                      selectedTask.status?.toLowerCase() === 'completed' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                      selectedTask.status?.toLowerCase() === 'pending' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                      'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                    }`}>
+                      {selectedTask.status}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Priority</h3>
+                    <span className={`px-2 py-1 rounded text-xs font-medium inline-block ${
+                      selectedTask.priority?.toLowerCase() === 'urgent' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
+                      selectedTask.priority?.toLowerCase() === 'high' ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' :
+                      selectedTask.priority?.toLowerCase() === 'medium' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
+                      'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                    }`}>
+                      {selectedTask.priority}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Due Date</h3>
+                    <p className="text-white">
+                      {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString() : 'Not set'}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Created Date</h3>
+                    <p className="text-white">
+                      {selectedTask.created_at ? new Date(selectedTask.created_at).toLocaleDateString() : 'Not available'}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Completed Date</h3>
+                    <p className="text-white">
+                      {selectedTask.completed_at ? new Date(selectedTask.completed_at).toLocaleDateString() : 'Not completed'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
     </BaseLayout>
   )
 }

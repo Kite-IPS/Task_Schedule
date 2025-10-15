@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { ChevronUp, ChevronDown, Filter, X } from "lucide-react";
+import { ChevronUp, ChevronDown, Filter, X, Eye } from "lucide-react";
 
-const Table = ({ data = [] }) => {
+const Table = ({ data = [], onView }) => {
   // Safety check: ensure data is an array
   const safeData = Array.isArray(data) ? data : [];
 
@@ -379,6 +379,11 @@ const Table = ({ data = [] }) => {
                       Due Date <SortIcon columnKey="dueDate" />
                     </div>
                   </th>
+                  <th
+                    className="px-6 py-4 text-center text-sm font-bold text-white"
+                  >
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -488,6 +493,15 @@ const Table = ({ data = [] }) => {
 
                           return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
                         })() : "-"}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => onView && onView(item)}
+                          className="text-green-400 hover:text-green-300 transition p-2 hover:bg-white/5 rounded"
+                          title="View Task Details"
+                        >
+                          <Eye size={18} />
+                        </button>
                       </td>
                     </tr>
                   ))
