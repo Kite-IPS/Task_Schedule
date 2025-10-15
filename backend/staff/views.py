@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from django.views.decorators.csrf import csrf_exempt
 from .models import User
 from .serializers import UserSerializer, UserCreateSerializer, LoginSerializer
 from task.permissions import IsAdmin
@@ -12,6 +13,7 @@ from task.permissions import RoleBasedPermission
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def login_view(request):
     """Login endpoint with JWT token generation using email"""
     serializer = LoginSerializer(data=request.data)
@@ -26,9 +28,9 @@ def login_view(request):
     if user:
         refresh = RefreshToken.for_user(user)
         return Response({
-            'access': str(refresh.access_token),
+            'token': str(refresh.access_token),
             'refresh': str(refresh),
-            'user': UserSerializer(user).data
+            'staff': UserSerializer(user).data
         })
     
     return Response(
