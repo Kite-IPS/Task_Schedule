@@ -1,55 +1,14 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Edit, Eye, Trash2, X, Home } from "lucide-react";
 import BaseLayout from "../../Components/Layouts/BaseLayout";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../Utils/axiosInstance";
+import { API_PATH } from "../../Utils/apiPath";
 
 const Users = () => {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      role: "Admin",
-      department: "IT",
-      email: "john@example.com",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      role: "User",
-      department: "HR",
-      email: "jane@example.com",
-    },
-    {
-      id: 3,
-      name: "Bob Johnson",
-      role: "Officer staff",
-      department: "Sales",
-      email: "bob@example.com",
-    },
-    {
-      id: 4,
-      name: "Alice Williams",
-      role: "User",
-      department: "Marketing",
-      email: "alice@example.com",
-    },
-    {
-      id: 5,
-      name: "Charlie Brown",
-      role: "Admin",
-      department: "IT",
-      email: "charlie@example.com",
-    },
-    {
-      id: 6,
-      name: "Diana Prince",
-      role: "Officer staff",
-      department: "Finance",
-      email: "diana@example.com",
-    },
-  ]);
-
-  const [filteredUsers, setFilteredUsers] = useState(users);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [departmentFilter, setDepartmentFilter] = useState("All");
@@ -65,11 +24,32 @@ const Users = () => {
     email: "",
   });
 
-  const roles = ["Admin", "Officer staff", "User"];
+  const roles = ["admin", "Officer staff", "user"];
   const departments = ["IT", "HR", "Sales", "Marketing", "Finance"];
 
   const navigate = useNavigate();
 
+  // Fetch users from API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get(API_PATH.USER.ALL);
+        const usersData = response.data.users || [];
+        setUsers(usersData);
+        setFilteredUsers(usersData);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        alert('Failed to fetch users. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Filter users
   useMemo(() => {
     let filtered = users.filter((user) => {
       const matchesSearch =
@@ -120,41 +100,69 @@ const Users = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCreateUser = () => {
+  const handleCreateUser = async () => {
     if (
       formData.name &&
       formData.role &&
-      formData.department &&
       formData.email
     ) {
-      const newUser = {
-        id: Math.max(...users.map((u) => u.id), 0) + 1,
-        ...formData,
-      };
-      setUsers([...users, newUser]);
-      closeModal();
+      try {
+        // If you have a CREATE endpoint, use it here
+        // const response = await axiosInstance.post(API_PATH.USER.CREATE, formData);
+        // For now, adding locally
+        const newUser = {
+          id: Math.max(...users.map((u) => u.id), 0) + 1,
+          ...formData,
+        };
+        setUsers([...users, newUser]);
+        closeModal();
+      } catch (error) {
+        console.error('Error creating user:', error);
+        alert('Failed to create user');
+      }
     } else {
-      alert("Please fill all fields");
+      alert("Please fill required fields (Name, Role, and Email)");
     }
   };
 
-  const handleUpdateUser = () => {
+  const handleUpdateUser = async () => {
     if (
       formData.name &&
       formData.role &&
-      formData.department &&
       formData.email
     ) {
-      setUsers(users.map((u) => (u.id === selectedUser.id ? formData : u)));
-      closeModal();
+      try {
+        // API call to update user
+        await axiosInstance.put(API_PATH.USER.UPDATE(selectedUser.id), formData);
+        
+        // Update local state after successful API call
+        setUsers(users.map((u) => (u.id === selectedUser.id ? { ...selectedUser, ...formData } : u)));
+        
+        alert('User updated successfully!');
+        closeModal();
+      } catch (error) {
+        console.error('Error updating user:', error);
+        alert(error.response?.data?.message || 'Failed to update user. Please try again.');
+      }
     } else {
-      alert("Please fill all fields");
+      alert("Please fill required fields (Name, Role, and Email)");
     }
   };
 
-  const handleDeleteUser = (id) => {
+  const handleDeleteUser = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter((u) => u.id !== id));
+      try {
+        // API call to delete user
+        await axiosInstance.delete(API_PATH.USER.DELETE(id));
+        
+        // Update local state after successful API call
+        setUsers(users.filter((u) => u.id !== id));
+        
+        alert('User deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert(error.response?.data?.message || 'Failed to delete user. Please try again.');
+      }
     }
   };
 
@@ -163,7 +171,10 @@ const Users = () => {
       <div className="w-[90%] md:w-[80%] mx-auto py-6">
         {/* Breadcrumb */}
         <div className="flex gap-1 items-center my-4 text-white/70">
-          <button className="hover:text-red-400 cursor-pointer transition-colors">
+          <button 
+            className="hover:text-red-400 cursor-pointer transition-colors"
+            onClick={() => navigate('/admin/dashboard')}
+          >
             <Home size={20} />
           </button>
           <span>{">"}</span>
@@ -178,7 +189,7 @@ const Users = () => {
 
         {/* Header with Create Button */}
         <div className="flex justify-between items-center my-6">
-          <h1 className="text-2xl font-bold text-[17px] text-white">Users Management</h1>
+          <h1 className="text-2xl font-bold text-white">Users Management</h1>
           <button
             onClick={openCreateModal}
             className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105"
@@ -225,115 +236,127 @@ const Users = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-white/5 border-b border-white/10">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
-                  S.No
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
-                  Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
-                  Role
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
-                  Department
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-white">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedUsers.map((user, index) => (
-                <tr
-                  key={user.id}
-                  className="border-b border-white/10 hover:bg-white/5 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm text-white/80">
-                    {startIndex + index + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white font-medium">
-                    {user.name}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white/80">
-                    {user.role}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white/80">
-                    {user.department}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white/70">
-                    {user.email}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex gap-2 justify-center">
-                      <button
-                        onClick={() => openViewModal(user)}
-                        className="text-green-400 hover:text-green-300 transition p-1 hover:bg-white/5 rounded"
-                        title="View"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-red-400 hover:text-red-300 transition p-1 hover:bg-white/5 rounded"
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-8 text-white/50">
-              No users found. Try adjusting your filters.
+        {/* Loading State */}
+        {loading ? (
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-12">
+            <div className="text-center text-white/70">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+              <p>Loading users...</p>
             </div>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {filteredUsers.length > 0 && (
-          <div className="flex justify-center items-center gap-2 mt-6">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-2 rounded-lg transition-all ${
-                  currentPage === page
-                    ? "bg-red-600 text-white border border-red-500"
-                    : "border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, currentPage + 1))
-              }
-              disabled={currentPage === totalPages}
-              className="px-3 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
-            >
-              Next
-            </button>
           </div>
+        ) : (
+          <>
+            {/* Table */}
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-white/5 border-b border-white/10">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                      S.No
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                      Name
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                      Role
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                      Department
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                      Email
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-white">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedUsers.map((user, index) => (
+                    <tr
+                      key={user.id}
+                      className="border-b border-white/10 hover:bg-white/5 transition-colors"
+                    >
+                      <td className="px-4 py-3 text-sm text-white/80">
+                        {startIndex + index + 1}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-white font-medium">
+                        {user.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-white/80">
+                        <span className="capitalize">{user.role}</span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-white/80">
+                        {user.department || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-white/70">
+                        {user.email}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex gap-2 justify-center">
+                          <button
+                            onClick={() => openViewModal(user)}
+                            className="text-green-400 hover:text-green-300 transition p-1 hover:bg-white/5 rounded"
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="text-red-400 hover:text-red-300 transition p-1 hover:bg-white/5 rounded"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {filteredUsers.length === 0 && !loading && (
+                <div className="text-center py-8 text-white/50">
+                  No users found. Try adjusting your filters.
+                </div>
+              )}
+            </div>
+
+            {/* Pagination */}
+            {filteredUsers.length > 0 && (
+              <div className="flex justify-center items-center gap-2 mt-6">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-2 rounded-lg transition-all ${
+                      currentPage === page
+                        ? "bg-red-600 text-white border border-red-500"
+                        : "border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -358,7 +381,7 @@ const Users = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-white/90 mb-1">
-                  Name
+                  Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -372,7 +395,7 @@ const Users = () => {
 
               <div>
                 <label className="block text-sm font-medium text-white/90 mb-1">
-                  Email
+                  Email <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="email"
@@ -386,7 +409,7 @@ const Users = () => {
 
               <div>
                 <label className="block text-sm font-medium text-white/90 mb-1">
-                  Role
+                  Role <span className="text-red-400">*</span>
                 </label>
                 <select
                   name="role"
@@ -409,7 +432,7 @@ const Users = () => {
                 </label>
                 <select
                   name="department"
-                  value={formData.department}
+                  value={formData.department || ""}
                   onChange={handleInputChange}
                   className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                 >

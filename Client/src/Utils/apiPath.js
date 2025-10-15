@@ -6,7 +6,9 @@ export const API_PATH = {
         INFO:'/api/auth/info/'
     },
     USER:{
-        ALL:'/api/auth/users/'
+        ALL:'/api/auth/users/',
+        UPDATE:(id)=>`/api/auth/users/${id}/update/`,
+        DELETE:(id)=>`/api/auth/users/${id}/delete/`
     },
     TASK:{
         DASHBOARD:'/api/dashboard/',
