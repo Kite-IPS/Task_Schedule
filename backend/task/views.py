@@ -8,7 +8,7 @@ from django.db.models import Q, Count
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .models import Task, TaskAssignment
-from .serializers import TaskSerializer, TaskDetailSerializer, TaskCreateSerializer
+from .serializers import TaskSerializer, TaskDetailSerializer, TaskCreateSerializer, TaskHistory
 from .permissions import IsAdmin, IsHOD, IsAdminOrHOD
 from django.http import HttpResponse
 import csv
@@ -55,9 +55,20 @@ def get_all_tasks(request):
     if user.role == 'admin':
         tasks = Task.objects.all()
     elif user.role == 'hod':
+        print(f"HOD User: {user.email}")
+        print(f"HOD Department: {user.department}")  # Check if None
+        
+        # Check all task assignments
+        all_assignments = TaskAssignment.objects.all()
+        print(f"Total assignments: {all_assignments.count()}")
+        print(f"Unique departments in assignments: {list(all_assignments.values_list('department', flat=True).distinct())}")
+        
+        # Filter tasks
         tasks = Task.objects.filter(
             assignments__department=user.department
         ).distinct()
+        
+        print(f"Tasks found for HOD: {tasks.count()}")
     else:  # staff
         tasks = Task.objects.filter(
             assignments__assignee=user
@@ -132,7 +143,6 @@ def create_task(request):
         status=status.HTTP_201_CREATED
     )
 
-
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated, IsAdmin])
 def update_task(request, task_id):
@@ -140,17 +150,48 @@ def update_task(request, task_id):
     try:
         task = Task.objects.get(id=task_id)
         
-        # Update fields
-        if 'title' in request.data:
-            task.title = request.data['title']
-        if 'description' in request.data:
-            task.description = request.data['description']
-        if 'deadline' in request.data:
-            task.deadline = request.data['deadline']
-        if 'priority' in request.data:
-            task.priority = request.data['priority']
+        # Capture old values BEFORE updating
+        old_values = {}
+        changes = {}
         
-        task.save()
+        # Track what changed
+        if 'title' in request.data and task.title != request.data['title']:
+            old_values['title'] = task.title
+            task.title = request.data['title']
+            changes['title'] = {'old': old_values['title'], 'new': task.title}
+        
+        if 'description' in request.data and task.description != request.data['description']:
+            old_values['description'] = task.description
+            task.description = request.data['description']
+            changes['description'] = {'old': old_values['description'], 'new': task.description}
+        
+        if 'due_date' in request.data:  # Note: Your model uses 'due_date', not 'deadline'
+            new_deadline = request.data['due_date']
+            if str(task.due_date) != str(new_deadline):
+                old_values['due_date'] = str(task.due_date)
+                task.due_date = new_deadline
+                changes['due_date'] = {'old': old_values['due_date'], 'new': str(new_deadline)}
+        
+        if 'priority' in request.data and task.priority != request.data['priority']:
+            old_values['priority'] = task.priority
+            task.priority = request.data['priority']
+            changes['priority'] = {'old': old_values['priority'], 'new': task.priority}
+        
+        # Only save and create history if something changed
+        if changes:
+            task.save()
+            
+            # Create history entry
+            TaskHistory.objects.create(
+                task=task,
+                action='updated',
+                performed_by=request.user,
+                details={
+                    'changes': changes,
+                    'updated_fields': list(changes.keys())
+                }
+            )
+        
         return Response(TaskDetailSerializer(task).data)
         
     except Task.DoesNotExist:
@@ -158,7 +199,6 @@ def update_task(request, task_id):
             {'error': 'Task not found'},
             status=status.HTTP_404_NOT_FOUND
         )
-
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsAdmin])
