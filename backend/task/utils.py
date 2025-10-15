@@ -113,58 +113,74 @@ def get_overdue_html(task, assignee):
 
 def send_task_assignment_email(task, assignee):
     """Send email to staff member when assigned to a task"""
-    subject = f'New Task Assignment: {task.title}'
-    
-    # Email to staff
-    html_message = get_task_assignment_html(task, assignee)
-    send_mail(
-        subject=subject,
-        message='',  # HTML-only email
-        html_message=html_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[assignee.email],
-        fail_silently=False
-    )
-
-    # Email to HOD
-    if assignee.department and assignee.department.hod:
-        hod = assignee.department.hod
-        hod_html_message = get_task_assignment_hod_html(task, assignee.get_full_name())
+    try:
+        subject = f'New Task Assignment: {task.title}'
+        
+        # Email to staff
+        html_message = get_task_assignment_html(task, assignee)
         send_mail(
-            subject=f'Task Assignment Notification: {task.title}',
+            subject=subject,
             message='',  # HTML-only email
-            html_message=hod_html_message,
+            html_message=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[hod.email],
-            fail_silently=False
+            recipient_list=[assignee.email],
+            fail_silently=True
         )
+
+        # Email to HOD
+        if assignee.department and assignee.department.hod:
+            hod = assignee.department.hod
+            if hod.email:  # Check if HOD has an email
+                hod_html_message = get_task_assignment_hod_html(task, assignee.get_full_name())
+                send_mail(
+                    subject=f'Task Assignment Notification: {task.title}',
+                    message='',  # HTML-only email
+                    html_message=hod_html_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[hod.email],
+                    fail_silently=True
+                )
+    except Exception as e:
+        if settings.DEBUG:
+            print(f"Error sending task assignment email: {str(e)}")
+        # Don't raise the exception to prevent breaking the application flow
 
 def send_deadline_reminder_email(task, assignee):
     """Send deadline reminder email to staff"""
-    subject = f'Deadline Reminder: {task.title}'
-    time_left = task.deadline - timezone.now()
-    hours_left = int(time_left.total_seconds() / 3600)
+    try:
+        subject = f'Deadline Reminder: {task.title}'
+        time_left = task.deadline - timezone.now()
+        hours_left = int(time_left.total_seconds() / 3600)
 
-    html_message = get_deadline_reminder_html(task, assignee, hours_left)
-    send_mail(
-        subject=subject,
-        message='',  # HTML-only email
-        html_message=html_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[assignee.email],
-        fail_silently=False
-    )
+        html_message = get_deadline_reminder_html(task, assignee, hours_left)
+        send_mail(
+            subject=subject,
+            message='',  # HTML-only email
+            html_message=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[assignee.email],
+            fail_silently=True
+        )
+    except Exception as e:
+        if settings.DEBUG:
+            print(f"Error sending deadline reminder email: {str(e)}")
+        # Don't raise the exception to prevent breaking the application flow
 
 def send_overdue_notification(task, assignee):
     """Send overdue notification email"""
-    subject = f'Task Overdue: {task.title}'
-    
-    html_message = get_overdue_html(task, assignee)
-    send_mail(
-        subject=subject,
-        message='',  # HTML-only email
-        html_message=html_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[assignee.email],
-        fail_silently=False
-    )
+    try:
+        subject = f'Task Overdue: {task.title}'
+        
+        html_message = get_overdue_html(task, assignee)
+        send_mail(
+            subject=subject,
+            message='',  # HTML-only email
+            html_message=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[assignee.email],
+            fail_silently=True
+        )
+    except Exception as e:
+        if settings.DEBUG:
+            print(f"Error sending overdue notification email: {str(e)}")
+        # Don't raise the exception to prevent breaking the application flow

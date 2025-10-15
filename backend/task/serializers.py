@@ -64,7 +64,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 # task/serializers.py
 class TaskCreateSerializer(serializers.ModelSerializer):
     department = serializers.ListField(child=serializers.CharField())
-    assignee = serializers.ListField(child=serializers.CharField())
+    assignee = serializers.ListField(child=serializers.EmailField())
     attachment = serializers.FileField(required=False, allow_null=True)
     
     class Meta:
@@ -98,6 +98,33 @@ class TaskCreateSerializer(serializers.ModelSerializer):
                 )
         
         return value
+        
+    def create(self, validated_data):
+        """Create task with multiple assignments"""
+        from staff.models import User
+        
+        # Pop assignment data
+        assignees = validated_data.pop('assignee')
+        departments = validated_data.pop('department')
+        
+        # Create task
+        task = Task.objects.create(**validated_data)
+        
+        # Create assignments
+        assignments = []
+        for email, dept in zip(assignees, departments):
+            assignee = User.objects.get(email=email)
+            assignment = TaskAssignment(
+                task=task,
+                assignee=assignee,
+                department=dept
+            )
+            assignments.append(assignment)
+        
+        # Bulk create assignments
+        TaskAssignment.objects.bulk_create(assignments)
+        
+        return task
     
     def validate(self, data):
         """Cross-field validation: check assignees belong to departments"""
