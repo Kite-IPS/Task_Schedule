@@ -1,8 +1,30 @@
+# staff/admin.py
 from django.contrib import admin
-from .models import Staff
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from .models import User
 
-class StaffAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'department')
-    search_fields = ('name', 'email', 'department')
-  
-admin.site.register(Staff, StaffAdmin)
+@admin.register(User)
+class UserAdmin(BaseUserAdmin):
+    """Custom User admin with email login"""
+    
+    list_display = ['email', 'first_name', 'last_name', 'role', 'department', 'is_active']
+    list_filter = ['role', 'department', 'is_active', 'is_staff']
+    search_fields = ['email', 'first_name', 'last_name']
+    ordering = ['email']
+    
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Personal info', {'fields': ('first_name', 'last_name')}),
+        ('Role & Department', {'fields': ('role', 'department')}),
+        ('Permissions', {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+        }),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
+    
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'role', 'department'),
+        }),
+    )

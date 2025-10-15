@@ -1,87 +1,135 @@
+# task/models.py
 from django.db import models
-from staff.models import Staff
+from django.conf import settings
+from django.utils import timezone
 
 class Task(models.Model):
-    class Status(models.TextChoices):
-        PENDING = 'PENDING', 'Pending'
-        IN_PROGRESS = 'IN_PROGRESS', 'In Progress'
-        COMPLETED = 'COMPLETED', 'Completed'
-        OVERDUE = 'OVERDUE', 'Overdue'
-
-    title = models.CharField(max_length=200)
+    """Main task model with hierarchical delegation support"""
+    
+    PRIORITY_CHOICES = [
+        ('urgent', 'Urgent'),
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('overdue', 'Overdue'),
+    ]
+    
+    title = models.CharField(max_length=255)
     description = models.TextField()
-    issued_by = models.ForeignKey(
-        Staff,
-        on_delete=models.SET_NULL,
-        null=True,  # Allow null for existing records
-        related_name='issued_tasks'
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    due_date = models.DateTimeField()
+    
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='created_tasks'
     )
-    issued_on = models.DateTimeField(auto_now_add=True)
-    last_edited_by = models.ForeignKey(
-        Staff,
-        on_delete=models.SET_NULL,
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Parent task for hierarchical delegation
+    parent_task = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='edited_tasks'
+        related_name='subtasks'
     )
-    last_edited_on = models.DateTimeField(null=True, blank=True)
-    deadline = models.DateTimeField(null=True, blank=True)  # Allow null for existing records
-    deadline_modification_history = models.JSONField(default=list, blank=True)
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.PENDING
-    )
-    class Priority(models.TextChoices):
-        LOW = 'LOW', 'Low'
-        MEDIUM = 'MEDIUM', 'Medium'
-        HIGH = 'HIGH', 'High'
+    
+    class Meta:
+        db_table = 'tasks'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['priority']),
+            models.Index(fields=['status']),
+            models.Index(fields=['due_date']),
+            models.Index(fields=['created_by']),
+        ]
+    
+    def __str__(self):
+        return self.title
+    
+    def update_status(self):
+        """Auto-update status based on due date"""
+        if self.status != 'completed' and timezone.now() > self.due_date:
+            self.status = 'overdue'
+            self.save(update_fields=['status'])
 
-    priority = models.CharField(
-        max_length=10,
-        choices=Priority.choices,
-        default=Priority.MEDIUM,
-    )
-    assigned_to = models.ForeignKey(
-        Staff,
-        on_delete=models.SET_NULL,
-        null=True,  # Allow null for existing records
+
+class TaskAssignment(models.Model):
+    """Many-to-many relationship between tasks and assignees with departments"""
+    
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='assignments')
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
         related_name='assigned_tasks'
     )
-    staff_hod = models.ForeignKey(
-        Staff,
-        on_delete=models.SET_NULL,
-        null=True,  # Allow null for existing records
-        related_name='department_tasks',
-        limit_choices_to={'role': Staff.Roles.HOD}
-    )
-    department = models.CharField(max_length=100, default='General')  # Default for existing records
-
-    def __str__(self):
-        return f"{self.title} - {self.department}"
-
-    def extend_deadline(self, new_deadline, modified_by):
-        """
-        Extends the task deadline and maintains modification history
-        """
-        modification = {
-            'previous_deadline': self.deadline.isoformat(),
-            'new_deadline': new_deadline.isoformat(),
-            'modified_by': modified_by.id,
-            'modified_on': models.timezone.now().isoformat()
-        }
-        
-        if isinstance(self.deadline_modification_history, list):
-            self.deadline_modification_history.append(modification)
-        else:
-            self.deadline_modification_history = [modification]
-        
-        self.deadline = new_deadline
-        self.last_edited_by = modified_by
-        self.last_edited_on = models.timezone.now()
-        self.save()
-
+    department = models.CharField(max_length=50)
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
     class Meta:
-        ordering = ['-issued_on']
-        verbose_name = 'Task'
-        verbose_name_plural = 'Tasks'
+        db_table = 'task_assignments'
+        unique_together = ['task', 'assignee']
+        indexes = [
+            models.Index(fields=['task', 'assignee']),
+            models.Index(fields=['department']),
+        ]
+    
+    def __str__(self):
+        return f"{self.task.title} -> {self.assignee.get_full_name()}"
+
+
+class TaskHistory(models.Model):
+    """Complete audit trail for all task changes"""
+    
+    ACTION_CHOICES = [
+        ('created', 'Created'),
+        ('assigned', 'Assigned'),
+        ('updated', 'Updated'),
+        ('status_changed', 'Status Changed'),
+        ('completed', 'Completed'),
+        ('delegated', 'Delegated'),
+    ]
+    
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='history')
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+    details = models.JSONField(default=dict)  # Store change details
+    
+    class Meta:
+        db_table = 'task_history'
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['task', '-timestamp']),
+        ]
+    
+    def __str__(self):
+        return f"{self.task.title} - {self.action} by {self.performed_by}"
+
+
+class TaskAttachment(models.Model):
+    """File attachments for tasks"""
+    
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to='task_attachments/%Y/%m/%d/')
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    file_name = models.CharField(max_length=255)
+    file_size = models.IntegerField()  # in bytes
+    
+    class Meta:
+        db_table = 'task_attachments'
