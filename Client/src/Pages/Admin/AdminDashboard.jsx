@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axiosInstance from "../../Utils/axiosInstance";
 import { API_PATH } from "../../Utils/apiPath";
+import ExcelJS from 'exceljs';
+// import { data } from "../../DevSample/sample";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -15,6 +17,63 @@ const AdminDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
+
+  // Export to Excel function
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Tasks');
+
+    // Define columns
+    worksheet.columns = [
+      { header: 'S.No', key: 'sno', width: 5 },
+      { header: 'Title', key: 'title', width: 20 },
+      { header: 'Description', key: 'description', width: 30 },
+      { header: 'Assignee(s)', key: 'assignee', width: 25 },
+      { header: 'Department', key: 'department', width: 20 },
+      { header: 'Status', key: 'status', width: 10 },
+      { header: 'Priority', key: 'priority', width: 10 },
+      { header: 'Due Date', key: 'dueDate', width: 12 },
+      { header: 'Created Date', key: 'createdDate', width: 12 },
+      { header: 'Completed Date', key: 'completedDate', width: 12 }
+    ];
+
+    // Get tasks data - handle both response.data.tasks and response.data formats
+    const tasksData = data.tasks || data;
+
+    // Add data rows
+    tasksData.forEach((task, index) => {
+      worksheet.addRow({
+        sno: index + 1,
+        title: task.title,
+        description: task.description,
+        assignee: task.assignee || 'Unassigned',
+        department: Array.isArray(task.dept) ? task.dept.join(', ') : task.dept,
+        status: task.status ? task.status.charAt(0).toUpperCase() + task.status.slice(1) : '',
+        priority: task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : '',
+        dueDate: task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-',
+        createdDate: task.created_at ? new Date(task.created_at).toLocaleDateString() : '-',
+        completedDate: task.completed_at ? new Date(task.completed_at).toLocaleDateString() : '-'
+      });
+    });
+
+    // Style the header row
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE6E6FA' }
+    };
+
+    // Generate and download the file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'admin_tasks_report.xlsx';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
@@ -48,7 +107,7 @@ const AdminDashboard = () => {
           }));
           setData(transformedData);
         } else if (Array.isArray(response.data)) {
-          setData(response.data);
+        setData(response.data);
         } else {
           console.error('Unexpected data structure:', response.data);
           setData([]);
@@ -133,15 +192,14 @@ const AdminDashboard = () => {
           >
             View Users <UsersRound className="w-4 h-4" />
           </button>
-          <button className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm w-1/2 md:w-auto">
+          <button className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm w-1/2 md:w-auto"
+          onClick={exportToExcel}
+          >
             Export Data <Download className="w-4 h-4" />
           </button>
         </div>
       </div>
       <div className="w-[90%] md:w-[80%] mx-auto my-4">
-        <div className="mb-2 text-white/50 text-sm">
-          Total tasks loaded: {data.length}
-        </div>
         <Table data={data} />
       </div>
     </BaseLayout>
