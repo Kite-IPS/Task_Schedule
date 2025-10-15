@@ -49,38 +49,51 @@ def dashboard_view(request):
 @permission_classes([IsAuthenticated])
 def get_all_tasks(request):
     """Get all tasks based on user role"""
-    user = request.user
-    
-    # Query based on role
-    if user.role == 'admin':
-        tasks = Task.objects.all()
-    elif user.role == 'hod':
-        # Get all staff in the HOD's department
-        from staff.models import User
-        department_staff = User.objects.filter(department=user.department, role='staff')
+    try:
+        user = request.user
         
-        # Get tasks where any of the department staff are assigned
-        tasks = Task.objects.filter(
-            assignments__assignee__in=department_staff
-        ).distinct()
+        # Query based on role
+        if user.role == 'admin':
+            tasks = Task.objects.all()
+        elif user.role == 'hod':
+            # Get all staff in the HOD's department
+            from staff.models import User
+            department_staff = User.objects.filter(department=user.department, role='staff')
+            
+            # Get tasks where any of the department staff are assigned
+            tasks = Task.objects.filter(
+                assignments__assignee__in=department_staff
+            ).distinct()
+            
+            print(f"HOD Department: {user.department}")
+            print(f"Department Staff Count: {department_staff.count()}")
+            print(f"Tasks found for HOD's department: {tasks.count()}")
+        else:  # staff
+            tasks = Task.objects.filter(
+                assignments__assignee=user
+            ).distinct()
         
-        print(f"HOD Department: {user.department}")
-        print(f"Department Staff Count: {department_staff.count()}")
-        print(f"Tasks found for HOD's department: {tasks.count()}")
-    else:  # staff
-        tasks = Task.objects.filter(
-            assignments__assignee=user
-        ).distinct()
-    
-    # Prefetch related data for performance
-    tasks = tasks.select_related('created_by').prefetch_related('assignments__assignee')
-    
-    # Update overdue tasks
-    for task in tasks:
-        task.update_status()
-    
-    serializer = TaskSerializer(tasks, many=True)
-    return Response({'tasks': serializer.data})
+        # Prefetch related data for performance
+        tasks = tasks.select_related('created_by').prefetch_related('assignments__assignee')
+        
+        # Update overdue tasks
+        for task in tasks:
+            try:
+                task.update_status()
+            except Exception as e:
+                print(f"Error updating status for task {task.id}: {str(e)}")
+                continue
+        
+        serializer = TaskSerializer(tasks, many=True)
+        return Response({'tasks': serializer.data})
+    except Exception as e:
+        print(f"Error in get_all_tasks: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response(
+            {'error': 'Failed to fetch tasks', 'detail': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(['GET'])

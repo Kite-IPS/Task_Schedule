@@ -20,8 +20,10 @@ const Table = ({ data = [] }) => {
 
   // Helper function to get department as string
   const getDeptString = (dept) => {
-    if (Array.isArray(dept)) return dept.join(', ');
-    return dept || '';
+    if (Array.isArray(dept)) {
+      return dept.map(d => d.toUpperCase()).join(', ');
+    }
+    return typeof dept === 'string' ? dept.toUpperCase() : '';
   };
 
   // Get unique values for filter options
@@ -58,9 +60,9 @@ const Table = ({ data = [] }) => {
         const date = new Date(item.created_at);
         return `${date.getDate()}-${date.toLocaleString("en-US", { month: "long" })}-${date.getFullYear()}`;
       })() : null;
-      
+
       const itemDept = getDeptString(item.dept);
-      
+
       return (
         (filters.dept === "" || itemDept === filters.dept) &&
         (filters.status === "" || item.status === filters.status) &&
@@ -370,11 +372,11 @@ const Table = ({ data = [] }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-red-800 transition"
-                    onClick={() => handleSort("updated_at")}
+                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    onClick={() => handleSort("dueDate")}
                   >
                     <div className="flex items-center gap-2">
-                      Due Date <SortIcon columnKey="updated_at" />
+                      Due Date <SortIcon columnKey="dueDate" />
                     </div>
                   </th>
                 </tr>
@@ -393,9 +395,9 @@ const Table = ({ data = [] }) => {
                         {item.title}
                       </td>
                       <td className="px-6 py-4 text-sm text-white/70">
-                        {getDisplayedText(item.description, item.id)}
+                        {getDisplayedText(item.description || '', item.id)}
                         {item.description &&
-                          item.description.split(" ").length > 10 && (
+                          item.description.split(" ").length > 7 && (
                             <button
                               onClick={() => toggleReadMore(item.id)}
                               className="ml-2 text-red-400 hover:text-red-300 font-semibold"
@@ -469,8 +471,8 @@ const Table = ({ data = [] }) => {
                         })() : "-"}
                       </td>
                       <td className="px-6 py-4 text-sm text-white/70 font-medium">
-                        {item.updated_at ? (() => {
-                          const date = new Date(item.updated_at);
+                        {item.dueDate ? (() => {
+                          const date = new Date(item.dueDate);
 
                           const day = date.getDate();
                           const month = date.toLocaleString("en-US", {
@@ -531,11 +533,10 @@ const Table = ({ data = [] }) => {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-4 py-2 rounded-lg transition text-sm font-semibold ${
-                          currentPage === page
+                        className={`px-4 py-2 rounded-lg transition text-sm font-semibold ${currentPage === page
                             ? "bg-red-600 text-white border border-red-500 shadow-lg"
                             : "bg-white/5 backdrop-blur-sm border border-white/20 hover:bg-white/10 text-white"
-                        }`}
+                          }`}
                       >
                         {page}
                       </button>

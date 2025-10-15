@@ -15,21 +15,56 @@ const HodDashboard = () => {
     completed_task: 0,
     ongoing_task: 0
   });
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardStats = async () => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
       try {
-        const response = await axiosInstance.get(API_PATH.TASK.DASHBOARD);
-        setStats(response.data);
+        const response = await axiosInstance.get(API_PATH.TASK.ALL);
+        console.log("HOD Dashboard data:", response.data);
+        
+        // Set tasks for table
+        const transformedTasks = (response.data.tasks || []).map(task => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          assignee: task.assignee && task.assignee.length > 0 
+            ? (task.assignee[0].full_name) 
+            : 'Unassigned',
+          dept: task.department,
+          status: task.status.charAt(0).toUpperCase() + task.status.slice(1), // Capitalize status
+          priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1), // Capitalize priority
+          dueDate: task.due_date,
+          created_at: task.created_at,
+          created_by: task.created_by ? (task.created_by.full_name) : 'Unknown' // Convert created_by to string
+        }));
+        setTasks(transformedTasks);
+
+        // Calculate stats from the tasks
+        const tasksData = response.data.tasks || [];
+        const stats = {
+          total_task: tasksData.length,
+          completed_task: tasksData.filter(t => t.status === 'completed').length,
+          ongoing_task: tasksData.filter(t => t.status === 'pending').length
+        };
+        setStats(stats);
+        
       } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
+        console.error('Error fetching dashboard data:', error);
+        setTasks([]);
+        setStats({
+          total_task: 0,
+          completed_task: 0,
+          ongoing_task: 0
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDashboardStats();
+    fetchDashboardData();
   }, []);
 
   return (
@@ -78,7 +113,20 @@ const HodDashboard = () => {
           </div>
         </div>
         <div className="w-[90%] md:w-[80%] mx-auto my-4">
-          <Table data={data} />
+          {loading ? (
+            <div className="flex items-center justify-center h-64 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl">
+              <div className="flex items-center space-x-4 text-white/70">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+                <span>Loading tasks...</span>
+              </div>
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="flex items-center justify-center h-64 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl">
+              <p className="text-white/70">No tasks found</p>
+            </div>
+          ) : (
+            <Table data={tasks} />
+          )}
         </div>
     </BaseLayout>
   )

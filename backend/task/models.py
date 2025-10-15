@@ -59,9 +59,22 @@ class Task(models.Model):
     
     def update_status(self):
         """Auto-update status based on due date"""
-        if self.status != 'completed' and timezone.now() > self.due_date:
-            self.status = 'overdue'
-            self.save(update_fields=['status'])
+        try:
+            if self.status != 'completed' and self.due_date:
+                # Ensure both datetimes are timezone-aware
+                now = timezone.now()
+                due_date = self.due_date
+                
+                # Make due_date timezone-aware if it isn't
+                if timezone.is_naive(due_date):
+                    due_date = timezone.make_aware(due_date)
+                
+                if now > due_date:
+                    self.status = 'overdue'
+                    self.save(update_fields=['status'])
+        except Exception as e:
+            # Log the error but don't break the API
+            print(f"Error updating task status for task {self.id}: {str(e)}")
 
 
 class TaskAssignment(models.Model):
