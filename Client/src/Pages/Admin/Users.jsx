@@ -25,7 +25,7 @@ const Users = () => {
     password: "",
   });
 
-  const roles = ["admin", "staff", "hod"];
+  const roles = ["admin", "staff", "hod", "faculty"];
   const departments = ["CSE", "IT", "AIDS", "MECH", "ECE", "AIML", "CYS", "RA", "OFFICE", "IQSC", "OTHERS"];
 
   const navigate = useNavigate();

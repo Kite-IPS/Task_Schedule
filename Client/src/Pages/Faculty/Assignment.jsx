@@ -21,6 +21,7 @@ const Assignment = () => {
   const [tasksLoading, setTasksLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [departmentFilter, setDepartmentFilter] = useState("all");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -41,6 +42,17 @@ const Assignment = () => {
     { code: "high", name: "High" },
     { code: "urgent", name: "Urgent" }
   ];
+  const departments = [
+    { code: "CSE", name: "CSE" },
+    { code: "ECE", name: "ECE" }, 
+    { code: "AIDS", name: "AIDS" },
+    { code: "CSBS", name: "CSBS" },
+    { code: "MECH", name: "MECH" },
+    { code: "IT", name: "IT" },
+    { code: "CYS", name: "CYS" },
+    { code: "AIML", name: "AIML" },
+    { code: "RA", name: "R&A" }
+  ];
 
   const navigate = useNavigate();
 
@@ -49,7 +61,12 @@ const Assignment = () => {
       setUsersLoading(true);
       try {
         const response = await axiosInstance.get(API_PATH.USER.ALL);
-        setUsers(response.data.users || []);
+        const resdata = response.data.users;
+        // Filter to show only faculty and hod roles
+        const filteredUsers = (response.data.users || []).filter(user => 
+          user.role === 'faculty' || user.role === 'hod'
+        );
+        setUsers(filteredUsers);
       } catch (error) {
         console.error('Error fetching users:', error);
         setUsers([]);
@@ -128,6 +145,14 @@ const Assignment = () => {
     startIndex + itemsPerPage
   );
 
+  // Filter users based on selected department
+  const getFilteredUsers = () => {
+    if (departmentFilter === "all") {
+      return users;
+    }
+    return users.filter(user => user.department === departmentFilter);
+  };
+
   // Modal functions
   const openCreateModal = () => {
     setModalMode("create");
@@ -139,6 +164,7 @@ const Assignment = () => {
       priority: "medium",
       dueDate: "",
     });
+    setDepartmentFilter("all");
     setSelectedTask(null);
     setIsModalOpen(true);
   };
@@ -158,6 +184,7 @@ const Assignment = () => {
   const openEditModal = (task) => {
     setModalMode("edit");
     setSelectedTask(task);
+    setDepartmentFilter("all");
     // Format date to yyyy-MM-ddTHH:mm for datetime-local input
     const formatDateForInput = (dateString) => {
       if (!dateString) return '';
@@ -168,19 +195,6 @@ const Assignment = () => {
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
       return `${year}-${month}-${day}T${hours}:${minutes}`;
-    };
-    
-    // Format date for human-readable display
-    const formatDateForDisplay = (dateString) => {
-      if (!dateString) return 'No due date';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
     };
     
     setFormData({
@@ -204,6 +218,7 @@ const Assignment = () => {
       priority: "medium",
       dueDate: "",
     });
+    setDepartmentFilter("all");
     setSelectedTask(null);
   };
 
@@ -280,6 +295,8 @@ const Assignment = () => {
           status: task.status.charAt(0).toUpperCase() + task.status.slice(1),
           priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1),
           dueDate: task.due_date,
+          completedAt: task.completed_at,
+          createdAt: task.created_at,
           rawAssignee: task.assignee || [],
           rawDepartment: task.department || [],
           rawStatus: task.status,
@@ -353,6 +370,8 @@ const Assignment = () => {
           status: task.status.charAt(0).toUpperCase() + task.status.slice(1),
           priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1),
           dueDate: task.due_date,
+          completedAt: task.completed_at,
+          createdAt: task.created_at,
           rawAssignee: task.assignee || [],
           rawDepartment: task.department || [],
           rawStatus: task.status,
@@ -444,13 +463,11 @@ const Assignment = () => {
 
         {/* Header with Create Button */}
         <div className="flex justify-between items-center my-6">
-          {/* Mobile: text-[18px] -> Tailwind text-[18px] or text-base; keep md:text-2xl for larger screens */}
           <h1 className="text-[18px] md:text-2xl font-bold text-white">Task Management</h1>
           <button
             onClick={openCreateModal}
             className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-3 py-2 md:px-4 md:py-2 rounded-xl transition-all shadow-lg hover:scale-105 text-sm md:text-base"
           >
-            {/* Make icon slightly smaller on mobile */}
             <Plus className="w-4 h-4 md:w-5 md:h-5" />
             <span className="hidden sm:inline">Create Task</span>
             <span className="inline sm:hidden">Create</span>
@@ -852,14 +869,31 @@ const Assignment = () => {
                 <label className="block text-sm font-medium text-white/90 mb-1">
                   Assignee(s) * {formData.assignee.length > 0 && `(${formData.assignee.length} selected)`}
                 </label>
+                
+                {/* Department Filter Dropdown */}
+                <div className="mb-3">
+                  <select
+                    value={departmentFilter}
+                    onChange={(e) => setDepartmentFilter(e.target.value)}
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                  >
+                    <option value="all" className="bg-gray-900">All Departments</option>
+                    {departments.map((dept) => (
+                      <option key={dept.code} value={dept.code} className="bg-gray-900">
+                        {dept.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg p-3 max-h-60 overflow-y-auto">
                   {usersLoading ? (
                     <p className="text-white/60 text-sm">Loading users...</p>
-                  ) : users.length === 0 ? (
-                    <p className="text-white/60 text-sm">No users available</p>
+                  ) : getFilteredUsers().length === 0 ? (
+                    <p className="text-white/60 text-sm">No users available in this department</p>
                   ) : (
                     <div className="space-y-2">
-                      {users.map((user) => (
+                      {getFilteredUsers().map((user) => (
                         <label
                           key={user.id}
                           className="flex items-start gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
