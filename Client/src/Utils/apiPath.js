@@ -16,6 +16,7 @@ export const API_PATH = {
         ALL:'/api/tasks/',
         DETAIL:(id) => `/api/tasks/${id}/`,
         CREATE:'/api/tasks/create/',
-        PDF:'/api/tasks/generate-pdf/'
+        PDF:'/api/tasks/generate-pdf/',
+        HISTORY:'/api/tasks/history/'
     }
 }

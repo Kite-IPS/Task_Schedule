@@ -21,11 +21,12 @@ const FacultyDashboard = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    assignee: "",
+    assignee: [],
     status: "pending",
     priority: "medium",
     dueDate: "",
   });
+  const [recentActivities, setRecentActivities] = useState([]);
 
 
   const statuses = [
@@ -48,13 +49,7 @@ const FacultyDashboard = () => {
   ];
 
 
-  // Mock data for recent activities
-  const recentActivities = [
-    { id: 1, action: 'Task "Database Design" completed', time: '2 hours ago' },
-    { id: 2, action: 'New task "API Development" assigned', time: '1 day ago' },
-    { id: 3, action: 'Task "UI Mockups" updated', time: '2 days ago' },
-    { id: 4, action: 'Task "Code Review" completed', time: '3 days ago' },
-  ];
+
 
 
   useEffect(() => {
@@ -82,8 +77,19 @@ const FacultyDashboard = () => {
       }
     };
 
+    const fetchRecentActivities = async () => {
+      try {
+        const response = await axiosInstance.get(API_PATH.TASK.HISTORY);
+        setRecentActivities(response.data.activities || []);
+      } catch (error) {
+        console.error('Error fetching recent activities:', error);
+        setRecentActivities([]);
+      }
+    };
+
     fetchDashboardStats();
     fetchUsers();
+    fetchRecentActivities();
   }, []);
 
 
@@ -91,7 +97,7 @@ const FacultyDashboard = () => {
     setFormData({
       title: "",
       description: "",
-      assignee: "",
+      assignee: [],
       status: "pending",
       priority: "medium",
       dueDate: "",
@@ -105,7 +111,7 @@ const FacultyDashboard = () => {
     setFormData({
       title: "",
       description: "",
-      assignee: "",
+      assignee: [],
       status: "pending",
       priority: "medium",
       dueDate: "",
@@ -118,6 +124,25 @@ const FacultyDashboard = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleAssigneeToggle = (email) => {
+    setFormData(prev => {
+      const isSelected = prev.assignee.includes(email);
+      const newAssignees = isSelected
+        ? prev.assignee.filter(e => e !== email)
+        : [...prev.assignee, email];
+      return { ...prev, assignee: newAssignees };
+    });
+  };
+
+  const getSelectedDepartments = () => {
+    if (!formData.assignee || formData.assignee.length === 0) return '';
+    const departments = formData.assignee.map(email => {
+      const user = users.find(u => u.email === email);
+      return user?.department?.toUpperCase();
+    }).filter(Boolean);
+    return [...new Set(departments)].join(', ');
+  };
+
 
 
 
@@ -126,16 +151,19 @@ const FacultyDashboard = () => {
       formData.title &&
       formData.description &&
       formData.assignee &&
+      formData.assignee.length > 0 &&
       formData.dueDate
     ) {
       setCreateLoading(true);
       try {
-        // Get the selected user's department
-        const selectedUser = users.find(user => user.email === formData.assignee);
-        const userDepartment = selectedUser?.department;
+        // Get departments for selected assignees
+        const selectedDepartments = formData.assignee.map(email => {
+          const user = users.find(u => u.email === email);
+          return user?.department;
+        }).filter(Boolean);
 
-        if (!userDepartment) {
-          alert("Selected user doesn't have a department assigned. Please select a different user.");
+        if (selectedDepartments.length === 0) {
+          alert("Selected users don't have departments assigned. Please select different users.");
           setCreateLoading(false);
           return;
         }
@@ -143,8 +171,8 @@ const FacultyDashboard = () => {
         const taskData = {
           title: formData.title,
           description: formData.description,
-          assignee: [formData.assignee], // Backend expects array of emails
-          department: [userDepartment], // Use assignee's department
+          assignee: formData.assignee, // Array of emails
+          department: [...new Set(selectedDepartments)], // Unique departments
           priority: formData.priority || 'medium',
           status: formData.status || 'pending',
           due_date: formData.dueDate
@@ -255,19 +283,38 @@ const FacultyDashboard = () => {
 
           {/* Activity Content */}
           <div className="p-4 md:p-6">
-            <div className="space-y-3">
-              {recentActivities.map((activity) => (
-                <div 
-                  key={activity.id} 
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 py-3 md:py-4 px-3 md:px-5 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 hover:bg-white/10 hover:border-white/20 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                >
-                  <span className="text-sm md:text-base text-white/90 font-normal flex-1">{activity.action}</span>
-                  <span className="text-xs md:text-sm text-red-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 font-medium whitespace-nowrap w-fit">
-                    {activity.time}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {recentActivities.length === 0 ? (
+              <div className="text-center py-8 text-white/60">
+                <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm md:text-base">No recent activities</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentActivities.map((activity) => (
+                  <div 
+                    key={activity.id} 
+                    className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 py-3 md:py-4 px-3 md:px-5 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 hover:bg-white/10 hover:border-white/20 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <div className="flex-1">
+                      <div className="text-sm md:text-base text-white/90 font-medium">
+                        <span className="text-red-400">{activity.action_display}</span> - {activity.task_title}
+                      </div>
+                      <div className="text-xs text-white/60 mt-1">
+                        by {activity.performed_by_name}
+                      </div>
+                    </div>
+                    <span className="text-xs md:text-sm text-red-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 font-medium whitespace-nowrap w-fit">
+                      {new Date(activity.timestamp).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -323,26 +370,44 @@ const FacultyDashboard = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-white/90 mb-2">
-                  Assignee <span className="text-red-400">*</span>
+                  Assignee(s) <span className="text-red-400">*</span> {formData.assignee.length > 0 && `(${formData.assignee.length} selected)`}
                 </label>
-                <select
-                  name="assignee"
-                  value={formData.assignee}
-                  onChange={handleInputChange}
-                  className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white transition-all duration-200"
-                  disabled={usersLoading}
-                >
-                  <option value="" className="bg-gray-900">
-                    {usersLoading ? "Loading users..." : "Select Assignee"}
-                  </option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.email} className="bg-gray-900">
-                      {user.name} ({user.email}) - {user.role} {user.department && `- ${user.department.toUpperCase()}`}
-                    </option>
-                  ))}
-                </select>
+                <div className="border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg p-3 max-h-60 overflow-y-auto">
+                  {usersLoading ? (
+                    <p className="text-white/60 text-sm">Loading users...</p>
+                  ) : users.length === 0 ? (
+                    <p className="text-white/60 text-sm">No users available</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {users.map((user) => (
+                        <label
+                          key={user.id}
+                          className="flex items-start gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.assignee.includes(user.email)}
+                            onChange={() => handleAssigneeToggle(user.email)}
+                            className="mt-1 w-4 h-4 rounded border-white/20 bg-white/10 text-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-0"
+                          />
+                          <div className="flex-1">
+                            <div className="text-white text-sm font-medium">{user.name || user.email}</div>
+                            <div className="text-white/60 text-xs">
+                              {user.email} • {user.role} {user.department && `• ${user.department.toUpperCase()}`}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {formData.assignee.length > 0 && (
+                  <div className="mt-2 text-xs text-white/80 bg-white/5 p-2 rounded border border-white/10">
+                    <span className="font-semibold">Auto-selected Departments:</span> {getSelectedDepartments() || 'None'}
+                  </div>
+                )}
                 <p className="text-xs text-white/60 mt-1">
-                  * Department will be automatically set based on the assignee's department
+                  * Select one or more assignees. Departments will be automatically set.
                 </p>
               </div>
 
@@ -391,7 +456,7 @@ const FacultyDashboard = () => {
                     Due Date <span className="text-red-400">*</span>
                   </label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     name="dueDate"
                     value={formData.dueDate}
                     onChange={handleInputChange}

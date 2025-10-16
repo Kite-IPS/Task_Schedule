@@ -51,7 +51,13 @@ const HodDashboard = () => {
         department: Array.isArray(task.dept) ? task.dept.join(', ') : task.dept,
         status: task.status,
         priority: task.priority,
-        dueDate: task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-',
+        dueDate: task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '-',
         createdDate: task.created_at ? new Date(task.created_at).toLocaleDateString() : '-',
         completedDate: task.completed_at ? new Date(task.completed_at).toLocaleDateString() : '-'
       });
@@ -264,7 +270,13 @@ const HodDashboard = () => {
                   <div>
                     <h3 className="text-sm font-semibold text-white/90 mb-1">Due Date</h3>
                     <p className="text-white">
-                      {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString() : 'Not set'}
+                      {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'Not set'}
                     </p>
                   </div>
                 </div>

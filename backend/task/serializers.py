@@ -3,6 +3,22 @@ from rest_framework import serializers
 from .models import Task, TaskAssignment, TaskHistory, TaskAttachment
 from staff.serializers import UserSerializer
 
+class TaskHistorySerializer(serializers.ModelSerializer):
+    performed_by_name = serializers.SerializerMethodField()
+    task_title = serializers.SerializerMethodField()
+    action_display = serializers.CharField(source='get_action_display', read_only=True)
+    
+    class Meta:
+        model = TaskHistory
+        fields = ['id', 'task', 'task_title', 'action', 'action_display', 
+                  'performed_by_name', 'timestamp', 'details']
+    
+    def get_performed_by_name(self, obj):
+        return obj.performed_by.get_full_name() if obj.performed_by else 'System'
+    
+    def get_task_title(self, obj):
+        return obj.task.title if obj.task else 'Unknown Task'
+
 class TaskSerializer(serializers.ModelSerializer):
     department = serializers.SerializerMethodField()
     assignee = serializers.SerializerMethodField()

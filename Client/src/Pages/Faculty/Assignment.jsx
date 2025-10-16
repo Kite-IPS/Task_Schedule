@@ -6,40 +6,8 @@ import axiosInstance from "../../Utils/axiosInstance";
 import { API_PATH } from "../../Utils/apiPath";
 
 const Assignment = () => {
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      title: "Database Design",
-      description: "Design the database schema for the new project",
-      assignee: "John Doe",
-      department: "CSE",
-      status: "Completed",
-      priority: "High",
-      dueDate: "2025-10-15",
-    },
-    {
-      id: 2,
-      title: "API Development",
-      description: "Develop REST API endpoints",
-      assignee: "Jane Smith",
-      department: "IT",
-      status: "In Progress",
-      priority: "Urgent",
-      dueDate: "2025-10-20",
-    },
-    {
-      id: 3,
-      title: "UI Mockups",
-      description: "Create UI mockups for the dashboard",
-      assignee: "Bob Johnson",
-      department: "ECE",
-      status: "Pending",
-      priority: "Medium",
-      dueDate: "2025-10-18",
-    },
-  ]);
-
-  const [filteredTasks, setFilteredTasks] = useState(tasks);
+  const [tasks, setTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("All");
@@ -49,12 +17,13 @@ const Assignment = () => {
   const [modalMode, setModalMode] = useState("create");
   const [selectedTask, setSelectedTask] = useState(null);
   const [createLoading, setCreateLoading] = useState(false);
+  const [tasksLoading, setTasksLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    assignee: "",
+    assignee: [],
     status: "pending",
     priority: "medium",
     dueDate: "",
@@ -88,7 +57,39 @@ const Assignment = () => {
       }
     };
 
+    const fetchTasks = async () => {
+      setTasksLoading(true);
+      try {
+        const response = await axiosInstance.get(API_PATH.TASK.ALL);
+        // Transform API data to match UI expectations
+        const transformedTasks = (response.data.tasks || []).map(task => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          assignee: task.assignee && task.assignee.length > 0 
+            ? task.assignee.map(a => a.full_name || a.email).join(', ')
+            : 'Unassigned',
+          department: Array.isArray(task.department) ? task.department.join(', ').toUpperCase() : (task.department || '').toUpperCase(),
+          status: task.status.charAt(0).toUpperCase() + task.status.slice(1),
+          priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1),
+          dueDate: task.due_date,
+          completedAt: task.completed_at,
+          rawAssignee: task.assignee || [], // Keep raw data for editing
+          rawDepartment: task.department || [],
+          rawStatus: task.status,
+          rawPriority: task.priority,
+        }));
+        setTasks(transformedTasks);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        setTasks([]);
+      } finally {
+        setTasksLoading(false);
+      }
+    };
+
     fetchUsers();
+    fetchTasks();
   }, []);
 
   useMemo(() => {
@@ -121,7 +122,7 @@ const Assignment = () => {
     setFormData({
       title: "",
       description: "",
-      assignee: "",
+      assignee: [],
       status: "pending",
       priority: "medium",
       dueDate: "",
@@ -133,14 +134,51 @@ const Assignment = () => {
   const openViewModal = (task) => {
     setModalMode("view");
     setSelectedTask(task);
-    setFormData(task);
+    setFormData({
+      ...task,
+      assignee: task.rawAssignee || [],
+      status: task.rawStatus || task.status.toLowerCase(),
+      priority: task.rawPriority || task.priority.toLowerCase(),
+    });
     setIsModalOpen(true);
   };
 
   const openEditModal = (task) => {
     setModalMode("edit");
     setSelectedTask(task);
-    setFormData(task);
+    // Format date to yyyy-MM-ddTHH:mm for datetime-local input
+    const formatDateForInput = (dateString) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+    
+    // Format date for human-readable display
+    const formatDateForDisplay = (dateString) => {
+      if (!dateString) return 'No due date';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
+    
+    setFormData({
+      title: task.title,
+      description: task.description,
+      assignee: task.rawAssignee ? task.rawAssignee.map(a => a.email) : [],
+      status: task.rawStatus || task.status.toLowerCase(),
+      priority: task.rawPriority || task.priority.toLowerCase(),
+      dueDate: formatDateForInput(task.dueDate),
+    });
     setIsModalOpen(true);
   };
 
@@ -149,7 +187,7 @@ const Assignment = () => {
     setFormData({
       title: "",
       description: "",
-      assignee: "",
+      assignee: [],
       status: "pending",
       priority: "medium",
       dueDate: "",
@@ -162,21 +200,43 @@ const Assignment = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleAssigneeToggle = (email) => {
+    setFormData(prev => {
+      const isSelected = prev.assignee.includes(email);
+      const newAssignees = isSelected
+        ? prev.assignee.filter(e => e !== email)
+        : [...prev.assignee, email];
+      return { ...prev, assignee: newAssignees };
+    });
+  };
+
+  const getSelectedDepartments = () => {
+    if (!formData.assignee || formData.assignee.length === 0) return '';
+    const departments = formData.assignee.map(email => {
+      const user = users.find(u => u.email === email);
+      return user?.department?.toUpperCase();
+    }).filter(Boolean);
+    return [...new Set(departments)].join(', ');
+  };
+
   const handleCreateTask = async () => {
     if (
       formData.title &&
       formData.description &&
       formData.assignee &&
+      formData.assignee.length > 0 &&
       formData.dueDate
     ) {
       setCreateLoading(true);
       try {
-        // Get the selected user's department
-        const selectedUser = users.find(user => user.email === formData.assignee);
-        const userDepartment = selectedUser?.department;
+        // Get departments for selected assignees
+        const selectedDepartments = formData.assignee.map(email => {
+          const user = users.find(u => u.email === email);
+          return user?.department;
+        }).filter(Boolean);
 
-        if (!userDepartment) {
-          alert("Selected user doesn't have a department assigned. Please select a different user.");
+        if (selectedDepartments.length === 0) {
+          alert("Selected users don't have departments assigned. Please select different users.");
           setCreateLoading(false);
           return;
         }
@@ -184,8 +244,8 @@ const Assignment = () => {
         const taskData = {
           title: formData.title,
           description: formData.description,
-          assignee: [formData.assignee], // Backend expects array of emails
-          department: [userDepartment], // Use assignee's department
+          assignee: formData.assignee, // Array of emails
+          department: [...new Set(selectedDepartments)], // Unique departments
           priority: formData.priority || 'medium',
           status: formData.status || 'pending',
           due_date: formData.dueDate
@@ -195,22 +255,27 @@ const Assignment = () => {
         
         console.log("Task created successfully:", response.data);
         
-        // Add the new task to local state with the response data
-        const newTask = {
-          id: response.data.id,
-          title: response.data.title,
-          description: response.data.description,
-          assignee: formData.assignee, // Display format for UI
-          department: userDepartment.toUpperCase(), // Display format for UI (from assignee)
-          status: response.data.status || formData.status,
-          priority: response.data.priority || formData.priority,
-          dueDate: formData.dueDate,
-        };
-        
-        setTasks([...tasks, newTask]);
+        // Fetch updated tasks list
+        const tasksResponse = await axiosInstance.get(API_PATH.TASK.ALL);
+        const transformedTasks = (tasksResponse.data.tasks || []).map(task => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          assignee: task.assignee && task.assignee.length > 0 
+            ? task.assignee.map(a => a.full_name || a.email).join(', ')
+            : 'Unassigned',
+          department: Array.isArray(task.department) ? task.department.join(', ').toUpperCase() : (task.department || '').toUpperCase(),
+          status: task.status.charAt(0).toUpperCase() + task.status.slice(1),
+          priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1),
+          dueDate: task.due_date,
+          rawAssignee: task.assignee || [],
+          rawDepartment: task.department || [],
+          rawStatus: task.status,
+          rawPriority: task.priority,
+        }));
+        setTasks(transformedTasks);
         closeModal();
         
-        // Show success message
         alert("Task created successfully!");
         
       } catch (error) {
@@ -225,27 +290,91 @@ const Assignment = () => {
         setCreateLoading(false);
       }
     } else {
-      alert("Please fill all required fields");
+      alert("Please fill all required fields including at least one assignee");
     }
   };
 
-  const handleUpdateTask = () => {
+  const handleUpdateTask = async () => {
     if (
       formData.title &&
       formData.description &&
       formData.assignee &&
+      formData.assignee.length > 0 &&
       formData.dueDate
     ) {
-      setTasks(tasks.map((t) => (t.id === selectedTask.id ? formData : t)));
-      closeModal();
+      setCreateLoading(true);
+      try {
+        // Get departments for selected assignees
+        const selectedDepartments = formData.assignee.map(email => {
+          const user = users.find(u => u.email === email);
+          return user?.department;
+        }).filter(Boolean);
+
+        if (selectedDepartments.length === 0) {
+          alert("Selected users don't have departments assigned.");
+          setCreateLoading(false);
+          return;
+        }
+
+        const taskData = {
+          title: formData.title,
+          description: formData.description,
+          assignee: formData.assignee,
+          department: [...new Set(selectedDepartments)],
+          priority: formData.priority,
+          status: formData.status,
+          due_date: formData.dueDate
+        };
+
+        await axiosInstance.put(API_PATH.TASK.DETAIL(selectedTask.id), taskData);
+        
+        // Fetch updated tasks list
+        const tasksResponse = await axiosInstance.get(API_PATH.TASK.ALL);
+        const transformedTasks = (tasksResponse.data.tasks || []).map(task => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          assignee: task.assignee && task.assignee.length > 0 
+            ? task.assignee.map(a => a.full_name || a.email).join(', ')
+            : 'Unassigned',
+          department: Array.isArray(task.department) ? task.department.join(', ').toUpperCase() : (task.department || '').toUpperCase(),
+          status: task.status.charAt(0).toUpperCase() + task.status.slice(1),
+          priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1),
+          dueDate: task.due_date,
+          rawAssignee: task.assignee || [],
+          rawDepartment: task.department || [],
+          rawStatus: task.status,
+          rawPriority: task.priority,
+        }));
+        setTasks(transformedTasks);
+        closeModal();
+        
+        alert("Task updated successfully!");
+        
+      } catch (error) {
+        console.error("Error updating task:", error);
+        const errorMessage = error.response?.data?.detail || 
+                           error.response?.data?.message || 
+                           "Failed to update task";
+        alert("Error: " + errorMessage);
+      } finally {
+        setCreateLoading(false);
+      }
     } else {
       alert("Please fill all required fields");
     }
   };
 
-  const handleDeleteTask = (id) => {
+  const handleDeleteTask = async (id) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
-      setTasks(tasks.filter((t) => t.id !== id));
+      try {
+        await axiosInstance.delete(API_PATH.TASK.DETAIL(id));
+        setTasks(tasks.filter((t) => t.id !== id));
+        alert("Task deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting task:", error);
+        alert("Failed to delete task: " + (error.response?.data?.detail || error.message));
+      }
     }
   };
 
@@ -379,6 +508,9 @@ const Assignment = () => {
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Due Date
                 </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                  Completed Time
+                </th>
                 <th className="px-4 py-3 text-center text-sm font-semibold text-white">
                   Action
                 </th>
@@ -421,7 +553,36 @@ const Assignment = () => {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-white/80">
-                    {task.dueDate}
+                    {(() => {
+                      const formatDateForDisplay = (dateString) => {
+                        if (!dateString) return 'No due date';
+                        const date = new Date(dateString);
+                        return date.toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+                      };
+                      return formatDateForDisplay(task.dueDate);
+                    })()}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-white/80">
+                    {task.status === 'Completed' && task.completedAt ? (() => {
+                      const formatDateForDisplay = (dateString) => {
+                        if (!dateString) return '-';
+                        const date = new Date(dateString);
+                        return date.toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+                      };
+                      return formatDateForDisplay(task.completedAt);
+                    })() : '-'}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex gap-2 justify-center">
@@ -528,13 +689,17 @@ const Assignment = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-semibold text-white/90 mb-1">Assignee</h3>
-                    <p className="text-white">{formData.assignee}</p>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Assignee(s)</h3>
+                    <p className="text-white">
+                      {Array.isArray(formData.assignee) && formData.assignee.length > 0
+                        ? formData.assignee.map(a => a.full_name || a.email || a).join(', ')
+                        : selectedTask?.assignee || 'Unassigned'}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-white/90 mb-1">Department</h3>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Department(s)</h3>
                     <p className="text-white">
-                      {users.find(user => user.email === formData.assignee)?.department?.toUpperCase() || 'Not assigned'}
+                      {selectedTask?.department || 'Not assigned'}
                     </p>
                   </div>
                 </div>
@@ -553,8 +718,44 @@ const Assignment = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-white/90 mb-1">Due Date</h3>
-                    <p className="text-white">{formData.dueDate}</p>
+                    <p className="text-white">
+                      {(() => {
+                        const formatDateForDisplay = (dateString) => {
+                          if (!dateString) return 'No due date';
+                          const date = new Date(dateString);
+                          return date.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          });
+                        };
+                        return formatDateForDisplay(formData.dueDate);
+                      })()}
+                    </p>
                   </div>
+                  {formData.status === 'Completed' && selectedTask?.completedAt && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-white/90 mb-1">Completed Time</h3>
+                      <p className="text-white">
+                        {(() => {
+                          const formatDateForDisplay = (dateString) => {
+                            if (!dateString) return 'Not completed';
+                            const date = new Date(dateString);
+                            return date.toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            });
+                          };
+                          return formatDateForDisplay(selectedTask.completedAt);
+                        })()}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-end mt-6">
                   <button
@@ -598,26 +799,44 @@ const Assignment = () => {
 
               <div>
                 <label className="block text-sm font-medium text-white/90 mb-1">
-                  Assignee *
+                  Assignee(s) * {formData.assignee.length > 0 && `(${formData.assignee.length} selected)`}
                 </label>
-                <select
-                  name="assignee"
-                  value={formData.assignee}
-                  onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
-                  className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                  disabled={usersLoading}
-                >
-                  <option value="" className="bg-gray-900">
-                    {usersLoading ? "Loading users..." : "Select Assignee"}
-                  </option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.email} className="bg-gray-900">
-                      {user.name} ({user.email}) - {user.role} {user.department && `- ${user.department.toUpperCase()}`}
-                    </option>
-                  ))}
-                </select>
+                <div className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg p-3 max-h-60 overflow-y-auto">
+                  {usersLoading ? (
+                    <p className="text-white/60 text-sm">Loading users...</p>
+                  ) : users.length === 0 ? (
+                    <p className="text-white/60 text-sm">No users available</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {users.map((user) => (
+                        <label
+                          key={user.id}
+                          className="flex items-start gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.assignee.includes(user.email)}
+                            onChange={() => handleAssigneeToggle(user.email)}
+                            className="mt-1 w-4 h-4 rounded border-white/20 bg-white/10 text-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-0"
+                          />
+                          <div className="flex-1">
+                            <div className="text-white text-sm font-medium">{user.name || user.email}</div>
+                            <div className="text-white/60 text-xs">
+                              {user.email} • {user.role} {user.department && `• ${user.department.toUpperCase()}`}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {formData.assignee.length > 0 && (
+                  <div className="mt-2 text-xs text-white/80 bg-white/5 p-2 rounded border border-white/10">
+                    <span className="font-semibold">Auto-selected Departments:</span> {getSelectedDepartments() || 'None'}
+                  </div>
+                )}
                 <p className="text-xs text-white/60 mt-1">
-                  Department will be automatically set based on the assignee's department
+                  Select one or more assignees. Departments will be automatically set based on selected assignees.
                 </p>
               </div>
 
@@ -663,7 +882,7 @@ const Assignment = () => {
                     Due Date *
                   </label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     name="dueDate"
                     value={formData.dueDate}
                     onChange={handleInputChange}

@@ -97,10 +97,10 @@ def get_all_tasks(request):
         )
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def get_task(request, task_id):
-    """Get single task details with history"""
+    """Get, update, or delete a task"""
     user = request.user
     
     try:
@@ -122,9 +122,110 @@ def get_task(request, task_id):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        task.update_status()
-        serializer = TaskDetailSerializer(task)
-        return Response(serializer.data)
+        # Handle GET request
+        if request.method == 'GET':
+            task.update_status()
+            serializer = TaskDetailSerializer(task)
+            return Response(serializer.data)
+        
+        # Handle PUT request (Update)
+        elif request.method == 'PUT':
+            # Permission check: Admin can edit any task, HOD can edit department tasks, 
+            # Staff/Faculty can edit tasks they created or are assigned to
+            can_edit = (
+                user.role == 'admin' or 
+                user.is_superuser or
+                (user.role == 'hod' and task.assignments.filter(department=user.department).exists()) or
+                task.created_by == user or
+                task.assignments.filter(assignee=user).exists()
+            )
+            
+            if not can_edit:
+                return Response(
+                    {'error': 'You do not have permission to update this task'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Capture old values
+            changes = {}
+            
+            if 'title' in request.data and task.title != request.data['title']:
+                changes['title'] = {'old': task.title, 'new': request.data['title']}
+                task.title = request.data['title']
+            
+            if 'description' in request.data and task.description != request.data['description']:
+                changes['description'] = {'old': task.description, 'new': request.data['description']}
+                task.description = request.data['description']
+            
+            if 'due_date' in request.data:
+                new_deadline = request.data['due_date']
+                if str(task.due_date) != str(new_deadline):
+                    changes['due_date'] = {'old': str(task.due_date), 'new': str(new_deadline)}
+                    task.due_date = new_deadline
+            
+            if 'priority' in request.data and task.priority != request.data['priority']:
+                changes['priority'] = {'old': task.priority, 'new': request.data['priority']}
+                task.priority = request.data['priority']
+            
+            if 'status' in request.data and task.status != request.data['status']:
+                changes['status'] = {'old': task.status, 'new': request.data['status']}
+                task.status = request.data['status']
+                
+                if task.status == 'completed' and not task.completed_at:
+                    task.completed_at = timezone.now()
+                elif task.status != 'completed' and task.completed_at:
+                    task.completed_at = None
+            
+            # Handle assignee and department updates
+            if 'assignee' in request.data and 'department' in request.data:
+                from staff.models import User
+                
+                # Clear existing assignments
+                task.assignments.all().delete()
+                
+                # Create new assignments
+                assignees = request.data['assignee']
+                departments = request.data['department']
+                
+                for email in assignees:
+                    user_obj = User.objects.get(email=email)
+                    for dept in departments:
+                        TaskAssignment.objects.create(
+                            task=task,
+                            assignee=user_obj,
+                            department=dept
+                        )
+            
+            if changes:
+                task.save()
+                TaskHistory.objects.create(
+                    task=task,
+                    action='updated',
+                    performed_by=request.user,
+                    details={'changes': changes, 'updated_fields': list(changes.keys())}
+                )
+            
+            return Response(TaskDetailSerializer(task).data)
+        
+        # Handle DELETE request
+        elif request.method == 'DELETE':
+            # Permission check: Admin can delete any task, HOD can delete department tasks,
+            # Staff/Faculty can delete tasks they created
+            can_delete = (
+                user.role == 'admin' or 
+                user.is_superuser or
+                (user.role == 'hod' and task.assignments.filter(department=user.department).exists()) or
+                task.created_by == user
+            )
+            
+            if not can_delete:
+                return Response(
+                    {'error': 'You do not have permission to delete this task'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            task.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         
     except Task.DoesNotExist:
         return Response(
@@ -265,3 +366,35 @@ def generate_task_pdf(request):
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="tasks_report.pdf"'
     return response
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_task_history(request):
+    """Get recent task history/activity based on user role"""
+    from .serializers import TaskHistorySerializer
+    user = request.user
+    
+    # Get history based on role
+    if user.role == 'admin' or user.is_superuser:
+        # Admin sees all history
+        history = TaskHistory.objects.select_related(
+            'task', 'performed_by'
+        ).all()[:20]
+    elif user.role == 'hod':
+        # HOD sees history for tasks in their department
+        history = TaskHistory.objects.select_related(
+            'task', 'performed_by'
+        ).filter(
+            task__assignments__department=user.department
+        ).distinct()[:20]
+    else:  # staff
+        # Staff sees history for their assigned tasks
+        history = TaskHistory.objects.select_related(
+            'task', 'performed_by'
+        ).filter(
+            task__assignments__assignee=user
+        ).distinct()[:20]
+    
+    serializer = TaskHistorySerializer(history, many=True)
+    return Response({'activities': serializer.data})
