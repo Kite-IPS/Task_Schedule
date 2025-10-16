@@ -51,8 +51,8 @@ def user_info_view(request):
 @permission_classes([IsAuthenticated, RoleBasedPermission])
 def get_all_users(request):
     """Admin: Get all users"""
-    if request.user.role != 'admin' and not request.user.is_superuser:
-        return Response({'error': 'Admin access required'}, status=403)
+    # if request.user.role != 'admin' and not request.user.is_superuser:
+    #     return Response({'error': 'Admin access required'}, status=403)
     
     users = User.objects.all().order_by('role', 'department')
     serializer = UserSerializer(users, many=True)
