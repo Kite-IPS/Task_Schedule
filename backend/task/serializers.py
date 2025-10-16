@@ -27,7 +27,8 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'id', 'title', 'description', 'department', 'assignee',
-            'priority', 'status', 'due_date', 'created_at', 'completed_at'
+            'priority', 'status', 'due_date', 'created_at', 'completed_at',
+            'reminder1', 'reminder2'
         ]
     
     def get_department(self, obj):
@@ -55,7 +56,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'department', 'assignee',
             'priority', 'status', 'due_date', 'created_by', 'created_at',
-            'history', 'attachments'
+            'completed_at', 'reminder1', 'reminder2', 'history', 'attachments'
         ]
     
     def get_department(self, obj):
@@ -82,17 +83,26 @@ class TaskDetailSerializer(serializers.ModelSerializer):
             'uploaded_at': att.uploaded_at
         } for att in obj.attachments.all()]
 
-# task/serializers.py
 class TaskCreateSerializer(serializers.ModelSerializer):
     department = serializers.ListField(child=serializers.CharField())
     assignee = serializers.ListField(child=serializers.EmailField())
     attachment = serializers.FileField(required=False, allow_null=True)
+    created_by = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only allow staff to see created_by field
+        request = self.context.get('request')
+        if request and request.user.role != 'staff':
+            # For non-staff, remove the field from serializer
+            self.fields.pop('created_by', None)
     
     class Meta:
         model = Task
         fields = [
             'title', 'description', 'department', 'assignee',
-            'priority', 'status', 'due_date', 'attachment'
+            'priority', 'status', 'due_date', 'attachment',
+            'created_by'
         ]
     
     def validate_assignee(self, value):

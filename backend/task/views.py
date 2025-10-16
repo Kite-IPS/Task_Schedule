@@ -293,8 +293,24 @@ def create_task(request):
     )
     serializer.is_valid(raise_exception=True)
     
-    # Set created_by
-    task = serializer.save(created_by=request.user)
+    # Handle created_by field based on role
+    user = request.user
+    created_by_data = request.data.get('created_by')
+    
+    if user.role == 'staff' and created_by_data:
+        # Staff can set created_by field
+        from staff.models import User
+        try:
+            created_by_user = User.objects.get(id=created_by_data)
+            task = serializer.save(created_by=created_by_user)
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'Invalid created_by user ID'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    else:
+        # Admin and others get auto-assigned
+        task = serializer.save(created_by=user)
     
     # Send email notifications to assigned staff and their HODs
     for assignment in task.assignments.all():
@@ -348,6 +364,20 @@ def update_task(request, task_id):
                 task.completed_at = timezone.now()
             elif task.status != 'completed' and task.completed_at:
                 task.completed_at = None
+        
+        if 'reminder1' in request.data:
+            new_reminder1 = request.data['reminder1']
+            if str(task.reminder1) != str(new_reminder1):
+                old_values['reminder1'] = str(task.reminder1) if task.reminder1 else None
+                task.reminder1 = new_reminder1
+                changes['reminder1'] = {'old': old_values['reminder1'], 'new': str(new_reminder1)}
+        
+        if 'reminder2' in request.data:
+            new_reminder2 = request.data['reminder2']
+            if str(task.reminder2) != str(new_reminder2):
+                old_values['reminder2'] = str(task.reminder2) if task.reminder2 else None
+                task.reminder2 = new_reminder2
+                changes['reminder2'] = {'old': old_values['reminder2'], 'new': str(new_reminder2)}
         # Only save and create history if something changed
         if changes:
             task.save()

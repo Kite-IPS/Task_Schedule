@@ -15,6 +15,7 @@ class Task(models.Model):
     
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('ongoing', 'Ongoing'),
         ('completed', 'Completed'),
         ('overdue', 'Overdue'),
     ]
@@ -33,6 +34,10 @@ class Task(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Reminder fields
+    reminder1 = models.DateTimeField(null=True, blank=True, help_text="First reminder date and time")
+    reminder2 = models.DateTimeField(null=True, blank=True, help_text="Second reminder date and time")
     
     # Parent task for hierarchical delegation
     parent_task = models.ForeignKey(
