@@ -322,7 +322,7 @@ def update_task(request, task_id):
         )
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated, IsAdmin])
+@permission_classes([IsAuthenticated, IsStaff])
 def delete_task(request, task_id):
     """Delete task (Admin only)"""
     try:
