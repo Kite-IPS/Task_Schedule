@@ -105,7 +105,7 @@ def get_task(request, task_id):
     
     try:
         task = Task.objects.select_related('created_by').prefetch_related(
-            'assignments__assignee',
+            'assignments__assignee',                                                                        
             'history__performed_by',
             'attachments'
         ).get(id=task_id)
@@ -380,21 +380,21 @@ def get_task_history(request):
         # Admin sees all history
         history = TaskHistory.objects.select_related(
             'task', 'performed_by'
-        ).all()[:20]
+        ).all()[:10]
     elif user.role == 'hod':
         # HOD sees history for tasks in their department
         history = TaskHistory.objects.select_related(
             'task', 'performed_by'
         ).filter(
             task__assignments__department=user.department
-        ).distinct()[:20]
+        ).distinct()[:10]
     else:  # staff
         # Staff sees history for their assigned tasks
         history = TaskHistory.objects.select_related(
             'task', 'performed_by'
         ).filter(
             task__assignments__assignee=user
-        ).distinct()[:20]
+        ).distinct()[:10]
     
     serializer = TaskHistorySerializer(history, many=True)
     return Response({'activities': serializer.data})
