@@ -322,7 +322,7 @@ const Login = () => {
           <div style={styles.card} className="login-card">
             <div style={styles.header}>
               <div style={styles.iconBadge}>
-                <Lock size={24} color="#667eea" />
+                <Lock size={24} color="#ea6666ff" />
               </div>
               <h1 style={styles.title} className="login-title">Welcome</h1>
               <p style={styles.subtitle} className="login-subtitle">Sign in to continue your journey</p>
