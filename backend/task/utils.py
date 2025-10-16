@@ -1,6 +1,7 @@
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
+from django.db.models import Q
 from datetime import timedelta
 from staff.models import User  # Import User model for HOD lookup
 
@@ -113,18 +114,46 @@ def get_overdue_html(task, assignee):
     """
 
 def send_task_assignment_email(task, assignee):
-    """Send email to staff member when assigned to a task"""
+    """Send email to assignee with HOD and admins in CC"""
     try:
-        subject = f'New Task Assignment: {task.title}'
+        subject = task.title  # Use task title directly as subject
         
-        # Email to staff
+        # Email to assignee
         html_message = get_task_assignment_html(task, assignee)
-        print(f"Sending email to {assignee.email}")
-        print(f"From email: {settings.DEFAULT_FROM_EMAIL}")
-        print(f"Using SMTP settings:")
-        print(f"Host: {settings.EMAIL_HOST}")
-        print(f"Port: {settings.EMAIL_PORT}")
-        print(f"User: {settings.EMAIL_HOST_USER}")
+        
+        # Initialize CC list
+        cc_list = []
+        
+        # Add HOD to CC list if assignee has a department
+        if assignee.department:
+            hod = User.objects.filter(department=assignee.department, role='hod').first()
+            if hod and hod.email:
+                cc_list.append(hod.email)
+                # Also send a separate detailed notification to HOD
+                if assignee.role == 'staff':  # Send HOD-specific notification only for staff assignments
+                    hod_html_message = get_task_assignment_hod_html(task, assignee.get_full_name())
+                    send_mail(
+                        subject=f"Task Assignment Notification: {task.title}",
+                        message='',
+                        html_message=hod_html_message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[hod.email],
+                        fail_silently=False
+                    )
+        
+        # Add all admins to CC list
+        admin_emails = User.objects.filter(
+            Q(role='admin') | Q(is_superuser=True)
+        ).values_list('email', flat=True).distinct()
+        cc_list.extend(admin_emails)
+        
+        # Remove duplicates and None values from CC list
+        cc_list = list(set(filter(None, cc_list)))
+        
+        # Send email to assignee with CC
+        print(f"Sending email for task '{task.title}'")
+        print(f"To: {assignee.email}")
+        print(f"CC: {cc_list}")
         
         send_mail(
             subject=subject,
@@ -132,7 +161,8 @@ def send_task_assignment_email(task, assignee):
             html_message=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[assignee.email],
-            fail_silently=False  # Changed to False to see errors
+            cc=cc_list,  # Include HOD and admins in CC
+            fail_silently=False
         )
 
         # Email to HOD

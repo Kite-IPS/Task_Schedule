@@ -35,6 +35,7 @@ class User(AbstractUser):
         ('admin', 'Admin'),
         ('hod', 'HOD'),
         ('staff', 'Staff'),
+        ('faculty', 'Faculty')
     ]
     
     DEPARTMENT_CHOICES = [

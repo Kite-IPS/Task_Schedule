@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .models import Task, TaskAssignment
 from .serializers import TaskSerializer, TaskDetailSerializer, TaskCreateSerializer, TaskHistory
-from .permissions import IsAdmin, IsHOD, IsAdminOrHOD
+from .permissions import IsAdmin, IsHOD, IsTaskCreator
 from django.http import HttpResponse
 import csv
 from io import BytesIO
@@ -234,7 +234,7 @@ def get_task(request, task_id):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated, IsAdminOrHOD])
+@permission_classes([IsAuthenticated, IsTaskCreator])
 def create_task(request):
     """Create new task (Admin/HOD only)"""
     serializer = TaskCreateSerializer(

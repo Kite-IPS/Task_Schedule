@@ -25,9 +25,6 @@ class RoleBasedPermission(permissions.BasePermission):
         
         return request.user.role in required_roles
 
-# task/permissions.py
-from rest_framework import permissions
-
 class IsAdmin(permissions.BasePermission):
     """Admin can access everything"""
     
@@ -46,7 +43,21 @@ class IsHOD(permissions.BasePermission):
 
 
 class IsStaff(permissions.BasePermission):
-    """Staff can access their assigned tasks"""
+    """Staff can access their assigned tasks and create new tasks"""
+    
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'staff'
+
+
+class IsTaskCreator(permissions.BasePermission):
+    """Only Admin and Staff can create tasks"""
+    
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated and 
+            (request.user.role in ['admin', 'staff'] or
+            request.user.is_superuser)
+        )
     
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == 'staff'
