@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .models import Task, TaskAssignment
 from .serializers import TaskSerializer, TaskDetailSerializer, TaskCreateSerializer, TaskHistory
-from .permissions import IsAdmin, IsHOD, IsTaskCreator
+from .permissions import IsAdmin, IsHOD, IsAdminOrStaff, IsFaculty
 from django.http import HttpResponse
 import csv
 from io import BytesIO
@@ -52,25 +52,20 @@ def get_all_tasks(request):
     try:
         user = request.user
         
-        # Query based on role
-        if user.role == 'admin':
+        # Query based on role hierarchy
+        if user.role in ['admin', 'staff']:
+            # Admin and Staff can see all tasks
             tasks = Task.objects.all()
         elif user.role == 'hod':
-            # Get all staff in the HOD's department
-            from staff.models import User
-            department_staff = User.objects.filter(department=user.department, role='staff')
-            
-            # Get tasks where any of the department staff are assigned
+            # HOD can only see department tasks
             tasks = Task.objects.filter(
-                assignments__assignee__in=department_staff
+                Q(assignments__department=user.department)
             ).distinct()
-            
-            print(f"HOD Department: {user.department}")
-            print(f"Department Staff Count: {department_staff.count()}")
-            print(f"Tasks found for HOD's department: {tasks.count()}")
-        else:  # staff
-            # Staff can see all tasks
-            tasks = Task.objects.all()
+        elif user.role == 'faculty':
+            # Faculty can only see their assigned tasks
+            tasks = Task.objects.filter(
+                assignments__assignee=user
+            ).distinct()
         
         # Prefetch related data for performance
         tasks = tasks.select_related('created_by').prefetch_related('assignments__assignee')
@@ -131,14 +126,25 @@ def get_task(request, task_id):
                 print(f"Task assignments: {[a.assignee.email for a in task.assignments.all()]}")
                 print(f"Request data: {request.data}")
                 
-                # Permission check: Admin and Staff can edit any task, HOD can edit department tasks
-                can_edit = (
-                    user.role == 'admin' or 
-                    user.role == 'staff' or  # Staff (Faculty) can edit all tasks
-                    user.is_superuser or
-                    (user.role == 'hod' and task.assignments.filter(department=user.department).exists()) or
-                    task.created_by == user
-                )
+                # Permission check based on hierarchy
+                can_edit = False
+                
+                if user.role in ['admin', 'staff'] or user.is_superuser:
+                    # Admin and Staff can edit everything
+                    can_edit = True
+                elif user.role == 'hod':
+                    # HOD can only view, not edit
+                    can_edit = False
+                elif user.role == 'faculty':
+                    # Faculty can only view, not edit
+                    can_edit = False
+                
+                # Special check for status update - only admin and staff can mark as completed
+                if request.data.get('status') == 'completed' and not (user.role in ['admin', 'staff'] or user.is_superuser):
+                    return Response(
+                        {'error': 'Only Admin and Staff can mark tasks as completed'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
                 
                 print(f"Can edit: {can_edit}")
                 print(f"  - is_admin: {user.role == 'admin'}")
@@ -278,7 +284,7 @@ def get_task(request, task_id):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated, IsTaskCreator])
+@permission_classes([IsAuthenticated, IsAdminOrStaff])
 def create_task(request):
     """Create new task (Admin/HOD/Staff can create)"""
     serializer = TaskCreateSerializer(
