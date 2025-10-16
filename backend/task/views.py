@@ -68,7 +68,7 @@ def get_all_tasks(request):
             ).distinct()
         
         # Prefetch related data for performance
-        tasks = tasks.select_related('created_by').prefetch_related('assignments__assignee')
+        tasks = tasks.prefetch_related('assignments__assignee')
         
         # Update overdue tasks
         for task in tasks:
@@ -97,7 +97,7 @@ def get_task(request, task_id):
     user = request.user
     
     try:
-        task = Task.objects.select_related('created_by').prefetch_related(
+        task = Task.objects.prefetch_related(
             'assignments__assignee',                                                                        
             'history__performed_by',
             'attachments'

@@ -25,8 +25,10 @@ const FacultyDashboard = () => {
     status: "pending",
     priority: "medium",
     dueDate: "",
+    createdBy: "",
   });
   const [recentActivities, setRecentActivities] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
 
   const statuses = [
@@ -101,6 +103,7 @@ const FacultyDashboard = () => {
       status: "pending",
       priority: "medium",
       dueDate: "",
+      createdBy: currentUser?.email || "",
     });
     setIsModalOpen(true);
   };
@@ -115,6 +118,7 @@ const FacultyDashboard = () => {
       status: "pending",
       priority: "medium",
       dueDate: "",
+      createdBy: "",
     });
   };
 
@@ -175,20 +179,26 @@ const FacultyDashboard = () => {
           department: [...new Set(selectedDepartments)], // Unique departments
           priority: formData.priority || 'medium',
           status: formData.status || 'pending',
-          due_date: formData.dueDate
+          due_date: formData.dueDate,
+          created_by: formData.createdBy || currentUser?.email || ""
         };
 
         const response = await axiosInstance.post(API_PATH.TASK.CREATE, taskData);
         
         console.log("Task created successfully:", response.data);
+        
+        // Refresh dashboard stats after creating a task
+        const statsResponse = await axiosInstance.get(API_PATH.TASK.DASHBOARD);
+        setStats(statsResponse.data);
+        
+        // Refresh recent activities
+        const activitiesResponse = await axiosInstance.get(API_PATH.TASK.HISTORY);
+        setRecentActivities(activitiesResponse.data.activities || []);
+        
         closeModal();
         
-        // Show success message
+        // Show success message with alert
         alert("Task created successfully!");
-        
-        // Optionally refresh the dashboard stats
-        // You could call fetchDashboardStats() here if needed
-        
       } catch (error) {
         console.error("Error creating task:", error);
         const errorMessage = error.response?.data?.detail || 
@@ -239,7 +249,7 @@ const FacultyDashboard = () => {
             {loading ? '...' : stats.completed_task}
           </p>
         </div>
-        <div className="h-[60px] md:h-auto md:pt-8 flex md:flex-col md:justify-center items-center       md:items-start justify-between md:justify-start px-4 md:px-10 text-white bg-white/5 backdrop-blur-md       border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10      transition-all shadow-lg hover:shadow-2xl col-span-2 lg:col-span-1">
+        <div className="h-[60px] md:h-auto md:pt-8 flex md:flex-col md:justify-start items-center md:items-start justify-between px-4 md:px-10 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl col-span-2 lg:col-span-1">
           <h2 className="font-semibold text-white/80 text-[17px] md:text-xl mb-3">Pending Tasks</h2>
           <p className="font-bold text-orange-400 text-[18px] md:text-5xl">
             {loading ? '...' : stats.ongoing_task}
@@ -320,173 +330,169 @@ const FacultyDashboard = () => {
       </div>
 
 
-      {/* Create Task Modal */}
+      {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl md:rounded-2xl shadow-2xl w-full md:w-[600px] max-w-2xl p-5 md:p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl w-[90%] md:w-[600px] p-6 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
-              <h2 className="text-lg md:text-xl font-bold text-white">Create New Task</h2>
-              <button
-                onClick={closeModal}
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full p-1 transition-all duration-200"
-              >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">Create Task</h2>
+              <button onClick={closeModal} className="text-white/70 hover:text-white transition">
                 <X size={24} />
               </button>
             </div>
 
-
-            {/* Modal Body - Form */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-white/90 mb-2">
-                  Title <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white placeholder-white/40 transition-all duration-200"
-                  placeholder="Enter task title"
-                />
-              </div>
-
-
-              <div>
-                <label className="block text-sm font-semibold text-white/90 mb-2">
-                  Description <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white placeholder-white/40 resize-none transition-all duration-200"
-                  placeholder="Enter task description"
-                />
-              </div>
-
-
-              <div>
-                <label className="block text-sm font-semibold text-white/90 mb-2">
-                  Assignee(s) <span className="text-red-400">*</span> {formData.assignee.length > 0 && `(${formData.assignee.length} selected)`}
-                </label>
-                <div className="border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg p-3 max-h-60 overflow-y-auto">
-                  {usersLoading ? (
-                    <p className="text-white/60 text-sm">Loading users...</p>
-                  ) : users.length === 0 ? (
-                    <p className="text-white/60 text-sm">No users available</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {users.map((user) => (
-                        <label
-                          key={user.id}
-                          className="flex items-start gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={formData.assignee.includes(user.email)}
-                            onChange={() => handleAssigneeToggle(user.email)}
-                            className="mt-1 w-4 h-4 rounded border-white/20 bg-white/10 text-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-0"
-                          />
-                          <div className="flex-1">
-                            <div className="text-white text-sm font-medium">{user.name || user.email}</div>
-                            <div className="text-white/60 text-xs">
-                              {user.email} • {user.role} {user.department && `• ${user.department.toUpperCase()}`}
-                            </div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {formData.assignee.length > 0 && (
-                  <div className="mt-2 text-xs text-white/80 bg-white/5 p-2 rounded border border-white/10">
-                    <span className="font-semibold">Auto-selected Departments:</span> {getSelectedDepartments() || 'None'}
-                  </div>
-                )}
-                <p className="text-xs text-white/60 mt-1">
-                  * Select one or more assignees. Departments will be automatically set.
-                </p>
-              </div>
-
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Modal Body */}
+            <>
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-white/90 mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white transition-all duration-200"
-                  >
-                    {statuses.map((status) => (
-                      <option key={status.code} value={status.code} className="bg-gray-900">
-                        {status.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-
-                <div>
-                  <label className="block text-sm font-semibold text-white/90 mb-2">
-                    Priority
-                  </label>
-                  <select
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleInputChange}
-                    className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white transition-all duration-200"
-                  >
-                    {priorities.map((priority) => (
-                      <option key={priority.code} value={priority.code} className="bg-gray-900">
-                        {priority.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-
-                <div>
-                  <label className="block text-sm font-semibold text-white/90 mb-2">
-                    Due Date <span className="text-red-400">*</span>
-                  </label>
+                  <label className="block text-sm font-medium text-white/90 mb-1">Title *</label>
                   <input
-                    type="datetime-local"
-                    name="dueDate"
-                    value={formData.dueDate}
+                    type="text"
+                    name="title"
+                    value={formData.title}
                     onChange={handleInputChange}
-                    className="w-full border-2 border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-white transition-all duration-200"
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
+                    placeholder="Enter task title"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white/90 mb-1">Description *</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows={3}
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40 resize-none"
+                    placeholder="Enter task description"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white/90 mb-1">Created By</label>
+                  <input
+                    type="text"
+                    name="createdBy"
+                    value={formData.createdBy}
+                    onChange={handleInputChange}
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
+                    placeholder="Enter the name of the person creating this task"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white/90 mb-1">
+                    Assignee(s) * {formData.assignee.length > 0 && `(${formData.assignee.length} selected)`}
+                  </label>
+
+                  <div className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg p-3 max-h-60 overflow-y-auto">
+                    {usersLoading ? (
+                      <p className="text-white/60 text-sm">Loading users...</p>
+                    ) : users.length === 0 ? (
+                      <p className="text-white/60 text-sm">No users available</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {users.map((user) => (
+                          <label
+                            key={user.id}
+                            className="flex items-start gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.assignee.includes(user.email)}
+                              onChange={() => handleAssigneeToggle(user.email)}
+                              className="mt-1 w-4 h-4 rounded border-white/20 bg-white/10 text-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-0"
+                            />
+                            <div className="flex-1">
+                              <div className="text-white text-sm font-medium">{user.name || user.email}</div>
+                              <div className="text-white/60 text-xs">
+                                {user.email} • {user.role} {user.department && `• ${user.department.toUpperCase()}`}
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {formData.assignee.length > 0 && (
+                    <div className="mt-2 text-xs text-white/80 bg-white/5 p-2 rounded border border-white/10">
+                      <span className="font-semibold">Auto-selected Departments:</span>{" "}
+                      {getSelectedDepartments() || "None"}
+                    </div>
+                  )}
+                  <p className="text-xs text-white/60 mt-1">
+                    Select one or more assignees. Departments will be automatically set based on selected assignees.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                    >
+                      {statuses.map((status) => (
+                        <option key={status.code} value={status.code} className="bg-gray-900">
+                          {status.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-1">Priority</label>
+                    <select
+                      name="priority"
+                      value={formData.priority}
+                      onChange={handleInputChange}
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                    >
+                      {priorities.map((priority) => (
+                        <option key={priority.code} value={priority.code} className="bg-gray-900">
+                          {priority.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-1">Due Date *</label>
+                    <input
+                      type="datetime-local"
+                      name="dueDate"
+                      value={formData.dueDate}
+                      onChange={handleInputChange}
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-
-            {/* Modal Footer */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-4 border-t border-white/10">
-              <button
-                onClick={closeModal}
-                className="w-full sm:flex-1 px-5 py-2.5 border-2 border-white/20 bg-white/5 rounded-lg hover:bg-white/10 hover:border-white/30 transition-all duration-200 font-semibold text-white"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateTask}
-                disabled={createLoading}
-                className={`w-full sm:flex-1 px-5 py-2.5 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl ${
-                  createLoading 
-                    ? 'bg-gray-600 cursor-not-allowed' 
-                    : 'bg-red-600 hover:bg-red-700'
-                }`}
-              >
-                {createLoading ? 'Creating...' : 'Create Task'}
-              </button>
-            </div>
+              {/* Modal Footer */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={closeModal}
+                  className="flex-1 px-4 py-2 border border-white/20 bg-white/5 rounded-lg hover:bg-white/10 transition font-medium text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateTask}
+                  disabled={createLoading}
+                  className={`flex-1 px-4 py-2 text-white rounded-lg transition font-medium ${
+                    createLoading
+                      ? "bg-gray-600 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
+                >
+                  {createLoading ? "Creating..." : "Create"}
+                </button>
+              </div>
+            </>
           </div>
         </div>
       )}

@@ -62,14 +62,14 @@ const Assignment = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await axiosInstance.get(API_PATH.USER.PROFILE || "/api/user/profile")
-        setCurrentUser(response.data.user || response.data)
-      } catch (error) {
-        console.error("Error fetching current user:", error)
-      }
-    }
+    // const fetchCurrentUser = async () => {
+    //   try {
+    //     const response = await axiosInstance.get(API_PATH.USER.PROFILE || "/api/user/profile")
+    //     setCurrentUser(response.data.user || response.data)
+    //   } catch (error) {
+    //     console.error("Error fetching current user:", error)
+    //   }
+    // }
 
     const fetchUsers = async () => {
       setUsersLoading(true)
@@ -126,7 +126,7 @@ const Assignment = () => {
       }
     }
 
-    fetchCurrentUser()
+    // fetchCurrentUser()
     fetchUsers()
     fetchTasks()
   }, [])
