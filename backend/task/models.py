@@ -27,11 +27,7 @@ class Task(models.Model):
     due_date = models.DateTimeField()
     
     completed_at = models.DateTimeField(null=True, blank=True)  
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='created_tasks'
-    )
+    created_by = models.CharField(max_length=255, help_text="Name of the person who requested this task")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

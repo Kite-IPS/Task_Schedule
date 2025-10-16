@@ -293,24 +293,8 @@ def create_task(request):
     )
     serializer.is_valid(raise_exception=True)
     
-    # Handle created_by field based on role
-    user = request.user
-    created_by_data = request.data.get('created_by')
-    
-    if user.role == 'staff' and created_by_data:
-        # Staff can set created_by field
-        from staff.models import User
-        try:
-            created_by_user = User.objects.get(id=created_by_data)
-            task = serializer.save(created_by=created_by_user)
-        except User.DoesNotExist:
-            return Response(
-                {'error': 'Invalid created_by user ID'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    else:
-        # Admin and others get auto-assigned
-        task = serializer.save(created_by=user)
+    # Create the task with the provided created_by name
+    task = serializer.save()
     
     # Send email notifications to assigned staff and their HODs
     for assignment in task.assignments.all():
