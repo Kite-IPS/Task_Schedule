@@ -70,9 +70,8 @@ def get_all_tasks(request):
             print(f"Department Staff Count: {department_staff.count()}")
             print(f"Tasks found for HOD's department: {tasks.count()}")
         else:  # staff
-            tasks = Task.objects.filter(
-                assignments__assignee=user
-            ).distinct()
+            # Staff can see all tasks
+            tasks = Task.objects.all()
         
         # Prefetch related data for performance
         tasks = tasks.select_related('created_by').prefetch_related('assignments__assignee')
@@ -389,12 +388,10 @@ def get_task_history(request):
             task__assignments__department=user.department
         ).distinct()[:10]
     else:  # staff
-        # Staff sees history for their assigned tasks
+        # Staff sees all task history
         history = TaskHistory.objects.select_related(
             'task', 'performed_by'
-        ).filter(
-            task__assignments__assignee=user
-        ).distinct()[:10]
+        ).all()[:10]
     
     serializer = TaskHistorySerializer(history, many=True)
     return Response({'activities': serializer.data})

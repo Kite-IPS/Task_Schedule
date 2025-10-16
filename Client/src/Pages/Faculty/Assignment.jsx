@@ -11,6 +11,7 @@ const Assignment = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("All");
+  const [createdDateFilter, setCreatedDateFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -74,6 +75,7 @@ const Assignment = () => {
           priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1),
           dueDate: task.due_date,
           completedAt: task.completed_at,
+          createdAt: task.created_at,
           rawAssignee: task.assignee || [], // Keep raw data for editing
           rawDepartment: task.department || [],
           rawStatus: task.status,
@@ -100,13 +102,23 @@ const Assignment = () => {
       const matchesStatus = statusFilter === "All" || task.status === statusFilter;
       const matchesPriority =
         priorityFilter === "All" || task.priority === priorityFilter;
+      const matchesCreatedDate = createdDateFilter === "All" || (() => {
+        if (!task.createdAt) return false;
+        const date = new Date(task.createdAt);
+        const formattedDate = date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+        return formattedDate === createdDateFilter;
+      })();
 
-      return matchesSearch && matchesStatus && matchesPriority;
+      return matchesSearch && matchesStatus && matchesPriority && matchesCreatedDate;
     });
 
     setFilteredTasks(filtered);
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, priorityFilter, tasks]);
+  }, [searchTerm, statusFilter, priorityFilter, createdDateFilter, tasks]);
 
   // Pagination
   const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
@@ -447,7 +459,7 @@ const Assignment = () => {
 
         {/* Filters */}
         <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-xl shadow-lg mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <input
               type="text"
               placeholder="Search by title or assignee..."
@@ -479,6 +491,26 @@ const Assignment = () => {
                 </option>
               ))}
             </select>
+            <select
+              value={createdDateFilter}
+              onChange={(e) => setCreatedDateFilter(e.target.value)}
+              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+            >
+              <option value="All" className="bg-gray-900">All Created Dates</option>
+              {Array.from(new Set(tasks.map(task => {
+                if (!task.createdAt) return null;
+                const date = new Date(task.createdAt);
+                return date.toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                });
+              }).filter(Boolean))).sort((a, b) => new Date(b) - new Date(a)).map(date => (
+                <option key={date} value={date} className="bg-gray-900">
+                  {date}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -507,6 +539,9 @@ const Assignment = () => {
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Due Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                  Created Date
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">
                   Completed Time
@@ -566,6 +601,22 @@ const Assignment = () => {
                         });
                       };
                       return formatDateForDisplay(task.dueDate);
+                    })()}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-white/80">
+                    {(() => {
+                      const formatDateForDisplay = (dateString) => {
+                        if (!dateString) return 'No date';
+                        const date = new Date(dateString);
+                        return date.toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+                      };
+                      return formatDateForDisplay(task.createdAt);
                     })()}
                   </td>
                   <td className="px-4 py-3 text-sm text-white/80">
