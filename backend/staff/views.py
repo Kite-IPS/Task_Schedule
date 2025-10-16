@@ -48,12 +48,9 @@ def user_info_view(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, RoleBasedPermission])
+@permission_classes([IsAuthenticated])
 def get_all_users(request):
-    """Admin: Get all users"""
-    if request.user.role != 'admin' and not request.user.is_superuser:
-        return Response({'error': 'Admin access required'}, status=403)
-    
+    """Get all users - All authenticated users can see user list for task assignment"""
     users = User.objects.all().order_by('role', 'department')
     serializer = UserSerializer(users, many=True)
     return Response({'users': serializer.data})

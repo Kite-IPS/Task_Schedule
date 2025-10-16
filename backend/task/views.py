@@ -29,10 +29,9 @@ def dashboard_view(request):
         tasks = Task.objects.filter(
             assignments__department=user.department
         ).distinct()
-    else:  # staff
-        tasks = Task.objects.filter(
-            assignments__assignee=user
-        ).distinct()
+    else:  # staff (Faculty)
+        # Staff can see all tasks (consistent with get_all_tasks)
+        tasks = Task.objects.all()
     
     # Calculate stats based on status (not priority)
     total_tasks = tasks.count()
@@ -109,17 +108,13 @@ def get_task(request, task_id):
             'attachments'
         ).get(id=task_id)
         
-        # Check permission
-        if user.role == 'hod' and not task.assignments.filter(department=user.department).exists():
-            return Response(
-                {'error': 'Permission denied'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        elif user.role == 'staff' and not task.assignments.filter(assignee=user).exists():
-            return Response(
-                {'error': 'Permission denied'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # Check permission - Staff can now view all tasks
+        if user.role == 'hod' and not user.is_superuser:
+            if not task.assignments.filter(department=user.department).exists():
+                return Response(
+                    {'error': 'Permission denied'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
         
         # Handle GET request
         if request.method == 'GET':
@@ -129,20 +124,40 @@ def get_task(request, task_id):
         
         # Handle PUT request (Update)
         elif request.method == 'PUT':
-            # Permission check: Admin can edit any task, HOD can edit department tasks, 
-            # Staff/Faculty can edit tasks they created or are assigned to
-            can_edit = (
-                user.role == 'admin' or 
-                user.is_superuser or
-                (user.role == 'hod' and task.assignments.filter(department=user.department).exists()) or
-                task.created_by == user or
-                task.assignments.filter(assignee=user).exists()
-            )
-            
-            if not can_edit:
+            try:
+                # Debug logging
+                print(f"PUT request from user: {user.email}, role: {user.role}")
+                print(f"Task ID: {task.id}, created_by: {task.created_by.email if task.created_by else 'None'}")
+                print(f"Task assignments: {[a.assignee.email for a in task.assignments.all()]}")
+                print(f"Request data: {request.data}")
+                
+                # Permission check: Admin and Staff can edit any task, HOD can edit department tasks
+                can_edit = (
+                    user.role == 'admin' or 
+                    user.role == 'staff' or  # Staff (Faculty) can edit all tasks
+                    user.is_superuser or
+                    (user.role == 'hod' and task.assignments.filter(department=user.department).exists()) or
+                    task.created_by == user
+                )
+                
+                print(f"Can edit: {can_edit}")
+                print(f"  - is_admin: {user.role == 'admin'}")
+                print(f"  - is_superuser: {user.is_superuser}")
+                print(f"  - is_creator: {task.created_by == user}")
+                print(f"  - is_assigned: {task.assignments.filter(assignee=user).exists()}")
+                
+                if not can_edit:
+                    return Response(
+                        {'error': 'You do not have permission to update this task'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            except Exception as e:
+                print(f"Error in permission check: {str(e)}")
+                import traceback
+                traceback.print_exc()
                 return Response(
-                    {'error': 'You do not have permission to update this task'},
-                    status=status.HTTP_403_FORBIDDEN
+                    {'error': 'Error checking permissions', 'detail': str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
             
             # Capture old values
@@ -176,46 +191,75 @@ def get_task(request, task_id):
                     task.completed_at = None
             
             # Handle assignee and department updates
-            if 'assignee' in request.data and 'department' in request.data:
-                from staff.models import User
+            try:
+                if 'assignee' in request.data:
+                    from staff.models import User
+                    
+                    # Clear existing assignments
+                    task.assignments.all().delete()
+                    
+                    # Create new assignments
+                    assignees = request.data['assignee']
+                    
+                    print(f"Updating assignees: {assignees}")
+                    
+                    # Each assignee gets assigned once with their own department
+                    for email in assignees:
+                        try:
+                            user_obj = User.objects.get(email=email)
+                            # Use the user's department from their profile
+                            # unique_together constraint allows only one assignment per task-assignee pair
+                            TaskAssignment.objects.create(
+                                task=task,
+                                assignee=user_obj,
+                                department=user_obj.department or 'GENERAL'  # Fallback to GENERAL if no department
+                            )
+                            print(f"Assigned {email} with department {user_obj.department}")
+                        except User.DoesNotExist:
+                            print(f"Warning: User with email {email} not found")
+                            continue
+                        except Exception as e:
+                            print(f"Error creating assignment for {email}: {str(e)}")
+                            continue
                 
-                # Clear existing assignments
-                task.assignments.all().delete()
+                if changes:
+                    task.save()
+                    TaskHistory.objects.create(
+                        task=task,
+                        action='updated',
+                        performed_by=request.user,
+                        details={'changes': changes, 'updated_fields': list(changes.keys())}
+                    )
                 
-                # Create new assignments
-                assignees = request.data['assignee']
-                departments = request.data['department']
-                
-                for email in assignees:
-                    user_obj = User.objects.get(email=email)
-                    for dept in departments:
-                        TaskAssignment.objects.create(
-                            task=task,
-                            assignee=user_obj,
-                            department=dept
-                        )
-            
-            if changes:
-                task.save()
-                TaskHistory.objects.create(
-                    task=task,
-                    action='updated',
-                    performed_by=request.user,
-                    details={'changes': changes, 'updated_fields': list(changes.keys())}
+                return Response(TaskDetailSerializer(task).data)
+            except Exception as e:
+                print(f"Error updating task: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                return Response(
+                    {'error': 'Error updating task', 'detail': str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
-            
-            return Response(TaskDetailSerializer(task).data)
         
         # Handle DELETE request
         elif request.method == 'DELETE':
-            # Permission check: Admin can delete any task, HOD can delete department tasks,
-            # Staff/Faculty can delete tasks they created
+            # Debug logging
+            print(f"DELETE request from user: {user.email}, role: {user.role}")
+            print(f"Task ID: {task.id}, created_by: {task.created_by.email if task.created_by else 'None'}")
+            
+            # Permission check: Admin and Staff can delete any task, HOD can delete department tasks
             can_delete = (
                 user.role == 'admin' or 
+                user.role == 'staff' or  # Staff (Faculty) can delete all tasks
                 user.is_superuser or
                 (user.role == 'hod' and task.assignments.filter(department=user.department).exists()) or
                 task.created_by == user
             )
+            
+            print(f"Can delete: {can_delete}")
+            print(f"  - is_admin: {user.role == 'admin'}")
+            print(f"  - is_superuser: {user.is_superuser}")
+            print(f"  - is_creator: {task.created_by == user}")
             
             if not can_delete:
                 return Response(
@@ -236,7 +280,7 @@ def get_task(request, task_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsTaskCreator])
 def create_task(request):
-    """Create new task (Admin/HOD only)"""
+    """Create new task (Admin/HOD/Staff can create)"""
     serializer = TaskCreateSerializer(
         data=request.data,
         context={'request': request}
@@ -256,9 +300,9 @@ def create_task(request):
     )
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated, IsAdmin])
+@permission_classes([IsAuthenticated])
 def update_task(request, task_id):
-    """Update task details (Admin only)"""
+    """Update task details"""
     try:
         task = Task.objects.get(id=task_id)
         
@@ -322,7 +366,7 @@ def update_task(request, task_id):
         )
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated, IsAdmin])
+@permission_classes([IsAuthenticated, IsStaff])
 def delete_task(request, task_id):
     """Delete task (Admin only)"""
     try:
