@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .models import Task, TaskAssignment
 from .serializers import TaskSerializer, TaskDetailSerializer, TaskCreateSerializer, TaskHistory
-from .permissions import IsAdmin, IsHOD, IsAdminOrStaff, IsFaculty
+from .permissions import IsAdmin, IsHOD, IsAdminOrStaff, IsFaculty, IsStaff
 from django.http import HttpResponse
 import csv
 from io import BytesIO

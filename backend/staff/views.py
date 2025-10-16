@@ -9,7 +9,6 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import User
 from .serializers import UserSerializer, UserCreateSerializer, LoginSerializer
 from task.permissions import IsAdmin
-from task.permissions import RoleBasedPermission
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
