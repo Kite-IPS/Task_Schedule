@@ -126,19 +126,21 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         
         # Pop assignment data
         assignees = validated_data.pop('assignee')
-        departments = validated_data.pop('department')
+        departments = validated_data.pop('department', [])  # Optional now
         
         # Create task
         task = Task.objects.create(**validated_data)
         
-        # Create assignments
+        # Create assignments - one per assignee using their own department
         assignments = []
-        for email, dept in zip(assignees, departments):
+        for email in assignees:
             assignee = User.objects.get(email=email)
+            # Use the user's own department from their profile
+            # This respects the unique_together constraint (task, assignee)
             assignment = TaskAssignment(
                 task=task,
                 assignee=assignee,
-                department=dept
+                department=assignee.department or 'GENERAL'  # Fallback to GENERAL
             )
             assignments.append(assignment)
         
