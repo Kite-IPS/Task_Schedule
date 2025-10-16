@@ -598,7 +598,7 @@ const styles = {
   card: {
     padding: '3rem',
     borderRadius: '24px',
-    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+    boxShadow: '0 8px 32px 0 rgba(218, 33, 33, 0.56)',
     background: 'rgba(255, 255, 255, 0.05)',
     backdropFilter: 'blur(20px) saturate(180%)',
     WebkitBackdropFilter: 'blur(20px) saturate(180%)',
