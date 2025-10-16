@@ -112,78 +112,45 @@ def get_overdue_html(task, assignee):
         <p>Best regards,<br>Task Management System</p>
     </div>
     """
-
 def send_task_assignment_email(task, assignee):
-    """Send email to assignee with HOD and admins in CC"""
+    """Send email to assignee with HOD in recipient list"""
     try:
         subject = task.title  # Use task title directly as subject
         
         # Email to assignee
         html_message = get_task_assignment_html(task, assignee)
         
-        # Initialize CC list
-        cc_list = []
+        # Initialize recipient list with assignee
+        recipient_list = [assignee.email]
         
-        # Add HOD to CC list if assignee has a department
+        # Add HOD to recipient list if assignee has a department
         if assignee.department:
             hod = User.objects.filter(department=assignee.department, role='hod').first()
             if hod and hod.email:
-                cc_list.append(hod.email)
-                # Also send a separate detailed notification to HOD
-                if assignee.role == 'staff':  # Send HOD-specific notification only for staff assignments
-                    hod_html_message = get_task_assignment_hod_html(task, assignee.get_full_name())
-                    send_mail(
-                        subject=f"Task Assignment Notification: {task.title}",
-                        message='',
-                        html_message=hod_html_message,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[hod.email],
-                        fail_silently=False
-                    )
+                recipient_list.append(hod.email)
         
-        # Add all admins to CC list
+        # Add all admins to recipient list
         admin_emails = User.objects.filter(
             Q(role='admin') | Q(is_superuser=True)
         ).values_list('email', flat=True).distinct()
-        cc_list.extend(admin_emails)
+        recipient_list.extend(admin_emails)
         
-        # Remove duplicates and None values from CC list
-        cc_list = list(set(filter(None, cc_list)))
+        # Remove duplicates and None values from recipient list
+        recipient_list = list(set(filter(None, recipient_list)))
         
-        # Send email to assignee with CC
+        # Send email to all recipients
         print(f"Sending email for task '{task.title}'")
-        print(f"To: {assignee.email}")
-        print(f"CC: {cc_list}")
+        print(f"Recipients: {recipient_list}")
         
         send_mail(
             subject=subject,
             message='',  # HTML-only email
             html_message=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[assignee.email],
-            cc=cc_list,  # Include HOD and admins in CC
+            recipient_list=recipient_list,
             fail_silently=False
         )
-
-        # Email to HOD
-        if assignee.department:  # If staff has a department assigned
-            # Find HOD for this department
-            try:
-                hod = User.objects.filter(department=assignee.department, role='hod').first()
-                if hod and hod.email:
-                    hod_html_message = get_task_assignment_hod_html(task, assignee.get_full_name())
-                    send_mail(
-                        subject=f'Task Assignment Notification: {task.title}',
-                        message='',  # HTML-only email
-                        html_message=hod_html_message,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[hod.email],
-                        fail_silently=True
-                    )
-            except Exception as e:
-                if settings.DEBUG:
-                    print(f"Error sending HOD notification: {str(e)}")
-                # Continue even if HOD notification fails
+        
     except Exception as e:
         if settings.DEBUG:
             print(f"Error sending task assignment email: {str(e)}")
