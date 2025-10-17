@@ -146,5 +146,6 @@ class TaskAttachment(models.Model):
     file_name = models.CharField(max_length=255)
     file_size = models.IntegerField()  # in bytes
     
+    
     class Meta:
         db_table = 'task_attachments'
