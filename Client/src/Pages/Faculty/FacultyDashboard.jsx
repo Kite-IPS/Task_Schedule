@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from "../../Utils/axiosInstance";
 import { API_PATH } from "../../Utils/apiPath";
 
-
 const FacultyDashboard = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,6 +17,7 @@ const FacultyDashboard = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [departmentFilter, setDepartmentFilter] = useState("all");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -29,7 +29,6 @@ const FacultyDashboard = () => {
   });
   const [recentActivities, setRecentActivities] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
-
 
   const statuses = [
     { code: "pending", name: "Pending" },
@@ -43,16 +42,16 @@ const FacultyDashboard = () => {
     { code: "urgent", name: "Urgent" }
   ];
   const departments = [
-    { code: "cse", name: "Computer Science" },
-    { code: "ece", name: "Electronics" }, 
-    { code: "mech", name: "Mechanical" },
-    { code: "civil", name: "Civil" },
-    { code: "eee", name: "Electrical" }
+    { code: "CSE", name: "CSE" },
+    { code: "ECE", name: "ECE" },
+    { code: "AIDS", name: "AIDS" },
+    { code: "CSBS", name: "CSBS" },
+    { code: "MECH", name: "MECH" },
+    { code: "IT", name: "IT" },
+    { code: "CYS", name: "CYS" },
+    { code: "AIML", name: "AIML" },
+    { code: "RA", name: "R&A" },
   ];
-
-
-
-
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
@@ -70,7 +69,12 @@ const FacultyDashboard = () => {
       setUsersLoading(true);
       try {
         const response = await axiosInstance.get(API_PATH.USER.ALL);
-        setUsers(response.data.users || []);
+        
+        // Filter to show only faculty and hod roles (exclude staff)
+        const filteredUsers = (response.data.users || []).filter(
+          (user) => user.role === "faculty" || user.role === "hod"
+        );
+        setUsers(filteredUsers);
       } catch (error) {
         console.error('Error fetching users:', error);
         setUsers([]);
@@ -94,6 +98,13 @@ const FacultyDashboard = () => {
     fetchRecentActivities();
   }, []);
 
+  // Filter users based on selected department
+  const getFilteredUsers = () => {
+    if (departmentFilter === "all") {
+      return users;
+    }
+    return users.filter((user) => user.department === departmentFilter);
+  };
 
   const openCreateModal = () => {
     setFormData({
@@ -105,9 +116,9 @@ const FacultyDashboard = () => {
       dueDate: "",
       createdBy: currentUser?.email || "",
     });
+    setDepartmentFilter("all");
     setIsModalOpen(true);
   };
-
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -120,8 +131,8 @@ const FacultyDashboard = () => {
       dueDate: "",
       createdBy: "",
     });
+    setDepartmentFilter("all");
   };
-
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -146,9 +157,6 @@ const FacultyDashboard = () => {
     }).filter(Boolean);
     return [...new Set(departments)].join(', ');
   };
-
-
-
 
   const handleCreateTask = async () => {
     if (
@@ -215,7 +223,6 @@ const FacultyDashboard = () => {
     }
   };
 
-
   return (
     <BaseLayout>
       <div className="flex gap-1 items-center my-4 w-[90%] md:w-[80%] mx-auto text-white/70">
@@ -233,7 +240,6 @@ const FacultyDashboard = () => {
           Dashboard
         </button>
       </div>
-
 
       {/* Stats Cards - 2 cards in first row on mobile, third card below */}
       <div className="w-[90%] md:w-[80%] mx-auto grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 my-10">
@@ -257,7 +263,6 @@ const FacultyDashboard = () => {
         </div>
       </div>
 
-
       {/* Action Buttons - Equal width on mobile, centered on desktop */}
       <div className="w-[90%] md:w-[80%] mx-auto my-8">
         <div className="flex flex-row justify-center items-center gap-4 md:gap-6 flex-wrap md:flex-nowrap">
@@ -278,7 +283,6 @@ const FacultyDashboard = () => {
         </div>
       </div>
 
-
       {/* Recent Activity Tab - Improved width and hover effects */}
       <div className="w-[90%] md:w-[80%] mx-auto my-8 mb-12">
         <div className="bg-white/5 backdrop-blur-md rounded-xl md:rounded-2xl shadow-xl border border-white/10 overflow-hidden">
@@ -289,7 +293,6 @@ const FacultyDashboard = () => {
               <h2 className="text-base md:text-xl font-semibold text-white">Recent Activity</h2>
             </div>
           </div>
-
 
           {/* Activity Content */}
           <div className="p-4 md:p-6">
@@ -328,7 +331,6 @@ const FacultyDashboard = () => {
           </div>
         </div>
       </div>
-
 
       {/* Modal */}
       {isModalOpen && (
@@ -386,14 +388,32 @@ const FacultyDashboard = () => {
                     Assignee(s) * {formData.assignee.length > 0 && `(${formData.assignee.length} selected)`}
                   </label>
 
+                  {/* Department Filter Dropdown */}
+                  <div className="mb-3">
+                    <select
+                      value={departmentFilter}
+                      onChange={(e) => setDepartmentFilter(e.target.value)}
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                    >
+                      <option value="all" className="bg-gray-900">
+                        All Departments
+                      </option>
+                      {departments.map((dept) => (
+                        <option key={dept.code} value={dept.code} className="bg-gray-900">
+                          {dept.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg p-3 max-h-60 overflow-y-auto">
                     {usersLoading ? (
                       <p className="text-white/60 text-sm">Loading users...</p>
-                    ) : users.length === 0 ? (
-                      <p className="text-white/60 text-sm">No users available</p>
+                    ) : getFilteredUsers().length === 0 ? (
+                      <p className="text-white/60 text-sm">No users available in this department</p>
                     ) : (
                       <div className="space-y-2">
-                        {users.map((user) => (
+                        {getFilteredUsers().map((user) => (
                           <label
                             key={user.id}
                             className="flex items-start gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
@@ -422,7 +442,7 @@ const FacultyDashboard = () => {
                     </div>
                   )}
                   <p className="text-xs text-white/60 mt-1">
-                    Select one or more assignees. Departments will be automatically set based on selected assignees.
+                    Select one or more assignees (Faculty/HOD only). Departments will be automatically set based on selected assignees.
                   </p>
                 </div>
 
@@ -499,6 +519,5 @@ const FacultyDashboard = () => {
     </BaseLayout>
   )
 }
-
 
 export default FacultyDashboard
