@@ -1,4 +1,3 @@
-# task/views.py
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -15,6 +14,9 @@ from django.http import HttpResponse
 import csv
 from io import BytesIO
 from reportlab.pdfgen import canvas
+import logging
+
+logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -75,13 +77,13 @@ def get_all_tasks(request):
             try:
                 task.update_status()
             except Exception as e:
-                print(f"Error updating status for task {task.id}: {str(e)}")
+                logger.warning(f"Error updating status for task {task.id}: {str(e)}")
                 continue
         
         serializer = TaskSerializer(tasks, many=True)
         return Response({'tasks': serializer.data})
     except Exception as e:
-        print(f"Error in get_all_tasks: {str(e)}")
+        logger.error(f"Error in get_all_tasks: {str(e)}")
         import traceback
         traceback.print_exc()
         return Response(
@@ -120,11 +122,13 @@ def get_task(request, task_id):
         # Handle PUT request (Update)
         elif request.method == 'PUT':
             try:
-                # Debug logging
-                print(f"PUT request from user: {user.email}, role: {user.role}")
-                print(f"Task ID: {task.id}, created_by: {task.created_by.email if task.created_by else 'None'}")
-                print(f"Task assignments: {[a.assignee.email for a in task.assignments.all()]}")
-                print(f"Request data: {request.data}")
+                # Debug logging - Safe access to created_by and assignees
+                created_by_safe = task.created_by if isinstance(task.created_by, str) else (task.created_by.email if task.created_by else 'None')
+                assignee_emails = [a.assignee.email if not isinstance(a.assignee, str) else a.assignee for a in task.assignments.all()]
+                logger.info(f"PUT request from user: {user.email}, role: {user.role}")
+                logger.info(f"Task ID: {task.id}, created_by: {created_by_safe}")
+                logger.info(f"Task assignments: {assignee_emails}")
+                logger.info(f"Request data: {request.data}")
                 
                 # Permission check based on hierarchy
                 can_edit = False
@@ -146,11 +150,19 @@ def get_task(request, task_id):
                         status=status.HTTP_403_FORBIDDEN
                     )
                 
-                print(f"Can edit: {can_edit}")
-                print(f"  - is_admin: {user.role == 'admin'}")
-                print(f"  - is_superuser: {user.is_superuser}")
-                print(f"  - is_creator: {task.created_by == user}")
-                print(f"  - is_assigned: {task.assignments.filter(assignee=user).exists()}")
+                # Safe creator and assigned checks
+                is_creator = task.created_by == user.email if isinstance(task.created_by, str) else (task.created_by == user)
+                # For assigned, use loop if filter may fail on str
+                is_assigned = any(
+                    a.assignee == user if not isinstance(a.assignee, str) else a.assignee == user.email
+                    for a in task.assignments.all()
+                )
+                
+                logger.info(f"Can edit: {can_edit}")
+                logger.info(f"  - is_admin: {user.role == 'admin'}")
+                logger.info(f"  - is_superuser: {user.is_superuser}")
+                logger.info(f"  - is_creator: {is_creator}")
+                logger.info(f"  - is_assigned: {is_assigned}")
                 
                 if not can_edit:
                     return Response(
@@ -158,7 +170,7 @@ def get_task(request, task_id):
                         status=status.HTTP_403_FORBIDDEN
                     )
             except Exception as e:
-                print(f"Error in permission check: {str(e)}")
+                logger.error(f"Error in permission check: {str(e)}")
                 import traceback
                 traceback.print_exc()
                 return Response(
@@ -207,7 +219,7 @@ def get_task(request, task_id):
                     # Create new assignments
                     assignees = request.data['assignee']
                     
-                    print(f"Updating assignees: {assignees}")
+                    logger.info(f"Updating assignees: {assignees}")
                     
                     # Each assignee gets assigned once with their own department
                     for email in assignees:
@@ -220,12 +232,12 @@ def get_task(request, task_id):
                                 assignee=user_obj,
                                 department=user_obj.department or 'GENERAL'  # Fallback to GENERAL if no department
                             )
-                            print(f"Assigned {email} with department {user_obj.department}")
+                            logger.info(f"Assigned {email} with department {user_obj.department}")
                         except User.DoesNotExist:
-                            print(f"Warning: User with email {email} not found")
+                            logger.warning(f"Warning: User with email {email} not found")
                             continue
                         except Exception as e:
-                            print(f"Error creating assignment for {email}: {str(e)}")
+                            logger.error(f"Error creating assignment for {email}: {str(e)}")
                             continue
                 
                 if changes:
@@ -239,7 +251,7 @@ def get_task(request, task_id):
                 
                 return Response(TaskDetailSerializer(task).data)
             except Exception as e:
-                print(f"Error updating task: {str(e)}")
+                logger.error(f"Error updating task: {str(e)}")
                 import traceback
                 traceback.print_exc()
                 return Response(
@@ -249,23 +261,26 @@ def get_task(request, task_id):
         
         # Handle DELETE request
         elif request.method == 'DELETE':
-            # Debug logging
-            print(f"DELETE request from user: {user.email}, role: {user.role}")
-            print(f"Task ID: {task.id}, created_by: {task.created_by if task.created_by else 'None'}")
+            # Debug logging - Safe access
+            created_by_safe = task.created_by if isinstance(task.created_by, str) else (task.created_by.email if task.created_by else 'None')
+            logger.info(f"DELETE request from user: {user.email}, role: {user.role}")
+            logger.info(f"Task ID: {task.id}, created_by: {created_by_safe}")
             
             # Permission check: Admin and Staff can delete any task, HOD can delete department tasks
+            # Safe creator check
+            is_creator = task.created_by == user.email if isinstance(task.created_by, str) else (task.created_by == user)
             can_delete = (
                 user.role == 'admin' or 
                 user.role == 'staff' or  # Staff (Faculty) can delete all tasks
                 user.is_superuser or
                 (user.role == 'hod' and task.assignments.filter(department=user.department).exists()) or
-                task.created_by == user
+                is_creator
             )
             
-            print(f"Can delete: {can_delete}")
-            print(f"  - is_admin: {user.role == 'admin'}")
-            print(f"  - is_superuser: {user.is_superuser}")
-            print(f"  - is_creator: {task.created_by == user}")
+            logger.info(f"Can delete: {can_delete}")
+            logger.info(f"  - is_admin: {user.role == 'admin'}")
+            logger.info(f"  - is_superuser: {user.is_superuser}")
+            logger.info(f"  - is_creator: {is_creator}")
             
             if not can_delete:
                 return Response(
