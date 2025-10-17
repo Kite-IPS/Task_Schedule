@@ -5,168 +5,155 @@ from django.db.models import Q
 from datetime import timedelta
 from staff.models import User  # Import User model for HOD lookup
 
+# ----------------------------------------------------------------------
+# ✉️ PROFESSIONAL HTML TEMPLATES
+# ----------------------------------------------------------------------
+
 def get_task_assignment_html(task, assignee):
+    initiated_by = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
     return f"""
-    <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2>New Task Assignment</h2>
-        <p>Hello {assignee.get_full_name()},</p>
-        <p>You have been assigned a new task:</p>
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
+        <h2 style="color: #2c3e50;">New Task Assigned</h2>
+        <p>Dear {assignee.get_full_name()},</p>
+        <p>You have been assigned a new task. Please find the details below:</p>
         
-        <h3>{task.title}</h3>
-        <p><strong>Description:</strong> {task.description}</p>
-        <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
-        <p><strong>Priority:</strong> {task.priority}</p>
+        <div style="border-left: 4px solid #007bff; padding-left: 12px; margin: 16px 0;">
+            <p><strong>Title:</strong> {task.title}</p>
+            <p><strong>Description:</strong> {task.description}</p>
+            <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
+            <p><strong>Priority:</strong> {task.priority}</p>
+            <p><strong>Initiated by:</strong> {initiated_by}</p>
+        </div>
+
+        <p>Please begin working on this task at your earliest convenience. If you have any questions or require clarification, feel free to reach out.</p>
         
-        <p>
-            <a href="{settings.FRONTEND_URL}/task/{task.id}" 
-               style="display: inline-block; padding: 10px 20px; background-color: #007bff; 
-                      color: white; text-decoration: none; border-radius: 5px;">
-                View Task
-            </a>
-        </p>
-        
-        <p>Please start working on this task as soon as possible.</p>
-        
-        <p>Best regards,<br>Task Management System</p>
+        <p style="margin-top: 24px;">Kind regards,<br><strong>Task Management System</strong></p>
     </div>
     """
+
 
 def get_task_assignment_hod_html(task, staff_name):
+    initiated_by = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
     return f"""
-    <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2>Task Assignment Notification</h2>
-        <p>Hello,</p>
-        <p>A member of your department ({staff_name}) has been assigned a new task:</p>
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
+        <h2 style="color: #2c3e50;">Task Assignment Notification</h2>
+        <p>Dear HOD,</p>
+        <p>A member of your department (<strong>{staff_name}</strong>) has been assigned a new task.</p>
         
-        <h3>{task.title}</h3>
-        <p><strong>Description:</strong> {task.description}</p>
-        <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
-        <p><strong>Priority:</strong> {task.priority}</p>
+        <div style="border-left: 4px solid #007bff; padding-left: 12px; margin: 16px 0;">
+            <p><strong>Title:</strong> {task.title}</p>
+            <p><strong>Description:</strong> {task.description}</p>
+            <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
+            <p><strong>Priority:</strong> {task.priority}</p>
+            <p><strong>Initiated by:</strong> {initiated_by}</p>
+        </div>
+
+        <p>Kindly note this assignment for departmental tracking and review.</p>
         
-        <p>
-            <a href="{settings.FRONTEND_URL}/task/{task.id}"
-               style="display: inline-block; padding: 10px 20px; background-color: #007bff;
-                      color: white; text-decoration: none; border-radius: 5px;">
-                View Task
-            </a>
-        </p>
-        
-        <p>Best regards,<br>Task Management System</p>
+        <p style="margin-top: 24px;">Best regards,<br><strong>Task Management System</strong></p>
     </div>
     """
+
 
 def get_deadline_reminder_html(task, assignee, hours_left):
+    initiated_by = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
     return f"""
-    <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2>Task Deadline Reminder</h2>
-        <p>Hello {assignee.get_full_name()},</p>
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
+        <h2 style="color: #e67e22;">Task Deadline Reminder</h2>
+        <p>Dear {assignee.get_full_name()},</p>
+        <p>This is a friendly reminder that your task deadline is approaching. You have approximately <strong>{hours_left} hours</strong> remaining.</p>
         
-        <p style="color: #dc3545;">
-            <strong>Your task deadline is approaching! Only {hours_left} hours remaining.</strong>
-        </p>
+        <div style="border-left: 4px solid #f39c12; padding-left: 12px; margin: 16px 0;">
+            <p><strong>Title:</strong> {task.title}</p>
+            <p><strong>Description:</strong> {task.description}</p>
+            <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
+            <p><strong>Priority:</strong> {task.priority}</p>
+            <p><strong>Initiated by:</strong> {initiated_by}</p>
+        </div>
+
+        <p>Please ensure to complete the task on time. Thank you for your diligence.</p>
         
-        <h3>{task.title}</h3>
-        <p><strong>Description:</strong> {task.description}</p>
-        <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
-        <p><strong>Priority:</strong> {task.priority}</p>
-        
-        <p>
-            <a href="{settings.FRONTEND_URL}/task/{task.id}"
-               style="display: inline-block; padding: 10px 20px; background-color: #dc3545;
-                      color: white; text-decoration: none; border-radius: 5px;">
-                View Task
-            </a>
-        </p>
-        
-        <p>Please ensure to complete the task before the deadline.</p>
-        
-        <p>Best regards,<br>Task Management System</p>
+        <p style="margin-top: 24px;">Warm regards,<br><strong>Task Management System</strong></p>
     </div>
     """
 
+
 def get_overdue_html(task, assignee):
+    initiated_by = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
     return f"""
-    <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2>Task Overdue Notice</h2>
-        <p>Hello {assignee.get_full_name()},</p>
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
+        <h2 style="color: #dc3545;">Task Overdue Notice</h2>
+        <p>Dear {assignee.get_full_name()},</p>
+        <p>This is to notify you that the following task has passed its due date and is now overdue:</p>
         
-        <p style="color: #dc3545;">
-            <strong>The following task has passed its deadline and is now overdue!</strong>
-        </p>
+        <div style="border-left: 4px solid #dc3545; padding-left: 12px; margin: 16px 0;">
+            <p><strong>Title:</strong> {task.title}</p>
+            <p><strong>Description:</strong> {task.description}</p>
+            <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
+            <p><strong>Priority:</strong> {task.priority}</p>
+            <p><strong>Initiated by:</strong> {initiated_by}</p>
+        </div>
+
+        <p>Please prioritize completing this task as soon as possible and update the task status accordingly.</p>
         
-        <h3>{task.title}</h3>
-        <p><strong>Description:</strong> {task.description}</p>
-        <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
-        <p><strong>Priority:</strong> {task.priority}</p>
-        
-        <p>
-            <a href="{settings.FRONTEND_URL}/task/{task.id}"
-               style="display: inline-block; padding: 10px 20px; background-color: #dc3545;
-                      color: white; text-decoration: none; border-radius: 5px;">
-                View Task
-            </a>
-        </p>
-        
-        <p>Please complete this task as soon as possible and update its status.</p>
-        
-        <p>Best regards,<br>Task Management System</p>
+        <p style="margin-top: 24px;">Sincerely,<br><strong>Task Management System</strong></p>
     </div>
     """
+
+# ----------------------------------------------------------------------
+# ✉️ EMAIL SENDING FUNCTIONS
+# ----------------------------------------------------------------------
+
 def send_task_assignment_email(task, assignee):
-    """Send email to assignee with HOD in recipient list"""
+    """Send email to assignee and notify HOD/admins."""
     try:
-        subject = task.title  # Use task title directly as subject
+        subject = task.title  # ✅ Subject is always the title
         
-        # Email to assignee
         html_message = get_task_assignment_html(task, assignee)
-        
-        # Initialize recipient list with assignee
         recipient_list = [assignee.email]
-        
-        # Add HOD to recipient list if assignee has a department
+
+        # Include HOD
         if assignee.department:
             hod = User.objects.filter(department=assignee.department, role='hod').first()
             if hod and hod.email:
                 recipient_list.append(hod.email)
-        
-        # Add all admins to recipient list
+
+        # Include all admins
         admin_emails = User.objects.filter(
             Q(role='admin') | Q(is_superuser=True)
         ).values_list('email', flat=True).distinct()
         recipient_list.extend(admin_emails)
-        
-        # Remove duplicates and None values from recipient list
+
+        # Remove duplicates / invalids
         recipient_list = list(set(filter(None, recipient_list)))
-        
-        # Send email to all recipients
-        print(f"Sending email for task '{task.title}'")
-        print(f"Recipients: {recipient_list}")
-        
+
+        print(f"Sending email for task '{task.title}' to: {recipient_list}")
+
         send_mail(
             subject=subject,
-            message='',  # HTML-only email
+            message='',
             html_message=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=recipient_list,
             fail_silently=False
         )
-        
+
     except Exception as e:
         if settings.DEBUG:
             print(f"Error sending task assignment email: {str(e)}")
-        # Don't raise the exception to prevent breaking the application flow
+
 
 def send_deadline_reminder_email(task, assignee):
-    """Send deadline reminder email to staff"""
+    """Send deadline reminder email."""
     try:
-        subject = f'Deadline Reminder: {task.title}'
+        subject = task.title  # ✅ Only title
         time_left = task.due_date - timezone.now()
         hours_left = int(time_left.total_seconds() / 3600)
 
         html_message = get_deadline_reminder_html(task, assignee, hours_left)
         send_mail(
             subject=subject,
-            message='',  # HTML-only email
+            message='',
             html_message=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[assignee.email],
@@ -175,17 +162,16 @@ def send_deadline_reminder_email(task, assignee):
     except Exception as e:
         if settings.DEBUG:
             print(f"Error sending deadline reminder email: {str(e)}")
-        # Don't raise the exception to prevent breaking the application flow
+
 
 def send_overdue_notification(task, assignee):
-    """Send overdue notification email"""
+    """Send overdue notification email."""
     try:
-        subject = f'Task Overdue: {task.title}'
-        
+        subject = task.title  # ✅ Only title
         html_message = get_overdue_html(task, assignee)
         send_mail(
             subject=subject,
-            message='',  # HTML-only email
+            message='',
             html_message=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[assignee.email],
@@ -194,4 +180,3 @@ def send_overdue_notification(task, assignee):
     except Exception as e:
         if settings.DEBUG:
             print(f"Error sending overdue notification email: {str(e)}")
-        # Don't raise the exception to prevent breaking the application flow
