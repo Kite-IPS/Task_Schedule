@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useMemo, useEffect } from "react"
 import { Plus, Edit, Trash2, X, Home, Eye } from "lucide-react"
 import BaseLayout from "../../Components/Layouts/BaseLayout"
@@ -205,7 +203,10 @@ const Assignment = () => {
   }
 
   const openEditModal = (task) => {
+    console.log("Opening edit modal with task:", task); // Debug log
+    console.log("Task ID:", task?.id); // Verify ID exists
     setModalMode("edit")
+    setSelectedTask(task) 
     setDepartmentFilter("all")
     // Format date to yyyy-MM-ddTHH:mm for datetime-local input
     const formatDateForInput = (dateString) => {
@@ -357,14 +358,29 @@ const Assignment = () => {
   }
 
   const handleUpdateTask = async () => {
-  if (
-    formData.title &&
-    formData.description &&
-    formData.assignee &&
-    formData.assignee.length > 0 &&
-    formData.dueDate
-  ) {
+    // Validate required fields
+    console.log("handleUpdateTask called");
+    console.log("selectedTask:", selectedTask);
+    console.log("selectedTask.id:", selectedTask?.id);
+    if (
+      !formData.title ||
+      !formData.description ||
+      !formData.assignee ||
+      formData.assignee.length === 0 ||
+      !formData.dueDate
+    ) {
+      alert("Please fill all required fields including at least one assignee")
+      return
+    }
+
+    // Check if task is selected
+    if (!selectedTask || !selectedTask.id) {
+      alert("Error: No task selected for update.")
+      return
+    }
+
     setCreateLoading(true)
+
     try {
       // Get departments for selected assignees
       const selectedDepartments = formData.assignee
@@ -375,11 +391,12 @@ const Assignment = () => {
         .filter(Boolean)
 
       if (selectedDepartments.length === 0) {
-        alert("Selected users don't have departments assigned.")
+        alert("Selected users don't have departments assigned. Please select different users.")
         setCreateLoading(false)
         return
       }
 
+      // Prepare task data
       const taskData = {
         title: formData.title,
         description: formData.description,
@@ -389,9 +406,10 @@ const Assignment = () => {
         status: formData.status,
         due_date: formData.dueDate,
         created_by: formData.createdBy,
-        follow_comment: formData.follow_comment || '',  // Optional follow-up comment
+        follow_comment: formData.follow_comment || '',
       }
 
+      // Update task via API
       await axiosInstance.put(API_PATH.TASK.DETAIL(selectedTask.id), taskData)
 
       // Fetch updated tasks list
@@ -418,24 +436,22 @@ const Assignment = () => {
         rawStatus: task.status,
         rawPriority: task.priority,
       }))
+
       setTasks(transformedTasks)
       closeModal()
-
-      // Clear follow comment field after success
-      setFormData(prev => ({ ...prev, follow_comment: '' }));  // Assuming formData is managed via state
 
       alert("Task updated successfully!")
     } catch (error) {
       console.error("Error updating task:", error)
-      const errorMessage = error.response?.data?.detail || error.response?.data?.message || "Failed to update task"
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        "Failed to update task"
       alert("Error: " + errorMessage)
     } finally {
       setCreateLoading(false)
     }
-  } else {
-    alert("Please fill all required fields")
   }
-}
 
   const handleDeleteTask = async (id) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
@@ -655,19 +671,19 @@ const Assignment = () => {
                   <td className="px-4 py-3 text-sm text-white/80">
                     {task.status === "Completed" && task.completedAt
                       ? (() => {
-                          const formatDateForDisplay = (dateString) => {
-                            if (!dateString) return "-"
-                            const date = new Date(dateString)
-                            return date.toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          }
-                          return formatDateForDisplay(task.completedAt)
-                        })()
+                        const formatDateForDisplay = (dateString) => {
+                          if (!dateString) return "-"
+                          const date = new Date(dateString)
+                          return date.toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        }
+                        return formatDateForDisplay(task.completedAt)
+                      })()
                       : "-"}
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -719,11 +735,10 @@ const Assignment = () => {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`px-3 py-2 rounded-lg transition-all ${
-                  currentPage === page
-                    ? "bg-red-600 text-white border border-red-500"
-                    : "border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white"
-                }`}
+                className={`px-3 py-2 rounded-lg transition-all ${currentPage === page
+                  ? "bg-red-600 text-white border border-red-500"
+                  : "border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white"
+                  }`}
               >
                 {page}
               </button>
@@ -913,125 +928,108 @@ const Assignment = () => {
                       </select>
                     </div>
 
-                    <div className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg p-3 max-h-60 overflow-y-auto">
+                    <div className="max-h-40 overflow-y-auto border border-white/10 rounded-lg p-3 bg-white/5">
                       {usersLoading ? (
-                        <p className="text-white/60 text-sm">Loading users...</p>
-                      ) : getFilteredUsers().length === 0 ? (
-                        <p className="text-white/60 text-sm">No users available in this department</p>
+                        <p className="text-white/70 text-center py-2">Loading users...</p>
+                      ) : getFilteredUsers().length > 0 ? (
+                        getFilteredUsers().map((user) => (
+                          <label
+                            key={user.email}
+                            className="flex items-center gap-2 text-white/80 cursor-pointer hover:bg-white/10 px-2 py-1 rounded"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.assignee.includes(user.email)}
+                              onChange={() => handleAssigneeToggle(user.email)}
+                              className="accent-red-500"
+                            />
+                            <span>{user.full_name || user.email}</span>
+                            <span className="text-xs text-white/50 ml-auto">{user.department}</span>
+                          </label>
+                        ))
                       ) : (
-                        <div className="space-y-2">
-                          {getFilteredUsers().map((user) => (
-                            <label
-                              key={user.id}
-                              className="flex items-start gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={formData.assignee.includes(user.email)}
-                                onChange={() => handleAssigneeToggle(user.email)}
-                                className="mt-1 w-4 h-4 rounded border-white/20 bg-white/10 text-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-0"
-                              />
-                              <div className="flex-1">
-                                <div className="text-white text-sm font-medium">{user.name || user.email}</div>
-                                <div className="text-white/60 text-xs">
-                                  {user.email} • {user.role} {user.department && `• ${user.department.toUpperCase()}`}
-                                </div>
-                              </div>
-                            </label>
-                          ))}
-                        </div>
+                        <p className="text-white/60 text-center py-2">No users found in this department.</p>
                       )}
                     </div>
-                    {formData.assignee.length > 0 && (
-                      <div className="mt-2 text-xs text-white/80 bg-white/5 p-2 rounded border border-white/10">
-                        <span className="font-semibold">Auto-selected Departments:</span>{" "}
-                        {getSelectedDepartments() || "None"}
-                      </div>
-                    )}
-                    <p className="text-xs text-white/60 mt-1">
-                      Select one or more assignees. Departments will be automatically set based on selected assignees.
-                    </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
-                      <select
-                        name="status"
-                        value={formData.status}
-                        onChange={handleInputChange}
-                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                      >
-                        {statuses.map((status) => (
-                          <option key={status.code} value={status.code} className="bg-gray-900">
-                            {status.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-1">Priority</label>
-                      <select
-                        name="priority"
-                        value={formData.priority}
-                        onChange={handleInputChange}
-                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                      >
-                        {priorities.map((priority) => (
-                          <option key={priority.code} value={priority.code} className="bg-gray-900">
-                            {priority.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-1">Due Date *</label>
-                      <input
-                        type="datetime-local"
-                        name="dueDate"
-                        value={formData.dueDate}
-                        onChange={handleInputChange}
-                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                    >
+                      {statuses.map((status) => (
+                        <option key={status.code} value={status.code} className="bg-gray-900">
+                          {status.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Follow-up Comment - Only show in edit mode */}
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-1">Priority</label>
+                    <select
+                      name="priority"
+                      value={formData.priority}
+                      onChange={handleInputChange}
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                    >
+                      {priorities.map((priority) => (
+                        <option key={priority.code} value={priority.code} className="bg-gray-900">
+                          {priority.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-1">Due Date *</label>
+                    <input
+                      type="datetime-local"
+                      name="dueDate"
+                      value={formData.dueDate}
+                      onChange={handleInputChange}
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                    />
+                  </div>
+
+                  {/* Follow-up comment (for edit mode) */}
                   {modalMode === "edit" && (
                     <div>
-                      <label className="block text-sm font-medium text-white/90 mb-1">Follow-up Comment (Optional)</label>
+                      <label className="block text-sm font-medium text-white/90 mb-1">Follow-up Comment</label>
                       <textarea
                         name="follow_comment"
-                        value={formData.follow_comment || ''}
+                        value={formData.follow_comment}
                         onChange={handleInputChange}
-                        rows={3}
-                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40 resize-none"
-                        placeholder="Add a note for follow-up (e.g., reasons for changes or next steps)"
+                        rows={2}
+                        placeholder="Add any follow-up comment..."
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white resize-none"
                       />
                     </div>
                   )}
                 </div>
 
                 {/* Modal Footer */}
-                <div className="flex gap-3 mt-6">
+                <div className="flex justify-end mt-6 gap-3">
                   <button
                     onClick={closeModal}
-                    className="flex-1 px-4 py-2 border border-white/20 bg-white/5 rounded-lg hover:bg-white/10 transition font-medium text-white"
+                    className="px-4 py-2 bg-white/10 border border-white/20 hover:bg-red-600 text-white rounded-lg transition font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={modalMode === "create" ? handleCreateTask : handleUpdateTask}
-                    disabled={modalMode === "create" ? createLoading : false}
-                    className={`flex-1 px-4 py-2 text-white rounded-lg transition font-medium ${
-                      modalMode === "create" && createLoading
-                        ? "bg-gray-600 cursor-not-allowed"
-                        : "bg-red-600 hover:bg-red-700"
-                    }`}
+                    disabled={createLoading}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 border border-red-500 text-white rounded-lg transition font-medium disabled:opacity-50"
                   >
-                    {modalMode === "create" ? (createLoading ? "Creating..." : "Create") : "Update"}
+                    {createLoading
+                      ? "Processing..."
+                      : modalMode === "create"
+                        ? "Create Task"
+                        : "Update Task"}
                   </button>
                 </div>
               </>
