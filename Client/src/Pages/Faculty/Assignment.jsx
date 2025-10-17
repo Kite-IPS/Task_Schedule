@@ -33,6 +33,7 @@ const Assignment = () => {
     priority: "medium",
     dueDate: "",
     createdBy: "",
+    follow_comment: "",  // Added for follow-up comment
   })
 
   const statuses = [
@@ -182,6 +183,7 @@ const Assignment = () => {
       priority: "medium",
       dueDate: "",
       createdBy: currentUser ? currentUser.full_name || currentUser.name || currentUser.email : "",
+      follow_comment: "",  // Reset comment
     })
     setDepartmentFilter("all")
     setSelectedTask(null)
@@ -197,13 +199,13 @@ const Assignment = () => {
       status: task.rawStatus || task.status.toLowerCase(),
       priority: task.rawPriority || task.priority.toLowerCase(),
       createdBy: task.createdBy || "Unknown",
+      follow_comment: "",  // Reset comment
     })
     setIsModalOpen(true)
   }
 
   const openEditModal = (task) => {
     setModalMode("edit")
-    setSelectedTask(task)
     setDepartmentFilter("all")
     // Format date to yyyy-MM-ddTHH:mm for datetime-local input
     const formatDateForInput = (dateString) => {
@@ -225,6 +227,7 @@ const Assignment = () => {
       priority: task.rawPriority || task.priority.toLowerCase(),
       dueDate: formatDateForInput(task.dueDate),
       createdBy: task.createdBy || "Unknown",
+      follow_comment: "",  // Reset comment for edit
     })
     setIsModalOpen(true)
   }
@@ -239,6 +242,7 @@ const Assignment = () => {
       priority: "medium",
       dueDate: "",
       createdBy: "",
+      follow_comment: "",  // Reset comment
     })
     setDepartmentFilter("all")
     setSelectedTask(null)
@@ -353,81 +357,85 @@ const Assignment = () => {
   }
 
   const handleUpdateTask = async () => {
-    if (
-      formData.title &&
-      formData.description &&
-      formData.assignee &&
-      formData.assignee.length > 0 &&
-      formData.dueDate
-    ) {
-      setCreateLoading(true)
-      try {
-        // Get departments for selected assignees
-        const selectedDepartments = formData.assignee
-          .map((email) => {
-            const user = users.find((u) => u.email === email)
-            return user?.department
-          })
-          .filter(Boolean)
+  if (
+    formData.title &&
+    formData.description &&
+    formData.assignee &&
+    formData.assignee.length > 0 &&
+    formData.dueDate
+  ) {
+    setCreateLoading(true)
+    try {
+      // Get departments for selected assignees
+      const selectedDepartments = formData.assignee
+        .map((email) => {
+          const user = users.find((u) => u.email === email)
+          return user?.department
+        })
+        .filter(Boolean)
 
-        if (selectedDepartments.length === 0) {
-          alert("Selected users don't have departments assigned.")
-          setCreateLoading(false)
-          return
-        }
-
-        const taskData = {
-          title: formData.title,
-          description: formData.description,
-          assignee: formData.assignee,
-          department: [...new Set(selectedDepartments)],
-          priority: formData.priority,
-          status: formData.status,
-          due_date: formData.dueDate,
-          created_by: formData.createdBy,
-        }
-
-        await axiosInstance.put(API_PATH.TASK.DETAIL(selectedTask.id), taskData)
-
-        // Fetch updated tasks list
-        const tasksResponse = await axiosInstance.get(API_PATH.TASK.ALL)
-        const transformedTasks = (tasksResponse.data.tasks || []).map((task) => ({
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          assignee:
-            task.assignee && task.assignee.length > 0
-              ? task.assignee.map((a) => a.full_name || a.email).join(", ")
-              : "Unassigned",
-          department: Array.isArray(task.department)
-            ? task.department.join(", ").toUpperCase()
-            : (task.department || "").toUpperCase(),
-          status: task.status.charAt(0).toUpperCase() + task.status.slice(1),
-          priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1),
-          dueDate: task.due_date,
-          completedAt: task.completed_at,
-          createdAt: task.created_at,
-          createdBy: task.created_by || task.createdBy || "Unknown",
-          rawAssignee: task.assignee || [],
-          rawDepartment: task.department || [],
-          rawStatus: task.status,
-          rawPriority: task.priority,
-        }))
-        setTasks(transformedTasks)
-        closeModal()
-
-        alert("Task updated successfully!")
-      } catch (error) {
-        console.error("Error updating task:", error)
-        const errorMessage = error.response?.data?.detail || error.response?.data?.message || "Failed to update task"
-        alert("Error: " + errorMessage)
-      } finally {
+      if (selectedDepartments.length === 0) {
+        alert("Selected users don't have departments assigned.")
         setCreateLoading(false)
+        return
       }
-    } else {
-      alert("Please fill all required fields")
+
+      const taskData = {
+        title: formData.title,
+        description: formData.description,
+        assignee: formData.assignee,
+        department: [...new Set(selectedDepartments)],
+        priority: formData.priority,
+        status: formData.status,
+        due_date: formData.dueDate,
+        created_by: formData.createdBy,
+        follow_comment: formData.follow_comment || '',  // Optional follow-up comment
+      }
+
+      await axiosInstance.put(API_PATH.TASK.DETAIL(selectedTask.id), taskData)
+
+      // Fetch updated tasks list
+      const tasksResponse = await axiosInstance.get(API_PATH.TASK.ALL)
+      const transformedTasks = (tasksResponse.data.tasks || []).map((task) => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        assignee:
+          task.assignee && task.assignee.length > 0
+            ? task.assignee.map((a) => a.full_name || a.email).join(", ")
+            : "Unassigned",
+        department: Array.isArray(task.department)
+          ? task.department.join(", ").toUpperCase()
+          : (task.department || "").toUpperCase(),
+        status: task.status.charAt(0).toUpperCase() + task.status.slice(1),
+        priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1),
+        dueDate: task.due_date,
+        completedAt: task.completed_at,
+        createdAt: task.created_at,
+        createdBy: task.created_by || task.createdBy || "Unknown",
+        rawAssignee: task.assignee || [],
+        rawDepartment: task.department || [],
+        rawStatus: task.status,
+        rawPriority: task.priority,
+      }))
+      setTasks(transformedTasks)
+      closeModal()
+
+      // Clear follow comment field after success
+      setFormData(prev => ({ ...prev, follow_comment: '' }));  // Assuming formData is managed via state
+
+      alert("Task updated successfully!")
+    } catch (error) {
+      console.error("Error updating task:", error)
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || "Failed to update task"
+      alert("Error: " + errorMessage)
+    } finally {
+      setCreateLoading(false)
     }
+  } else {
+    alert("Please fill all required fields")
   }
+}
 
   const handleDeleteTask = async (id) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
@@ -592,7 +600,7 @@ const Assignment = () => {
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Due Date</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Created Date</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Completed Time</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-white">Action</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -989,6 +997,21 @@ const Assignment = () => {
                       />
                     </div>
                   </div>
+
+                  {/* Follow-up Comment - Only show in edit mode */}
+                  {modalMode === "edit" && (
+                    <div>
+                      <label className="block text-sm font-medium text-white/90 mb-1">Follow-up Comment (Optional)</label>
+                      <textarea
+                        name="follow_comment"
+                        value={formData.follow_comment || ''}
+                        onChange={handleInputChange}
+                        rows={3}
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40 resize-none"
+                        placeholder="Add a note for follow-up (e.g., reasons for changes or next steps)"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Modal Footer */}
