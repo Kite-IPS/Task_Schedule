@@ -251,7 +251,7 @@ def get_task(request, task_id):
         elif request.method == 'DELETE':
             # Debug logging
             print(f"DELETE request from user: {user.email}, role: {user.role}")
-            print(f"Task ID: {task.id}, created_by: {task.created_by.email if task.created_by else 'None'}")
+            print(f"Task ID: {task.id}, created_by: {task.created_by if task.created_by else 'None'}")
             
             # Permission check: Admin and Staff can delete any task, HOD can delete department tasks
             can_delete = (
