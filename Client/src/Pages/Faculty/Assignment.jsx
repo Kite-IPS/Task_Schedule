@@ -1015,23 +1015,23 @@ const Assignment = () => {
                 </div>
 
                 {/* Modal Footer */}
-                <div className="flex justify-end mt-6 gap-3">
+                <div className="flex gap-3 mt-6">
                   <button
                     onClick={closeModal}
-                    className="px-4 py-2 bg-white/10 border border-white/20 hover:bg-red-600 text-white rounded-lg transition font-medium"
+                    className="flex-1 px-4 py-2 border border-white/20 bg-white/5 rounded-lg hover:bg-white/10 transition font-medium text-white"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={modalMode === "create" ? handleCreateTask : handleUpdateTask}
                     disabled={createLoading}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 border border-red-500 text-white rounded-lg transition font-medium disabled:opacity-50"
+                    className={`flex-1 px-4 py-2 text-white rounded-lg transition font-medium ${
+                      createLoading
+                        ? "bg-gray-600 cursor-not-allowed"
+                        : "bg-red-600 hover:bg-red-700"
+                    }`}
                   >
-                    {createLoading
-                      ? "Processing..."
-                      : modalMode === "create"
-                        ? "Create Task"
-                        : "Update Task"}
+                    {createLoading ? (modalMode === "create" ? "Creating..." : "Processing...") : (modalMode === "create" ? "Create" : "Update Task")}
                   </button>
                 </div>
               </>
