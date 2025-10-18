@@ -446,8 +446,8 @@ const FacultyDashboard = () => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="md:col-span-1">
                     <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
                     <select
                       name="status"
@@ -463,7 +463,7 @@ const FacultyDashboard = () => {
                     </select>
                   </div>
 
-                  <div>
+                  <div className="md:col-span-1">
                     <label className="block text-sm font-medium text-white/90 mb-1">Priority</label>
                     <select
                       name="priority"
@@ -479,7 +479,7 @@ const FacultyDashboard = () => {
                     </select>
                   </div>
 
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-white/90 mb-1">Due Date *</label>
                     <input
                       type="datetime-local"
