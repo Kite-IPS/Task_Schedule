@@ -953,47 +953,49 @@ const Assignment = () => {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                    >
-                      {statuses.map((status) => (
-                        <option key={status.code} value={status.code} className="bg-gray-900">
-                          {status.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
+                      <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                      >
+                        {statuses.map((status) => (
+                          <option key={status.code} value={status.code} className="bg-gray-900">
+                            {status.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-white/90 mb-1">Priority</label>
-                    <select
-                      name="priority"
-                      value={formData.priority}
-                      onChange={handleInputChange}
-                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                    >
-                      {priorities.map((priority) => (
-                        <option key={priority.code} value={priority.code} className="bg-gray-900">
-                          {priority.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-medium text-white/90 mb-1">Priority</label>
+                      <select
+                        name="priority"
+                        value={formData.priority}
+                        onChange={handleInputChange}
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                      >
+                        {priorities.map((priority) => (
+                          <option key={priority.code} value={priority.code} className="bg-gray-900">
+                            {priority.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-white/90 mb-1">Due Date *</label>
-                    <input
-                      type="datetime-local"
-                      name="dueDate"
-                      value={formData.dueDate}
-                      onChange={handleInputChange}
-                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                    />
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-white/90 mb-1">Due Date *</label>
+                      <input
+                        type="datetime-local"
+                        name="dueDate"
+                        value={formData.dueDate}
+                        onChange={handleInputChange}
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                      />
+                    </div>
                   </div>
 
                   {/* Follow-up comment (for edit mode) */}
