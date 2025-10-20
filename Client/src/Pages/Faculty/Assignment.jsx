@@ -249,7 +249,7 @@ const Assignment = () => {
     console.log("Opening edit modal with task:", task); // Debug log
     console.log("Task ID:", task?.id); // Verify ID exists
     setModalMode("edit")
-    setSelectedTask(task) 
+    setSelectedTask(task)
     setDepartmentFilter("all")
     // Format date to yyyy-MM-ddTHH:mm for datetime-local input
     const formatDateForInput = (dateString) => {
@@ -364,7 +364,7 @@ const Assignment = () => {
           reminder1: formData.reminder1 || null,  // NEW: Include reminder1
           reminder2: formData.reminder2 || null,  // NEW: Include reminder2
         }
-        
+
         const response = await axiosInstance.post(API_PATH.TASK.CREATE, taskData)
 
         console.log("Task created successfully:", response.data)
@@ -469,7 +469,7 @@ const Assignment = () => {
         reminder1: formData.reminder1 || null,  // NEW: Include reminder1
         reminder2: formData.reminder2 || null,  // NEW: Include reminder2
       }
-      
+
       // Update task via API
       await axiosInstance.put(API_PATH.TASK.DETAIL(selectedTask.id), taskData)
 
@@ -1053,8 +1053,14 @@ const Assignment = () => {
                               onChange={() => handleAssigneeToggle(user.email)}
                               className="accent-red-500"
                             />
-                            <span>{user.full_name || user.email}</span>
-                            <span className="text-xs text-white/50 ml-auto">{user.department}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-base font-semibold">{user.name}</span>
+                              <p className="text-xs text-white/50">{user.email}</p>
+                            </div>
+                            <div className="ml-auto flex items-center gap-2">
+                            <span className="text-xs text-white/50">{(user.role[0].toUpperCase())+(user.role.substring(1,))}</span>
+                            <span className="text-xs text-white/50">{user.department}</span>
+                            </div>
                           </label>
                         ))
                       ) : (
@@ -1159,11 +1165,10 @@ const Assignment = () => {
                   <button
                     onClick={modalMode === "create" ? handleCreateTask : handleUpdateTask}
                     disabled={createLoading}
-                    className={`flex-1 px-4 py-2 text-white rounded-lg transition font-medium ${
-                      createLoading
+                    className={`flex-1 px-4 py-2 text-white rounded-lg transition font-medium ${createLoading
                         ? "bg-gray-600 cursor-not-allowed"
                         : "bg-red-600 hover:bg-red-700"
-                    }`}
+                      }`}
                   >
                     {createLoading ? (modalMode === "create" ? "Creating..." : "Processing...") : (modalMode === "create" ? "Create" : "Update Task")}
                   </button>
