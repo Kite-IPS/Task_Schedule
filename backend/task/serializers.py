@@ -20,13 +20,15 @@ class TaskHistorySerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     department = serializers.SerializerMethodField()
     assignee = serializers.SerializerMethodField()
+    reminder1 = serializers.DateTimeField(required=False, allow_null=True)
+    reminder2 = serializers.DateTimeField(required=False, allow_null=True)
     
     class Meta:
         model = Task
         fields = [
             'id', 'title', 'description', 'department', 'assignee',
             'priority', 'status', 'due_date', 'created_by', 'created_at', 
-            'completed_at'
+            'completed_at', 'reminder1', 'reminder2'
         ]
     
     def get_department(self, obj):
@@ -85,13 +87,15 @@ class TaskCreateSerializer(serializers.ModelSerializer):
     attachment = serializers.FileField(required=False, allow_null=True)
     created_by = serializers.CharField(required=True, max_length=255,
                                      help_text="Name of the person who requested this task")
+    reminder1 = serializers.DateTimeField(required=False, allow_null=True)
+    reminder2 = serializers.DateTimeField(required=False, allow_null=True)
     
     class Meta:
         model = Task
         fields = [
             'title', 'description', 'department', 'assignee',
             'priority', 'status', 'due_date', 'attachment',
-            'created_by'
+            'created_by', 'reminder1', 'reminder2'
         ]
     
     def validate_department(self, value):

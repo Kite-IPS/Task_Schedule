@@ -32,6 +32,8 @@ const Assignment = () => {
     dueDate: "",
     createdBy: "",
     follow_comment: "",  // Added for follow-up comment
+    reminder1: "",  // NEW: Reminder 1
+    reminder2: "",  // NEW: Reminder 2
   })
   const [taskComments, setTaskComments] = useState([]);  // For current task's comments
   const [commentsLoading, setCommentsLoading] = useState(false);  // Loading state
@@ -119,6 +121,8 @@ const Assignment = () => {
           rawDepartment: task.department || [],
           rawStatus: task.status,
           rawPriority: task.priority,
+          reminder1: task.reminder1,  // NEW: Raw reminder1
+          reminder2: task.reminder2,  // NEW: Raw reminder2
         }))
         setTasks(transformedTasks)
       } catch (error) {
@@ -217,6 +221,8 @@ const Assignment = () => {
       dueDate: "",
       createdBy: currentUser ? currentUser.full_name || currentUser.name || currentUser.email : "",
       follow_comment: "",  // Reset comment
+      reminder1: "",  // NEW: Reset reminder1
+      reminder2: "",  // NEW: Reset reminder2
     })
     setDepartmentFilter("all")
     setSelectedTask(null)
@@ -233,6 +239,8 @@ const Assignment = () => {
       priority: task.rawPriority || task.priority.toLowerCase(),
       createdBy: task.createdBy || "Unknown",
       follow_comment: task.follow_comment || "",  // Reset comment
+      reminder1: task.reminder1 || "",  // NEW: Set reminder1 for view
+      reminder2: task.reminder2 || "",  // NEW: Set reminder2 for view
     })
     setIsModalOpen(true)
   }
@@ -245,14 +253,22 @@ const Assignment = () => {
     setDepartmentFilter("all")
     // Format date to yyyy-MM-ddTHH:mm for datetime-local input
     const formatDateForInput = (dateString) => {
-      if (!dateString) return ""
-      const date = new Date(dateString)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const day = String(date.getDate()).padStart(2, "0")
-      const hours = String(date.getHours()).padStart(2, "0")
-      const minutes = String(date.getMinutes()).padStart(2, "0")
-      return `${year}-${month}-${day}T${hours}:${minutes}`
+      if (!dateString || dateString === "" || dateString === "null") return ""
+      try {
+        const date = new Date(dateString)
+        // Check for invalid date
+        if (isNaN(date.getTime())) {
+          return ""
+        }
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, "0")
+        const day = String(date.getDate()).padStart(2, "0")
+        const hours = String(date.getHours()).padStart(2, "0")
+        const minutes = String(date.getMinutes()).padStart(2, "0")
+        return `${year}-${month}-${day}T${hours}:${minutes}`
+      } catch (e) {
+        return ""
+      }
     }
 
     setFormData({
@@ -264,6 +280,8 @@ const Assignment = () => {
       dueDate: formatDateForInput(task.dueDate),
       createdBy: task.createdBy || "Unknown",
       follow_comment: "",  // Reset comment for edit
+      reminder1: formatDateForInput(task.reminder1),  // NEW: Format reminder1 for edit
+      reminder2: formatDateForInput(task.reminder2),  // NEW: Format reminder2 for edit
     })
     setIsModalOpen(true)
   }
@@ -279,6 +297,8 @@ const Assignment = () => {
       dueDate: "",
       createdBy: "",
       follow_comment: "",  // Reset comment
+      reminder1: "",  // NEW: Reset reminder1
+      reminder2: "",  // NEW: Reset reminder2
     })
     setDepartmentFilter("all")
     setSelectedTask(null)
@@ -341,8 +361,10 @@ const Assignment = () => {
           status: formData.status || "pending",
           due_date: formData.dueDate,
           created_by: formData.createdBy,
+          reminder1: formData.reminder1 || null,  // NEW: Include reminder1
+          reminder2: formData.reminder2 || null,  // NEW: Include reminder2
         }
-
+        
         const response = await axiosInstance.post(API_PATH.TASK.CREATE, taskData)
 
         console.log("Task created successfully:", response.data)
@@ -370,6 +392,8 @@ const Assignment = () => {
           rawDepartment: task.department || [],
           rawStatus: task.status,
           rawPriority: task.priority,
+          reminder1: task.reminder1,  // NEW: Include in transform
+          reminder2: task.reminder2,  // NEW: Include in transform
         }))
         setTasks(transformedTasks)
         closeModal()
@@ -442,8 +466,10 @@ const Assignment = () => {
         due_date: formData.dueDate,
         created_by: formData.createdBy,
         follow_comment: formData.follow_comment || '',
+        reminder1: formData.reminder1 || null,  // NEW: Include reminder1
+        reminder2: formData.reminder2 || null,  // NEW: Include reminder2
       }
-
+      
       // Update task via API
       await axiosInstance.put(API_PATH.TASK.DETAIL(selectedTask.id), taskData)
 
@@ -470,6 +496,8 @@ const Assignment = () => {
         rawDepartment: task.department || [],
         rawStatus: task.status,
         rawPriority: task.priority,
+        reminder1: task.reminder1,  // NEW: Include in transform
+        reminder2: task.reminder2,  // NEW: Include in transform
       }))
 
       setTasks(transformedTasks)
@@ -526,6 +554,26 @@ const Assignment = () => {
         return "bg-gray-500/20 text-gray-300 border border-gray-500/30"
       default:
         return "bg-gray-100 text-gray-700 border border-gray-300"
+    }
+  }
+
+  // Format date for display
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString || dateString === "" || dateString === "null") return "Not set"
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) {
+        return "Not set"
+      }
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    } catch (e) {
+      return "Not set"
     }
   }
 
@@ -649,6 +697,8 @@ const Assignment = () => {
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Status</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Priority</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Due Date</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Reminder 1</th>  {/* NEW: Column for Reminder 1 */}
+                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Reminder 2</th>  {/* NEW: Column for Reminder 2 */}
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Created Date</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Completed Time</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Action</th>
@@ -686,6 +736,12 @@ const Assignment = () => {
                       }
                       return formatDateForDisplay(task.dueDate)
                     })()}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-white/80">  {/* NEW: Reminder 1 display */}
+                    {formatDateForDisplay(task.reminder1)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-white/80">  {/* NEW: Reminder 2 display */}
+                    {formatDateForDisplay(task.reminder2)}
                   </td>
                   <td className="px-4 py-3 text-sm text-white/80">
                     {(() => {
@@ -900,6 +956,17 @@ const Assignment = () => {
                     </div>
                   )}
                 </div>
+                {/* NEW: Display Reminders in View Mode */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Reminder 1</h3>
+                    <p className="text-white">{formatDateForDisplay(formData.reminder1)}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Reminder 2</h3>
+                    <p className="text-white">{formatDateForDisplay(formData.reminder2)}</p>
+                  </div>
+                </div>
                 <div className="flex justify-end mt-6">
                   <button
                     onClick={closeModal}
@@ -1035,6 +1102,30 @@ const Assignment = () => {
                         type="datetime-local"
                         name="dueDate"
                         value={formData.dueDate}
+                        onChange={handleInputChange}
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* NEW: Reminder Inputs */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-white/90 mb-1">Reminder 1</label>
+                      <input
+                        type="datetime-local"
+                        name="reminder1"
+                        value={formData.reminder1}
+                        onChange={handleInputChange}
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-white/90 mb-1">Reminder 2</label>
+                      <input
+                        type="datetime-local"
+                        name="reminder2"
+                        value={formData.reminder2}
                         onChange={handleInputChange}
                         className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                       />

@@ -1,4 +1,3 @@
-# task/models.py
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -53,6 +52,8 @@ class Task(models.Model):
             models.Index(fields=['status']),
             models.Index(fields=['due_date']),
             models.Index(fields=['created_by']),
+            models.Index(fields=['reminder1']),  # NEW: Index for reminders
+            models.Index(fields=['reminder2']),  # NEW: Index for reminders
         ]
     
     def __str__(self):
@@ -123,15 +124,15 @@ class TaskHistory(models.Model):
         null=True
     )
     timestamp = models.DateTimeField(auto_now_add=True)
-    details = models.JSONField(default=dict)  # Store change details
-    comment = models.TextField(null=True, blank=True, help_text="Follow-up comment or note")  # NEW: Dedicated field
+    details = models.JSONField(default=dict)  # Store change details, including follow_comment
+    comment = models.TextField(null=True, blank=True, help_text="Dedicated follow-up comment or note")
     
     class Meta:
         db_table = 'task_history'
         ordering = ['-timestamp']
         indexes = [
             models.Index(fields=['task', '-timestamp']),
-            models.Index(fields=['comment']),
+            models.Index(fields=['details']),  # NEW: Index on JSON details for follow_comment queries
         ]
     
     def __str__(self):
@@ -148,6 +149,12 @@ class TaskAttachment(models.Model):
     file_name = models.CharField(max_length=255)
     file_size = models.IntegerField()  # in bytes
     
-    
     class Meta:
         db_table = 'task_attachments'
+        ordering = ['-uploaded_at']
+        indexes = [
+            models.Index(fields=['task', '-uploaded_at']),
+        ]
+    
+    def __str__(self):
+        return f"Attachment for {self.task.title} - {self.file.name}"

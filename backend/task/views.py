@@ -388,16 +388,25 @@ def update_task(request, task_id):
         
         if 'reminder1' in request.data:
             new_reminder1 = request.data['reminder1']
+            # Handle empty strings as None
+            if new_reminder1 == "":
+                new_reminder1 = None
+            
             if str(task.reminder1) != str(new_reminder1):
                 old_values['reminder1'] = str(task.reminder1) if task.reminder1 else None
                 task.reminder1 = new_reminder1
-                changes['reminder1'] = {'old': old_values['reminder1'], 'new': str(new_reminder1)}
+                changes['reminder1'] = {'old': old_values['reminder1'], 'new': str(new_reminder1) if new_reminder1 else None}
         
         if 'reminder2' in request.data:
             new_reminder2 = request.data['reminder2']
+            # Handle empty strings as None
+            if new_reminder2 == "":
+                new_reminder2 = None
+                
             if str(task.reminder2) != str(new_reminder2):
                 old_values['reminder2'] = str(task.reminder2) if task.reminder2 else None
                 task.reminder2 = new_reminder2
+                changes['reminder2'] = {'old': old_values['reminder2'], 'new': str(new_reminder2) if new_reminder2 else None}
                 changes['reminder2'] = {'old': old_values['reminder2'], 'new': str(new_reminder2)}
         
         # NEW: Capture follow_comment
