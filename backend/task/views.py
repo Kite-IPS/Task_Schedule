@@ -7,8 +7,8 @@ from .test_email import test_email
 from django.db.models import Q, Count
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from .models import Task, TaskAssignment
-from .serializers import TaskSerializer, TaskDetailSerializer, TaskCreateSerializer, TaskHistory
+from .models import Task, TaskAssignment, TaskHistory
+from .serializers import TaskSerializer, TaskDetailSerializer, TaskCreateSerializer, TaskHistorySerializer
 from .permissions import IsAdmin, IsHOD, IsAdminOrStaff, IsFaculty, IsStaff
 from django.http import HttpResponse
 import csv
@@ -121,10 +121,14 @@ def get_task(request, task_id):
         
         # Handle PUT request (Update)
         elif request.method == 'PUT':
+            # Permission and logging block
             try:
                 # Debug logging - Safe access to created_by and assignees
                 created_by_safe = task.created_by if isinstance(task.created_by, str) else (task.created_by.email if task.created_by else 'None')
-                assignee_emails = [a.assignee.email if not isinstance(a.assignee, str) else a.assignee for a in task.assignments.all()]
+                assignee_emails = [
+                    a.assignee.email if not isinstance(a.assignee, str) else a.assignee 
+                    for a in task.assignments.all()
+                ]
                 logger.info(f"PUT request from user: {user.email}, role: {user.role}")
                 logger.info(f"Task ID: {task.id}, created_by: {created_by_safe}")
                 logger.info(f"Task assignments: {assignee_emails}")
@@ -239,25 +243,36 @@ def get_task(request, task_id):
                         except Exception as e:
                             logger.error(f"Error creating assignment for {email}: {str(e)}")
                             continue
-                
-                if changes:
-                    task.save()
-                    TaskHistory.objects.create(
-                        task=task,
-                        action='updated',
-                        performed_by=request.user,
-                        details={'changes': changes, 'updated_fields': list(changes.keys())}
-                    )
-                
-                return Response(TaskDetailSerializer(task).data)
             except Exception as e:
-                logger.error(f"Error updating task: {str(e)}")
-                import traceback
-                traceback.print_exc()
-                return Response(
-                    {'error': 'Error updating task', 'detail': str(e)},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                logger.error(f"Error handling assignees: {str(e)}")
+                return Response({'error': 'Error updating assignees', 'detail': str(e)}, status=500)
+            
+            # Capture follow_comment and decide if to save
+            follow_comment = request.data.get('follow_comment', '').strip()
+            has_changes = bool(changes)
+            should_save = has_changes or bool(follow_comment)
+            
+            if should_save:
+                task.save()
+                
+                # Build history details
+                history_details = {
+                    'changes': changes,
+                    'updated_fields': list(changes.keys()) if has_changes else []
+                }
+                if follow_comment:
+                    history_details['follow_comment'] = follow_comment
+                    logger.info(f"Follow comment saved for task {task.id}: {follow_comment}")
+                
+                # Create history entry
+                TaskHistory.objects.create(
+                    task=task,
+                    action='updated',
+                    performed_by=request.user,
+                    details=history_details
                 )
+            
+            return Response(TaskDetailSerializer(task).data)
         
         # Handle DELETE request
         elif request.method == 'DELETE':
@@ -296,7 +311,14 @@ def get_task(request, task_id):
             {'error': 'Task not found'},
             status=status.HTTP_404_NOT_FOUND
         )
-
+    except Exception as e:
+        logger.error(f"Error in get_task: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response(
+            {'error': 'Internal server error', 'detail': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsAdminOrStaff])
@@ -377,20 +399,32 @@ def update_task(request, task_id):
                 old_values['reminder2'] = str(task.reminder2) if task.reminder2 else None
                 task.reminder2 = new_reminder2
                 changes['reminder2'] = {'old': old_values['reminder2'], 'new': str(new_reminder2)}
-        # Only save and create history if something changed
-        if changes:
+        
+        # NEW: Capture follow_comment
+        follow_comment = request.data.get('follow_comment', '').strip()
+        has_changes = bool(changes)
+        should_save = has_changes or bool(follow_comment)
+        
+        if should_save:
             task.save()
             
-            # Create history entry
+            # Build history details (changes only in JSON)
+            history_details = {
+                'changes': changes,
+                'updated_fields': list(changes.keys()) if has_changes else []
+            }
+            
+            # NEW: Save comment to dedicated field
             TaskHistory.objects.create(
                 task=task,
                 action='updated',
                 performed_by=request.user,
-                details={
-                    'changes': changes,
-                    'updated_fields': list(changes.keys())
-                }
+                details=history_details,
+                comment=follow_comment if follow_comment else None  # Direct to field
             )
+            
+            if follow_comment:
+                logger.info(f"Follow comment saved for task {task.id}: {follow_comment}")
         
         return Response(TaskDetailSerializer(task).data)
         
@@ -399,7 +433,14 @@ def update_task(request, task_id):
             {'error': 'Task not found'},
             status=status.HTTP_404_NOT_FOUND
         )
-
+    except Exception as e:
+        logger.error(f"Error in update_task: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response(
+            {'error': 'Error updating task', 'detail': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsStaff])
 def delete_task(request, task_id):
@@ -449,7 +490,7 @@ def generate_task_pdf(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_task_history(request):
-    """Get recent task history/activity based on user role"""
+    """Get recent task history/activity based on user role, including follow-up comments"""
     from .serializers import TaskHistorySerializer
     user = request.user
     
@@ -472,5 +513,56 @@ def get_task_history(request):
             'task', 'performed_by'
         ).all()[:10]
     
+    # NEW: Extract follow-up comments from history (filter for 'updated' actions with comment)
+    comments = []
+    for entry in history:
+        if entry.action == 'updated' and 'follow_comment' in entry.details:
+            comments.append({
+                'id': entry.id,
+                'task_id': entry.task.id,
+                'comment': entry.details['follow_comment'],
+                'performed_by': entry.performed_by.email if entry.performed_by else 'System',
+                'timestamp': entry.timestamp,
+                'full_details': entry.details,  # Optional: Full history for context
+            })
+    
+    # Serialize full history
     serializer = TaskHistorySerializer(history, many=True)
-    return Response({'activities': serializer.data})
+    return Response({
+        'activities': serializer.data,
+        'follow_comments': comments  # NEW: Dedicated list of comments
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_task_comments(request, task_id):
+    """Get follow-up comments for a specific task"""
+    try:
+        task = Task.objects.get(id=task_id)
+        # Permission check - similar to other task views
+        if request.user.role == 'hod' and not task.assignments.filter(department=request.user.department).exists():
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Fetch history entries with follow_comments
+        history = TaskHistory.objects.filter(
+            task_id=task_id,
+            action='updated',
+            details__follow_comment__isnull=False
+        ).select_related('performed_by').order_by('-timestamp')
+        
+        follow_comments = [{
+            'id': entry.id,
+            'comment': entry.details['follow_comment'],
+            'performed_by': entry.performed_by.email if entry.performed_by else 'System',
+            'timestamp': entry.timestamp,
+        } for entry in history]
+        
+        return Response({'follow_comments': follow_comments})
+    except Task.DoesNotExist:
+        return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error in get_task_comments: {str(e)}")
+        return Response(
+            {'error': 'Failed to fetch comments', 'detail': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

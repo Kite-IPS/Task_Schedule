@@ -124,12 +124,14 @@ class TaskHistory(models.Model):
     )
     timestamp = models.DateTimeField(auto_now_add=True)
     details = models.JSONField(default=dict)  # Store change details
+    comment = models.TextField(null=True, blank=True, help_text="Follow-up comment or note")  # NEW: Dedicated field
     
     class Meta:
         db_table = 'task_history'
         ordering = ['-timestamp']
         indexes = [
             models.Index(fields=['task', '-timestamp']),
+            models.Index(fields=['comment']),
         ]
     
     def __str__(self):

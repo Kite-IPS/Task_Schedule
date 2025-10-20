@@ -8,6 +8,7 @@ urlpatterns = [
     path('tasks/<int:task_id>/', views.get_task, name='get-task'),  # Handles GET, PUT, DELETE
     path('tasks/create/', views.create_task, name='create-task'),
     path('tasks/history/', views.get_task_history, name='get-task-history'),
+    path('tasks/<int:task_id>/comments/', views.get_task_comments, name='get-task-comments'),
     
     # Admin only
     path('tasks/generate-pdf/', views.generate_task_pdf, name='generate-task-pdf'),

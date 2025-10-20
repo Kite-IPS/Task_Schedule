@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { Plus, Edit, Trash2, X, Home, Eye } from "lucide-react"
+import { Plus, Edit, Trash2, X, Home, Eye, MessageSquarePlus } from "lucide-react"
 import BaseLayout from "../../Components/Layouts/BaseLayout"
 import { useNavigate } from "react-router-dom"
 import axiosInstance from "../../Utils/axiosInstance"
@@ -33,6 +33,10 @@ const Assignment = () => {
     createdBy: "",
     follow_comment: "",  // Added for follow-up comment
   })
+  const [taskComments, setTaskComments] = useState([]);  // For current task's comments
+  const [commentsLoading, setCommentsLoading] = useState(false);  // Loading state
+  const [commentsModalOpen, setCommentsModalOpen] = useState(false);  // NEW: Modal state for comments
+  const [selectedCommentTask, setSelectedCommentTask] = useState(null);  // Track task for comments modal
 
   const statuses = [
     { code: "pending", name: "Pending" },
@@ -170,6 +174,37 @@ const Assignment = () => {
     return users.filter((user) => user.department === departmentFilter)
   }
 
+  // Fetch comments function
+  const fetchTaskComments = async (taskId) => {
+    setCommentsLoading(true);
+    try {
+      const detailPath = API_PATH.TASK.DETAIL(taskId).replace(/\/$/, '');
+      const response = await axiosInstance.get(`${detailPath}/comments/`);
+      setTaskComments(response.data.follow_comments || []);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      setTaskComments([]);  // Fallback
+      alert("Failed to load comments");
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  // NEW: Open comments modal for a task
+  const openCommentsModal = (task) => {
+    setSelectedCommentTask(task);
+    setTaskComments([]);  // Clear previous
+    setCommentsModalOpen(true);
+    fetchTaskComments(task.id);
+  };
+
+  // Close comments modal
+  const closeCommentsModal = () => {
+    setCommentsModalOpen(false);
+    setSelectedCommentTask(null);
+    setTaskComments([]);
+  };
+
   // Modal functions
   const openCreateModal = () => {
     setModalMode("create")
@@ -197,7 +232,7 @@ const Assignment = () => {
       status: task.rawStatus || task.status.toLowerCase(),
       priority: task.rawPriority || task.priority.toLowerCase(),
       createdBy: task.createdBy || "Unknown",
-      follow_comment: "",  // Reset comment
+      follow_comment: task.follow_comment || "",  // Reset comment
     })
     setIsModalOpen(true)
   }
@@ -695,6 +730,14 @@ const Assignment = () => {
                       >
                         <Eye size={18} />
                       </button>
+                      {/* Follow Up Button - Now opens modal */}
+                      <button
+                        onClick={() => openCommentsModal(task)}
+                        className="text-indigo-400 hover:text-indigo-300 transition p-1 hover:bg-white/5 rounded"
+                        title="Follow-Up Comments"
+                      >
+                        <MessageSquarePlus size={18} />
+                      </button>
                       <button
                         onClick={() => openEditModal(task)}
                         className="text-blue-400 hover:text-blue-300 transition p-1 hover:bg-white/5 rounded"
@@ -754,7 +797,7 @@ const Assignment = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Main Modal (unchanged) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl w-[90%] md:w-[600px] p-6 max-h-[90vh] overflow-y-auto">
@@ -1036,6 +1079,53 @@ const Assignment = () => {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* NEW: Comments Modal - Non-interfering centered popup */}
+      {commentsModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl w-[90%] md:w-[500px] p-6 max-h-[80vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">
+                Follow-Up Comments for: {selectedCommentTask?.title}
+              </h2>
+              <button onClick={closeCommentsModal} className="text-white/70 hover:text-white transition">
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="space-y-3">
+              {commentsLoading ? (
+                <p className="text-white/60 text-sm text-center py-4">Loading comments...</p>
+              ) : taskComments.length === 0 ? (
+                <p className="text-white/60 text-sm italic text-center py-4">No comments yet.</p>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {taskComments.map((comment) => (
+                    <div key={comment.id} className="bg-white/5 p-3 rounded-lg text-sm border border-white/10">
+                      <p className="text-white mb-1">{comment.comment}</p>
+                      <small className="text-white/60 block">
+                        By {comment.performed_by} on {new Date(comment.timestamp).toLocaleString()}
+                      </small>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={closeCommentsModal}
+                className="px-4 py-2 bg-white/10 border border-white/20 hover:bg-indigo-600 text-white rounded-lg transition font-medium"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
