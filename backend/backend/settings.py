@@ -155,10 +155,15 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Create a data directory for the database if it doesn't exist
+import os
+data_dir = os.path.join(BASE_DIR, 'data')
+os.makedirs(data_dir, exist_ok=True)
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(data_dir, 'db.sqlite3'),
     }
 }
 

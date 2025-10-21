@@ -34,6 +34,8 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 
 # Command to run migrations, collect static files, and start the application
-CMD python manage.py migrate && \
+CMD mkdir -p /app/data && \
+    chmod 777 /app/data && \
+    python manage.py migrate && \
     python manage.py collectstatic --noinput && \
     gunicorn --bind 0.0.0.0:8000 backend.wsgi_docker
