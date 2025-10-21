@@ -1,5 +1,4 @@
 import Table from "../../Components/Admin/Table";
-import { data } from "../../DevSample/sample";
 import BaseLayout from '../../Components/Layouts/BaseLayout'
 import { Download, House, UsersRound, Eye, X } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
@@ -172,7 +171,7 @@ const HodDashboard = () => {
               {loading ? '...' : stats.completed_task}
             </p>
           </div>
-          <div className="h-[60px] md:h-auto md:pt-8 flex md:flex-col md:justify-center items-center md:items-start justify-between md:justify-start px-4 md:px-10 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl col-span-2 lg:col-span-1">
+          <div className="h-[60px] md:h-auto md:pt-8 flex md:flex-col items-center md:items-start justify-between md:justify-start px-4 md:px-10 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg hover:shadow-2xl col-span-2 lg:col-span-1">
             <h2 className="font-semibold mb-3 text-white/80 text-[17px] md:text-xl">Total On-Going Tasks</h2>
             <p className="font-bold text-orange-400 text-[18px] md:text-5xl ">
               {loading ? '...' : stats.ongoing_task}
