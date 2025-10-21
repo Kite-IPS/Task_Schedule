@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './Pages/Login';
 import HodDashboard from './Pages/Hod/HodDashboard';
@@ -9,11 +9,24 @@ import Assignment from './Pages/Faculty/Assignment';
 import Users from './Pages/Admin/Users';
 import UserProvider, { UserContext } from './Context/userContext';
 
+// Component to redirect to Django admin
+const AdminRedirect = () => {
+  useEffect(() => {
+    window.location.href = '/api/admin/';
+  }, []);
+  
+  return <div>Redirecting to Django Admin...</div>;
+};
+
 const App = () => {
   return (
     <UserProvider>
       <Router>
         <Routes>
+          {/* Special route for Django admin */}
+          <Route path="/admin" element={<AdminRedirect />} />
+          <Route path="/admin/*" element={<AdminRedirect />} />
+          
           <Route path='/' element={<Root />} />
           <Route path='/login' element={<Login />} />
           
@@ -24,8 +37,8 @@ const App = () => {
           
           {/* Admin Routes */}
           <Route element={<PrivateRoute allowedRoles={["Admin", "admin"]} />}>
-            <Route path='/admin/dashboard' element={<AdminDashboard />} />
-            <Route path='/admin/users' element={<Users />} />
+            <Route path='/admin-panel/dashboard' element={<AdminDashboard />} />
+            <Route path='/admin-panel/users' element={<Users />} />
           </Route>
           
           {/* Faculty Routes */}
@@ -65,7 +78,7 @@ const Root = () => {
   if (userRole === 'hod') {
     return <Navigate to="/hod/dashboard" replace />;
   } else if (userRole === 'admin') {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/admin-panel/dashboard" replace />;
   } else if (userRole === 'staff') {
     return <Navigate to="/faculty/dashboard" replace />;
   }

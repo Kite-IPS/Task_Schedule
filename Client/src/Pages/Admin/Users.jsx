@@ -174,16 +174,16 @@ const Users = () => {
         <div className="flex gap-1 items-center my-4 text-white/70">
           <button 
             className="hover:text-red-400 cursor-pointer transition-colors"
-            onClick={() => navigate('/admin/dashboard')}
+            onClick={() => navigate('/admin-panel/dashboard')}
           >
             <Home size={20} />
           </button>
           <span>{">"}</span>
-          <button className="hover:text-red-400 cursor-pointer transition-colors" onClick={() => navigate('/admin/dashboard')}>
+          <button className="hover:text-red-400 cursor-pointer transition-colors" onClick={() => navigate('/admin-panel/dashboard')}>
             Dashboard
           </button>
           <span>{">"}</span>
-          <button className="hover:text-red-400 cursor-pointer transition-colors" onClick={() => navigate('/admin/users')}>
+          <button className="hover:text-red-400 cursor-pointer transition-colors" onClick={() => navigate('/admin-panel/users')}>
             Users
           </button>
         </div>

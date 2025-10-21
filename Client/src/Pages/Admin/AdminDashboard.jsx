@@ -170,14 +170,14 @@ const AdminDashboard = () => {
       <div className="flex gap-1 items-center my-4 w-[90%] md:w-[80%] mx-auto text-white/70">
         <button
           className="hover:text-red-400 cursor-pointer transition-colors"
-          onClick={() => navigate("/admin/dashboard")}
+          onClick={() => navigate("/admin-panel/dashboard")}
         >
           <House />
         </button>
         <span>{">"}</span>
         <button
           className="hover:text-red-400 cursor-pointer transition-colors"
-          onClick={() => navigate("/admin/dashboard")}
+          onClick={() => navigate("/admin-panel/dashboard")}
         >
           Dashboard
         </button>
@@ -207,7 +207,7 @@ const AdminDashboard = () => {
         <div className="flex items-center gap-2 w-full md:w-auto">
           <button
             className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm w-1/2 md:w-auto"
-            onClick={() => navigate("/admin/users")}
+            onClick={() => navigate("/admin-panel/users")}
           >
             View Users <UsersRound className="w-4 h-4" />
           </button>

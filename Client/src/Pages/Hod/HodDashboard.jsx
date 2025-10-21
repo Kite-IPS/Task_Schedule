@@ -146,14 +146,14 @@ const HodDashboard = () => {
         <div className="flex gap-1 items-center my-4 w-[90%] md:w-[80%] mx-auto text-white/70">
           <button
             className="hover:text-red-400 cursor-pointer transition-colors"
-            onClick={() => navigate("/admin/dashboard")}
+            onClick={() => navigate("/admin-panel/dashboard")}
           >
             <House />
           </button>
           <span>{">"}</span>
           <button
             className="hover:text-red-400 cursor-pointer transition-colors"
-            onClick={() => navigate("/admin/dashboard")}
+            onClick={() => navigate("/admin-panel/dashboard")}
           >
             Dashboard
           </button>

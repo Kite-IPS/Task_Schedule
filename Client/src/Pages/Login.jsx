@@ -115,7 +115,7 @@ const Login = () => {
       if (userRole === 'hod') {
         navigate('/hod/dashboard', { replace: true });
       } else if (userRole === 'admin') {
-        navigate('/admin/dashboard', { replace: true });
+        navigate('/admin-panel/dashboard', { replace: true });
       } else if (userRole === 'faculty') {
         navigate('/faculty/dashboard', { replace: true });
       }
@@ -218,7 +218,7 @@ const Login = () => {
         if (normalizedRole === "hod") {
           navigate('/hod/dashboard', { replace: true });
         } else if (normalizedRole === "admin") {
-          navigate('/admin/dashboard', { replace: true });
+          navigate('/admin-panel/dashboard', { replace: true });
         } else if (normalizedRole === "head of department") {
           navigate('/hod/dashboard', { replace: true });
         } else if(normalizedRole === "staff"){
