@@ -13,7 +13,7 @@ COPY . .
 
 # Set environment variables for production
 ENV NODE_ENV=production
-ENV VITE_API_URL=http://122.248.224.53:8000
+ENV VITE_API_URL=http://18.136.195.155:8000
 
 # Build the app
 RUN npm run build
