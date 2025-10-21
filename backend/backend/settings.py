@@ -102,14 +102,18 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:5173',
     'http://127.0.0.1:8000',
+    'http://122.248.224.53',
+    'http://122.248.224.53:80',
 ]
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = True  # Only for development!
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for now
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React default port
     "http://127.0.0.1:3000",
+    "http://122.248.224.53",
+    "http://122.248.224.53:80",
 ]
 CORS_ALLOWED_METHODS = [
     'DELETE',
@@ -124,6 +128,8 @@ CORS_ALLOWED_METHODS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://122.248.224.53",
+    "http://122.248.224.53:80",
 ]
 
 ROOT_URLCONF = 'backend.urls'
