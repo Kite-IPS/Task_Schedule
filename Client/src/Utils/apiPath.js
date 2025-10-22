@@ -17,6 +17,8 @@ export const API_PATH = {
         DETAIL:(id) => `/api/tasks/${id}/`,
         CREATE:'/api/tasks/create/',
         PDF:'/api/tasks/generate-pdf/',
-        HISTORY:'/api/tasks/history/'
+        HISTORY:'/api/tasks/history/',
+        COMMENTS:'/api/tasks/comments/',
+        TASK_COMMENTS:(id) => `/api/tasks/${id}/comments/`
     }
 }

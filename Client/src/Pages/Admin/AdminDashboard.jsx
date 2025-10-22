@@ -2,14 +2,16 @@ import BaseLayout from "../../Components/Layouts/BaseLayout";
 import Table from "../../Components/Admin/Table";
 import { Download, House, UsersRound, Eye, X, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import axiosInstance from "../../Utils/axiosInstance";
 import { API_PATH } from "../../Utils/apiPath";
 import ExcelJS from 'exceljs';
+import { UserContext } from "../../Context/userContext";
 // import { data } from "../../DevSample/sample";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
   const [stats, setStats] = useState({
     total_task: 0,
     completed_task: 0,
@@ -21,6 +23,20 @@ const AdminDashboard = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [recentActivities, setRecentActivities] = useState([]);
   const [followComments, setFollowComments] = useState([]);
+  
+  // Check if user is HOD or Admin - making sure admin sees comments
+  const isHOD = user?.role === 'hod';
+  // Use both 'admin' role and is_superuser flag to identify admins
+  const isAdmin = user?.role === 'admin' || user?.is_superuser === true;
+  
+  // Log user role for debugging
+  useEffect(() => {
+    console.log('User data:', user);
+    console.log('User role:', user?.role);
+    console.log('Is superuser:', user?.is_superuser);
+    console.log('Is HOD:', isHOD);
+    console.log('Is Admin:', isAdmin);
+  }, [user, isHOD, isAdmin]);
 
   // Export to Excel function
   const exportToExcel = async () => {
@@ -141,9 +157,26 @@ const AdminDashboard = () => {
 
     const fetchRecentActivities = async () => {
       try {
-        const response = await axiosInstance.get(API_PATH.TASK.HISTORY);
-        setRecentActivities(response.data.activities || []);
-        setFollowComments(response.data.follow_comments || []);
+        // Get recent activities
+        const activityResponse = await axiosInstance.get(API_PATH.TASK.HISTORY);
+        setRecentActivities(activityResponse.data.activities || []);
+        
+        // Get follow-up comments for admins and staff (not HODs)
+        if (isAdmin || (user?.role === 'staff')) {
+          try {
+            console.log('Fetching comments for role:', user?.role);
+            const commentsResponse = await axiosInstance.get(API_PATH.TASK.COMMENTS);
+            console.log('Comments response:', commentsResponse.data);
+            setFollowComments(commentsResponse.data.follow_comments || []);
+          } catch (commentError) {
+            // If there's an error fetching comments, just log it and continue
+            console.error('Error fetching follow-up comments:', commentError);
+            setFollowComments([]);
+          }
+        } else {
+          console.log('Not fetching comments for role:', user?.role);
+          setFollowComments([]);
+        }
       } catch (error) {
         console.error('Error fetching recent activities:', error);
         setRecentActivities([]);
@@ -237,46 +270,49 @@ const AdminDashboard = () => {
         <Table data={data} onView={openViewModal} />
       </div>
 
-      {/* Recent Activities Section */}
-      <div className="w-[90%] md:w-[80%] mx-auto my-8">
-        <div className="flex items-center gap-3 mb-4">
-          <Activity className="text-red-400" size={24} />
-          <h2 className="text-xl font-bold text-white">Recent Follow-up Comments</h2>
-        </div>
-        
-        <div className="grid gap-4">
-          {followComments.length > 0 ? (
-            followComments.map((comment, index) => (
-              <div 
-                key={comment.id || index} 
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-lg hover:bg-white/10 transition-all"
-              >
-                <div className="flex justify-between mb-2">
-                  <span className="text-white/70 text-sm">
-                    Task: <span className="text-red-400 font-semibold cursor-pointer hover:underline" onClick={() => {
-                      const task = data.find(t => t.id === comment.task_id);
-                      if (task) openViewModal(task);
-                    }}>
-                      {data.find(t => t.id === comment.task_id)?.title || `Task #${comment.task_id}`}
+      {/* Recent Activities Section - Only visible for admins and staff */}
+      {/* Double-checking to ensure admins see this section regardless of other checks */}
+      {(user?.role === 'admin' || user?.is_superuser === true || (!isHOD && user?.role === 'staff')) && (
+        <div className="w-[90%] md:w-[80%] mx-auto my-8">
+          <div className="flex items-center gap-3 mb-4">
+            <Activity className="text-red-400" size={24} />
+            <h2 className="text-xl font-bold text-white">Recent Follow-up Comments {isAdmin ? '(Admin View)' : ''}</h2>
+          </div>
+          
+          <div className="grid gap-4">
+            {followComments.length > 0 ? (
+              followComments.map((comment, index) => (
+                <div 
+                  key={comment.id || index} 
+                  className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-lg hover:bg-white/10 transition-all"
+                >
+                  <div className="flex justify-between mb-2">
+                    <span className="text-white/70 text-sm">
+                      Task: <span className="text-red-400 font-semibold cursor-pointer hover:underline" onClick={() => {
+                        const task = data.find(t => t.id === comment.task_id);
+                        if (task) openViewModal(task);
+                      }}>
+                        {comment.task_title || data.find(t => t.id === comment.task_id)?.title || `Task #${comment.task_id}`}
+                      </span>
                     </span>
-                  </span>
-                  <span className="text-white/60 text-xs">
-                    {new Date(comment.timestamp).toLocaleString()}
-                  </span>
+                    <span className="text-white/60 text-xs">
+                      {new Date(comment.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-white/90 mb-2">{comment.comment}</p>
+                  <div className="flex justify-end">
+                    <span className="text-blue-400 text-xs">by {comment.performed_by}</span>
+                  </div>
                 </div>
-                <p className="text-white/90 mb-2">{comment.comment}</p>
-                <div className="flex justify-end">
-                  <span className="text-blue-400 text-xs">by {comment.performed_by}</span>
-                </div>
+              ))
+            ) : (
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 text-center">
+                <p className="text-white/60">No follow-up comments found</p>
               </div>
-            ))
-          ) : (
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 text-center">
-              <p className="text-white/60">No follow-up comments found</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* View Task Modal */}
       {isViewModalOpen && selectedTask && (

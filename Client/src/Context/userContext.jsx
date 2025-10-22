@@ -56,6 +56,9 @@ const UserProvider = ({ children }) => {
                     token: accessToken
                 };
                 
+                // Log user data for debugging
+                console.log('User data from API:', userData);
+                
                 setUser(userData);
             } catch (error) {
                 console.log("Unauthorized", error);

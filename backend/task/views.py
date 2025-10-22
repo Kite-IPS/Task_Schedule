@@ -513,6 +513,12 @@ def get_task_history(request):
         history = TaskHistory.objects.select_related(
             'task', 'performed_by'
         ).all()[:10]
+        
+        # For admin, get all follow-up comments, not just from recent history
+        comment_history = TaskHistory.objects.filter(
+            action='updated',
+            details__follow_comment__isnull=False
+        ).select_related('task', 'performed_by').order_by('-timestamp')[:20]
     elif user.role == 'hod':
         # HOD sees history for tasks in their department
         history = TaskHistory.objects.select_related(
@@ -520,16 +526,25 @@ def get_task_history(request):
         ).filter(
             task__assignments__department=user.department
         ).distinct()[:10]
+        
+        # HODs do not see follow-up comments as per updated requirements
+        comment_history = TaskHistory.objects.none()
     else:  # staff
         # Staff sees all task history
         history = TaskHistory.objects.select_related(
             'task', 'performed_by'
         ).all()[:10]
+        
+        # Staff sees all comments
+        comment_history = TaskHistory.objects.filter(
+            action='updated',
+            details__follow_comment__isnull=False
+        ).select_related('task', 'performed_by').order_by('-timestamp')[:20]
     
-    # NEW: Extract follow-up comments from history (filter for 'updated' actions with comment)
+    # Extract follow-up comments
     comments = []
-    for entry in history:
-        if entry.action == 'updated' and 'follow_comment' in entry.details:
+    for entry in comment_history:
+        if 'follow_comment' in entry.details:
             comments.append({
                 'id': entry.id,
                 'task_id': entry.task.id,
@@ -543,7 +558,7 @@ def get_task_history(request):
     serializer = TaskHistorySerializer(history, many=True)
     return Response({
         'activities': serializer.data,
-        'follow_comments': comments  # NEW: Dedicated list of comments
+        'follow_comments': comments  # Dedicated list of comments from broader query
     })
 
 @api_view(['GET'])
@@ -552,9 +567,9 @@ def get_task_comments(request, task_id):
     """Get follow-up comments for a specific task"""
     try:
         task = Task.objects.get(id=task_id)
-        # Permission check - similar to other task views
-        if request.user.role == 'hod' and not task.assignments.filter(department=request.user.department).exists():
-            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        # Permission check - HODs cannot see follow-up comments
+        if request.user.role == 'hod':
+            return Response({'error': 'HODs do not have access to follow-up comments'}, status=status.HTTP_403_FORBIDDEN)
         
         # Fetch history entries with follow_comments
         history = TaskHistory.objects.filter(
@@ -565,6 +580,7 @@ def get_task_comments(request, task_id):
         
         follow_comments = [{
             'id': entry.id,
+            'task_id': task_id,
             'comment': entry.details['follow_comment'],
             'performed_by': entry.performed_by.email if entry.performed_by else 'System',
             'timestamp': entry.timestamp,
@@ -575,6 +591,74 @@ def get_task_comments(request, task_id):
         return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logger.error(f"Error in get_task_comments: {str(e)}")
+        return Response(
+            {'error': 'Failed to fetch comments', 'detail': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+        
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_follow_comments(request):
+    """Get all follow-up comments across tasks with pagination"""
+    try:
+        # Get pagination parameters
+        page = int(request.GET.get('page', 1))
+        page_size = int(request.GET.get('page_size', 20))
+        
+        # Calculate offset
+        offset = (page - 1) * page_size
+        limit = offset + page_size
+        
+        user = request.user
+        
+        # Filter based on role
+        if user.role == 'admin' or user.is_superuser:
+            # Admin sees all follow comments
+            query = TaskHistory.objects.filter(
+                action='updated',
+                details__follow_comment__isnull=False
+            )
+        elif user.role == 'hod':
+            # HODs do not see follow-up comments as per updated requirements
+            query = TaskHistory.objects.none()
+        else:
+            # Staff sees all comments assigned to them
+            query = TaskHistory.objects.filter(
+                action='updated',
+                details__follow_comment__isnull=False,
+                task__assignments__assignee=user
+            ).distinct()
+            
+        # Execute query with pagination
+        total_count = query.count()
+        history_entries = query.select_related('task', 'performed_by').order_by('-timestamp')[offset:limit]
+        
+        # Format comments
+        follow_comments = []
+        for entry in history_entries:
+            if 'follow_comment' in entry.details:
+                follow_comments.append({
+                    'id': entry.id,
+                    'task_id': entry.task.id,
+                    'task_title': entry.task.title,  # Include task title for context
+                    'comment': entry.details['follow_comment'],
+                    'performed_by': entry.performed_by.email if entry.performed_by else 'System',
+                    'timestamp': entry.timestamp,
+                })
+        
+        # Return paginated response
+        return Response({
+            'follow_comments': follow_comments,
+            'pagination': {
+                'total': total_count,
+                'page': page,
+                'page_size': page_size,
+                'pages': (total_count + page_size - 1) // page_size  # Ceiling division
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in get_all_follow_comments: {str(e)}")
         return Response(
             {'error': 'Failed to fetch comments', 'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
