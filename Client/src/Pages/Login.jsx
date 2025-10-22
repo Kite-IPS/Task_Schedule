@@ -185,15 +185,11 @@ const Login = () => {
         // Store token based on remember me
         if (remember) {
           localStorage.setItem("token", token);
-          localStorage.setItem("role", role.toLowerCase());
-          localStorage.setItem("userData",response.data.staff)
+          // We no longer need to store role separately since it will be in userData
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("role");
-          sessionStorage.removeItem("userData")
         } else {
           sessionStorage.setItem('token', token);
-          sessionStorage.setItem('role', role.toLowerCase());
-          sessionStorage.setItem('userData',response.data.staff)
           localStorage.removeItem("token");
           localStorage.removeItem("role");
         }
@@ -237,9 +233,8 @@ const Login = () => {
       // Clear authentication on error
       delete axiosInstance.defaults.headers.common['Authorization'];
       localStorage.removeItem('token');
-      localStorage.removeItem('role');
+      localStorage.removeItem('userData');
       sessionStorage.removeItem('token');
-      sessionStorage.removeItem('role');
 
       // Extract error message
       let errorMessage = 'Login failed. Please try again.';
