@@ -48,6 +48,7 @@ class User(AbstractUser):
         ('AIDS', 'Artifical Intelligence and Data Science'),
         ('CYS', 'CyberSecurity'),
         ('OFFICE', 'Kite Office'),
+        ('S&H', 'Science & Humanities'),
         ('IQSC', 'iqsc')
     ]
     
