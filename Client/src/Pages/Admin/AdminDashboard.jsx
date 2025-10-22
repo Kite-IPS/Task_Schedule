@@ -1,6 +1,6 @@
 import BaseLayout from "../../Components/Layouts/BaseLayout";
 import Table from "../../Components/Admin/Table";
-import { Download, House, UsersRound, Eye, X } from "lucide-react";
+import { Download, House, UsersRound, Eye, X, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axiosInstance from "../../Utils/axiosInstance";
@@ -19,6 +19,8 @@ const AdminDashboard = () => {
   const [data, setData] = useState([]);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [followComments, setFollowComments] = useState([]);
 
   // Export to Excel function
   const exportToExcel = async () => {
@@ -137,8 +139,21 @@ const AdminDashboard = () => {
       }
     };
 
+    const fetchRecentActivities = async () => {
+      try {
+        const response = await axiosInstance.get(API_PATH.TASK.HISTORY);
+        setRecentActivities(response.data.activities || []);
+        setFollowComments(response.data.follow_comments || []);
+      } catch (error) {
+        console.error('Error fetching recent activities:', error);
+        setRecentActivities([]);
+        setFollowComments([]);
+      }
+    };
+
     fetchDashboardStats();
     fetchAllTasks();
+    fetchRecentActivities();
   }, []);
 
   // Helper function to format status (pending -> Pending, in_progress -> In Progress)
@@ -220,6 +235,47 @@ const AdminDashboard = () => {
       </div>
       <div className="w-[90%] md:w-[80%] mx-auto my-4">
         <Table data={data} onView={openViewModal} />
+      </div>
+
+      {/* Recent Activities Section */}
+      <div className="w-[90%] md:w-[80%] mx-auto my-8">
+        <div className="flex items-center gap-3 mb-4">
+          <Activity className="text-red-400" size={24} />
+          <h2 className="text-xl font-bold text-white">Recent Follow-up Comments</h2>
+        </div>
+        
+        <div className="grid gap-4">
+          {followComments.length > 0 ? (
+            followComments.map((comment, index) => (
+              <div 
+                key={comment.id || index} 
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-lg hover:bg-white/10 transition-all"
+              >
+                <div className="flex justify-between mb-2">
+                  <span className="text-white/70 text-sm">
+                    Task: <span className="text-red-400 font-semibold cursor-pointer hover:underline" onClick={() => {
+                      const task = data.find(t => t.id === comment.task_id);
+                      if (task) openViewModal(task);
+                    }}>
+                      {data.find(t => t.id === comment.task_id)?.title || `Task #${comment.task_id}`}
+                    </span>
+                  </span>
+                  <span className="text-white/60 text-xs">
+                    {new Date(comment.timestamp).toLocaleString()}
+                  </span>
+                </div>
+                <p className="text-white/90 mb-2">{comment.comment}</p>
+                <div className="flex justify-end">
+                  <span className="text-blue-400 text-xs">by {comment.performed_by}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 text-center">
+              <p className="text-white/60">No follow-up comments found</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* View Task Modal */}

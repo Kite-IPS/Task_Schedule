@@ -140,3 +140,76 @@ def send_overdue_notification(task, assignee):
     except Exception as e:
         if settings.DEBUG:
             print(f"Error sending overdue notification email: {str(e)}")
+
+def get_status_update_html(task, assignee, old_status, new_status):
+    """Generate HTML for status update email."""
+    initiated_by = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    
+    # Format status for better readability
+    def format_status(status_value):
+        return status_value.replace('_', ' ').title()
+    
+    old_status_formatted = format_status(old_status)
+    new_status_formatted = format_status(new_status)
+    
+    # Determine color based on new status
+    status_color = {
+        'completed': '#28a745',  # Green for completed
+        'pending': '#ffc107',    # Yellow for pending
+        'ongoing': '#17a2b8',    # Blue for ongoing
+        'overdue': '#dc3545',    # Red for overdue
+    }.get(new_status, '#6c757d')  # Default gray
+    
+    return f"""
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
+        <h2 style="color: {status_color};">Task Status Changed</h2>
+        <p>Dear {assignee.get_full_name()},</p>
+        <p>The status of a task assigned to you has been updated from <strong>{old_status_formatted}</strong> to <strong>{new_status_formatted}</strong>.</p>
+        <div style="border-left: 4px solid {status_color}; padding-left: 12px; margin: 16px 0;">
+            <p><strong>Title:</strong> {task.title}</p>
+            <p><strong>Description:</strong> {task.description}</p>
+            <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
+            <p><strong>Priority:</strong> {task.priority}</p>
+            <p><strong>Initiated by:</strong> {initiated_by}</p>
+        </div>
+        <p>Please review this update and take any necessary actions.</p> 
+        <p style="margin-top: 24px;">Regards,<br><strong>Task Management System</strong></p>
+    </div>
+    """
+
+def send_status_update_email(task, assignee, old_status, new_status):
+    """Send email about task status updates."""
+    try:
+        subject = f"Status Update: {task.title}"
+        html_message = get_status_update_html(task, assignee, old_status, new_status)
+        recipient_list = [assignee.email]
+        
+        # Include HOD for important status changes
+        if assignee.department:
+            hod = User.objects.filter(department=assignee.department, role='hod').first()
+            if hod and hod.email:
+                recipient_list.append(hod.email)
+        
+        # Always include admin for completed or overdue status
+        if new_status in ['completed', 'overdue']:
+            admin_emails = User.objects.filter(
+                Q(role='admin') | Q(is_superuser=True)
+            ).values_list('email', flat=True).distinct()
+            recipient_list.extend(admin_emails)
+        
+        # Remove duplicates / invalids
+        recipient_list = list(set(filter(None, recipient_list)))
+        
+        send_mail(
+            subject=subject,
+            message='',
+            html_message=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipient_list,
+            fail_silently=True
+        )
+        return True
+    except Exception as e:
+        if settings.DEBUG:
+            print(f"Error sending status update email: {str(e)}")
+        return False

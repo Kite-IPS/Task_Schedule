@@ -378,7 +378,11 @@ def update_task(request, task_id):
         
         if 'status' in request.data and task.status != request.data['status']:
             old_values['status'] = task.status
-            task.status = request.data['status']
+            # Store this for later email notifications
+            old_status = task.status
+            new_status = request.data['status']
+            
+            task.status = new_status
             changes['status'] = {'old': old_values['status'], 'new': task.status}
 
             if task.status == 'completed' and not task.completed_at:

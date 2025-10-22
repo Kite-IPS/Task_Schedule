@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.db.models import Q
 
 class Task(models.Model):
     """Main task model with hierarchical delegation support"""
@@ -43,6 +44,14 @@ class Task(models.Model):
         related_name='subtasks'
     )
     
+    # Keep track of previous status to detect changes
+    _original_status = None
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Store the original status when instance is loaded
+        self._original_status = self.status
+    
     class Meta:
         db_table = 'tasks'
         ordering = ['-created_at']
@@ -59,6 +68,42 @@ class Task(models.Model):
     def __str__(self):
         return self.title
     
+    def save(self, *args, **kwargs):
+        """Override save method to handle status change emails"""
+        from .utils import send_status_update_email
+        
+        # Detect if status has changed
+        status_changed = self.pk is not None and self._original_status != self.status
+        
+        # Perform standard save
+        result = super().save(*args, **kwargs)
+        
+        # Handle completion logic
+        if self.status == 'completed' and not self.completed_at:
+            self.completed_at = timezone.now()
+            # Save again if we updated completed_at
+            if 'update_fields' not in kwargs or 'completed_at' not in kwargs['update_fields']:
+                super().save(update_fields=['completed_at'])
+        
+        # Send notifications if status changed
+        if status_changed:
+            try:
+                # Get all assignees for this task
+                for assignment in self.assignments.select_related('assignee').all():
+                    send_status_update_email(
+                        task=self,
+                        assignee=assignment.assignee,
+                        old_status=self._original_status,
+                        new_status=self.status
+                    )
+            except Exception as e:
+                print(f"Error sending status change email: {str(e)}")
+        
+        # Update our status tracker
+        self._original_status = self.status
+        
+        return result
+    
     def update_status(self):
         """Auto-update status based on due date"""
         try:
@@ -72,8 +117,12 @@ class Task(models.Model):
                     due_date = timezone.make_aware(due_date)
                 
                 if now > due_date:
+                    old_status = self.status
                     self.status = 'overdue'
-                    self.save(update_fields=['status'])
+                    self.save()
+                    
+                    # Status updated notification happens in save method
+            
         except Exception as e:
             # Log the error but don't break the API
             print(f"Error updating task status for task {self.id}: {str(e)}")
