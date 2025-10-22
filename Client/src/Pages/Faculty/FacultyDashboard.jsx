@@ -7,13 +7,9 @@ import { API_PATH } from "../../Utils/apiPath";
 
 const FacultyDashboard = () => {
   const navigate = useNavigate();
+  // Create Task modal state and form data (commented out)
+  /* 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [stats, setStats] = useState({
-    total_task: 0,
-    completed_task: 0,
-    ongoing_task: 0
-  });
-  const [loading, setLoading] = useState(true);
   const [createLoading, setCreateLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -27,9 +23,19 @@ const FacultyDashboard = () => {
     dueDate: "",
     createdBy: "",
   });
-  const [recentActivities, setRecentActivities] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  */
+  
+  // Active state variables
+  const [stats, setStats] = useState({
+    total_task: 0,
+    completed_task: 0,
+    ongoing_task: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [recentActivities, setRecentActivities] = useState([]);
 
+  /* Form options for create task (commented out)
   const statuses = [
     { code: "pending", name: "Pending" },
     { code: "completed", name: "Completed" },
@@ -52,6 +58,7 @@ const FacultyDashboard = () => {
     { code: "AIML", name: "AIML" },
     { code: "RA", name: "R&A" },
   ];
+  */
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
@@ -65,6 +72,7 @@ const FacultyDashboard = () => {
       }
     };
 
+    /* Fetch users function for create task (commented out)
     const fetchUsers = async () => {
       setUsersLoading(true);
       try {
@@ -82,6 +90,7 @@ const FacultyDashboard = () => {
         setUsersLoading(false);
       }
     };
+    */
 
     const fetchRecentActivities = async () => {
       try {
@@ -94,10 +103,12 @@ const FacultyDashboard = () => {
     };
 
     fetchDashboardStats();
-    fetchUsers();
+    // fetchUsers(); // Commented out - no longer needed since Create Task is disabled
     fetchRecentActivities();
   }, []);
 
+  /* Create Task related functions - all commented out
+  
   // Filter users based on selected department
   const getFilteredUsers = () => {
     if (departmentFilter === "all") {
@@ -222,6 +233,7 @@ const FacultyDashboard = () => {
       alert("Please fill all required fields");
     }
   };
+  */
 
   return (
     <BaseLayout>
@@ -266,6 +278,7 @@ const FacultyDashboard = () => {
       {/* Action Buttons - Equal width on mobile, centered on desktop */}
       <div className="w-[90%] md:w-[80%] mx-auto my-8">
         <div className="flex flex-row justify-center items-center gap-4 md:gap-6 flex-wrap md:flex-nowrap">
+          {/* Create Task button commented out
           <button
             className="w-auto bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-medium text-base md:text-lg shadow-lg hover:shadow-xl hover:scale-105"
             onClick={openCreateModal}
@@ -273,6 +286,7 @@ const FacultyDashboard = () => {
             <Plus className="w-5 h-5" />
             Create Task
           </button>
+          */}
           <button
             className="w-auto bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-medium text-base md:text-lg shadow-lg hover:shadow-xl hover:scale-105"
             onClick={() => navigate("/faculty/assign")}
@@ -332,11 +346,12 @@ const FacultyDashboard = () => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Create Task Modal - commented out
+      {/* 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl w-[90%] md:w-[600px] p-6 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
+            <!-- Modal Header -->
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-white">Create Task</h2>
               <button onClick={closeModal} className="text-white/70 hover:text-white transition">
@@ -344,7 +359,7 @@ const FacultyDashboard = () => {
               </button>
             </div>
 
-            {/* Modal Body */}
+            <!-- Modal Body -->
             <>
               <div className="space-y-4">
                 <div>
@@ -388,7 +403,7 @@ const FacultyDashboard = () => {
                     Assignee(s) * {formData.assignee.length > 0 && `(${formData.assignee.length} selected)`}
                   </label>
 
-                  {/* Department Filter Dropdown */}
+                  <!-- Department Filter Dropdown -->
                   <div className="mb-3">
                     <select
                       value={departmentFilter}
@@ -492,7 +507,7 @@ const FacultyDashboard = () => {
                 </div>
               </div>
 
-              {/* Modal Footer */}
+              <!-- Modal Footer -->
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={closeModal}
@@ -516,6 +531,7 @@ const FacultyDashboard = () => {
           </div>
         </div>
       )}
+      */}
     </BaseLayout>
   )
 }
