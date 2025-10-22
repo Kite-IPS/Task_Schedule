@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import BaseLayout from '../../Components/Layouts/BaseLayout';
-import { Plus, Eye, House, Activity, X } from "lucide-react";
+import { Eye, House, Activity } from "lucide-react"; // Removed Plus and X icons as they're no longer needed
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from "../../Utils/axiosInstance";
 import { API_PATH } from "../../Utils/apiPath";
@@ -278,15 +278,7 @@ const FacultyDashboard = () => {
       {/* Action Buttons - Equal width on mobile, centered on desktop */}
       <div className="w-[90%] md:w-[80%] mx-auto my-8">
         <div className="flex flex-row justify-center items-center gap-4 md:gap-6 flex-wrap md:flex-nowrap">
-          {/* Create Task button commented out
-          <button
-            className="w-auto bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-medium text-base md:text-lg shadow-lg hover:shadow-xl hover:scale-105"
-            onClick={openCreateModal}
-          >
-            <Plus className="w-5 h-5" />
-            Create Task
-          </button>
-          */}
+          {/* Only View All button is shown - Create Task button completely removed */}
           <button
             className="w-auto bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-medium text-base md:text-lg shadow-lg hover:shadow-xl hover:scale-105"
             onClick={() => navigate("/faculty/assign")}
