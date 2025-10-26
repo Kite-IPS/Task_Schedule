@@ -48,6 +48,11 @@ class User(AbstractUser):
         ('AIDS', 'Artifical Intelligence and Data Science'),
         ('CYS', 'CyberSecurity'),
         ('OFFICE', 'Kite Office'),
+        ('MBA', 'Master of Business Administration'),
+        ('Innovation', 'Innovation Team'),
+        ('Non-Teaching', 'Non-Teaching Staffs'),
+        ('Placement', 'Placement Department'),
+        ('R&A', 'Robotics & Automation'),
         ('S&H', 'Science & Humanities'),
         ('IQSC', 'iqsc')
     ]
