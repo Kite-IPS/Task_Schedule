@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { ChevronUp, ChevronDown, Filter, X, Eye } from "lucide-react";
+import { ChevronUp, ChevronDown, Filter, X, Eye, GitBranch } from "lucide-react";
 
-const Table = ({ data = [], onView }) => {
+const Table = ({ data = [], onView, onFetchHierarchy }) => {
   // Safety check: ensure data is an array
   const safeData = Array.isArray(data) ? data : [];
 
@@ -17,6 +17,9 @@ const Table = ({ data = [], onView }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState({});
+  const [hierarchyRows, setHierarchyRows] = useState({}); // Track which rows have hierarchy expanded
+  const [hierarchyData, setHierarchyData] = useState({}); // Cache hierarchy data per task
+  const [hierarchyLoading, setHierarchyLoading] = useState({}); // Loading state per task
   const itemsPerPage = 5;
 
   // Helper function to get department as string
@@ -44,6 +47,33 @@ const Table = ({ data = [], onView }) => {
       ...prev,
       [id]: !prev[id],
     }));
+  };
+
+  // Toggle hierarchy row
+  const toggleHierarchy = async (taskId) => {
+    const isCurrentlyOpen = hierarchyRows[taskId];
+
+    if (isCurrentlyOpen) {
+      // Close it
+      setHierarchyRows(prev => ({ ...prev, [taskId]: false }));
+      return;
+    }
+
+    // Open it - fetch data if not cached
+    setHierarchyRows(prev => ({ ...prev, [taskId]: true }));
+
+    if (!hierarchyData[taskId] && onFetchHierarchy) {
+      setHierarchyLoading(prev => ({ ...prev, [taskId]: true }));
+      try {
+        const data = await onFetchHierarchy(taskId);
+        setHierarchyData(prev => ({ ...prev, [taskId]: data }));
+      } catch (error) {
+        console.error('Error fetching hierarchy:', error);
+        setHierarchyData(prev => ({ ...prev, [taskId]: null }));
+      } finally {
+        setHierarchyLoading(prev => ({ ...prev, [taskId]: false }));
+      }
+    }
   };
 
   const getDisplayedText = (description, id) => {
@@ -159,6 +189,154 @@ const Table = ({ data = [], onView }) => {
       <ChevronUp className="w-4 h-4" />
     ) : (
       <ChevronDown className="w-4 h-4" />
+    );
+  };
+
+  // Render hierarchy inline content
+  const renderHierarchyRow = (taskId) => {
+    const isLoading = hierarchyLoading[taskId];
+    const data = hierarchyData[taskId];
+
+    if (isLoading) {
+      return (
+        <tr key={`hierarchy-${taskId}`}>
+          <td colSpan="12" className="px-0 py-0">
+            <div className="mx-4 mb-3 p-4 bg-gradient-to-r from-cyan-500/5 to-purple-500/5 border border-cyan-500/20 rounded-xl">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-500"></div>
+                <span className="text-white/50 text-sm">Loading delegation hierarchy...</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      );
+    }
+
+    if (!data || !data.hierarchy || data.hierarchy.length === 0) {
+      return (
+        <tr key={`hierarchy-${taskId}`}>
+          <td colSpan="12" className="px-0 py-0">
+            <div className="mx-4 mb-3 p-4 bg-white/3 border border-white/10 rounded-xl">
+              <div className="flex items-center gap-2">
+                <GitBranch size={14} className="text-white/30" />
+                <span className="text-white/40 text-sm">No delegation history — this task has not been delegated by any HOD.</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      );
+    }
+
+    return (
+      <tr key={`hierarchy-${taskId}`}>
+        <td colSpan="12" className="px-0 py-0">
+          <div className="mx-4 mb-3 p-4 bg-gradient-to-r from-cyan-500/5 to-purple-500/5 border border-cyan-500/20 rounded-xl">
+            <div className="flex items-center gap-2 mb-3">
+              <GitBranch size={14} className="text-cyan-400" />
+              <span className="text-sm font-semibold text-cyan-300">Delegation Hierarchy</span>
+              {data.total_delegations > 0 && (
+                <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30">
+                  {data.total_delegations} delegation(s)
+                </span>
+              )}
+            </div>
+
+            {/* Horizontal flow layout */}
+            <div className="flex items-stretch gap-0 overflow-x-auto pb-2">
+              {data.hierarchy.map((step, index) => (
+                <React.Fragment key={index}>
+                  {/* Step card */}
+                  <div className={`flex-shrink-0 min-w-[180px] max-w-[220px] rounded-lg border px-3 py-2.5 ${step.type === 'created' ? 'bg-green-500/10 border-green-500/25' :
+                      step.type === 'assigned' ? 'bg-blue-500/10 border-blue-500/25' :
+                        step.type === 'delegated' ? 'bg-purple-500/10 border-purple-500/25' :
+                          'bg-gray-500/10 border-gray-500/25'
+                    }`}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border ${step.type === 'created' ? 'bg-green-500/20 border-green-500/40 text-green-300' :
+                          step.type === 'assigned' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' :
+                            step.type === 'delegated' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' :
+                              'bg-gray-500/20 border-gray-500/40 text-gray-300'
+                        }`}>
+                        {step.step}
+                      </div>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${step.type === 'created' ? 'bg-green-500/20 text-green-300' :
+                          step.type === 'assigned' ? 'bg-blue-500/20 text-blue-300' :
+                            step.type === 'delegated' ? 'bg-purple-500/20 text-purple-300' :
+                              'bg-gray-500/20 text-gray-300'
+                        }`}>
+                        {step.label}
+                      </span>
+                    </div>
+                    <p className="text-white/70 text-xs">
+                      By: <span className="text-white font-medium text-xs">{step.performed_by?.name || 'System'}</span>
+                    </p>
+                    {step.performed_by?.role && (
+                      <p className="text-white/30 text-[10px]">{step.performed_by.role}{step.performed_by.department ? ` • ${step.performed_by.department}` : ''}</p>
+                    )}
+                    {step.timestamp && (
+                      <p className="text-white/25 text-[10px] mt-1">
+                        {new Date(step.timestamp).toLocaleDateString('en-US', {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </p>
+                    )}
+                    {/* Delegation targets */}
+                    {step.type === 'delegated' && step.delegated_to && step.delegated_to.length > 0 && (
+                      <div className="mt-1.5 border-t border-purple-500/15 pt-1.5">
+                        <p className="text-white/40 text-[10px] mb-1">Delegated to:</p>
+                        <div className="flex flex-col gap-0.5">
+                          {step.delegated_to.map((person, i) => (
+                            <span key={i} className="text-purple-300 text-[11px]">
+                              • {person.name || person.email}
+                              {person.department && <span className="text-purple-400/50 ml-1">({person.department})</span>}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {/* Arrow connector */}
+                  {index < data.hierarchy.length - 1 && (
+                    <div className="flex items-center px-1 flex-shrink-0">
+                      <div className="w-6 h-0.5 bg-white/15"></div>
+                      <div className="w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-white/25"></div>
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+
+              {/* Current assignees - final node */}
+              {data.current_assignees && data.current_assignees.length > 0 && (
+                <>
+                  <div className="flex items-center px-1 flex-shrink-0">
+                    <div className="w-6 h-0.5 bg-cyan-500/25"></div>
+                    <div className="w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-cyan-500/40"></div>
+                  </div>
+                  <div className="flex-shrink-0 min-w-[180px] max-w-[220px] rounded-lg border bg-cyan-500/10 border-cyan-500/25 px-3 py-2.5">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border bg-cyan-500/20 border-cyan-500/40 text-cyan-300">
+                        ✓
+                      </div>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">
+                        Current Assignees
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      {data.current_assignees.map((person, i) => (
+                        <span key={i} className="text-cyan-300 text-[11px]">
+                          • {person.name}
+                          {person.department && <span className="text-cyan-400/50 ml-1">({person.department})</span>}
+                          <span className="text-cyan-400/30 ml-1">· {person.role}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </td>
+      </tr>
     );
   };
 
@@ -421,124 +599,141 @@ const Table = ({ data = [], onView }) => {
               <tbody className="divide-y divide-gray-200">
                 {paginatedData.length > 0 ? (
                   paginatedData.map((item, index) => (
-                    <tr
-                      key={item.id}
-                      className="border-b border-white/10 hover:bg-white/5 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-sm font-semibold text-white/80">
-                        {(currentPage - 1) * itemsPerPage + index + 1}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-white font-semibold">
-                        {item.title}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-white/70">
-                        {getDisplayedText(item.description || '', item.id)}
-                        {item.description &&
-                          item.description.split(" ").length > 7 && (
+                    <React.Fragment key={item.id}>
+                      <tr
+                        className={`border-b border-white/10 hover:bg-white/5 transition-colors ${hierarchyRows[item.id] ? 'bg-white/3' : ''}`}
+                      >
+                        <td className="px-6 py-4 text-sm font-semibold text-white/80">
+                          {(currentPage - 1) * itemsPerPage + index + 1}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-white font-semibold">
+                          {item.title}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-white/70">
+                          {getDisplayedText(item.description || '', item.id)}
+                          {item.description &&
+                            item.description.split(" ").length > 7 && (
+                              <button
+                                onClick={() => toggleReadMore(item.id)}
+                                className="ml-2 text-red-400 hover:text-red-300 font-semibold"
+                              >
+                                {expandedRows[item.id]
+                                  ? "Read Less"
+                                  : "Read More"}
+                              </button>
+                            )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-white/80 font-medium">
+                          {getDeptString(item.dept)}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <span
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold ${getStatusColor(
+                              item.status
+                            )}`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-white/80 font-medium">
+                          {item.assignee}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <span
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold ${getPriorityColor(
+                              item.priority
+                            )}`}
+                          >
+                            {item.priority}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-white/70 font-medium">
+                          {item.created_at ? (() => {
+                            const date = new Date(item.created_at);
+
+                            const day = date.getDate();
+                            const month = date.toLocaleString("en-US", {
+                              month: "long",
+                            });
+                            const year = date.getFullYear();
+
+                            let hours = date.getHours();
+                            let minutes = date.getMinutes();
+                            const ampm = hours >= 12 ? "P.M" : "A.M";
+                            hours = hours % 12 || 12;
+                            minutes = minutes.toString().padStart(2, "0");
+
+                            return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
+                          })() : "-"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-white/70 font-medium">
+                          {item.completed_at ? (() => {
+                            const date = new Date(item.completed_at);
+
+                            const day = date.getDate();
+                            const month = date.toLocaleString("en-US", {
+                              month: "long",
+                            });
+                            const year = date.getFullYear();
+
+                            let hours = date.getHours();
+                            let minutes = date.getMinutes();
+                            const ampm = hours >= 12 ? "P.M" : "A.M";
+                            hours = hours % 12 || 12;
+                            minutes = minutes.toString().padStart(2, "0");
+
+                            return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
+                          })() : "-"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-white/70 font-medium">
+                          {item.dueDate ? (() => {
+                            const date = new Date(item.dueDate);
+
+                            const day = date.getDate();
+                            const month = date.toLocaleString("en-US", {
+                              month: "long",
+                            });
+                            const year = date.getFullYear();
+
+                            let hours = date.getHours();
+                            let minutes = date.getMinutes();
+                            const ampm = hours >= 12 ? "P.M" : "A.M";
+                            hours = hours % 12 || 12;
+                            minutes = minutes.toString().padStart(2, "0");
+
+                            return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
+                          })() : "-"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-white/80 font-medium">
+                          {item.followUp || "-"}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
                             <button
-                              onClick={() => toggleReadMore(item.id)}
-                              className="ml-2 text-red-400 hover:text-red-300 font-semibold"
+                              onClick={() => onView && onView(item)}
+                              className="text-green-400 hover:text-green-300 transition p-2 hover:bg-white/5 rounded"
+                              title="View Task Details"
                             >
-                              {expandedRows[item.id]
-                                ? "Read Less"
-                                : "Read More"}
+                              <Eye size={18} />
                             </button>
-                          )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-white/80 font-medium">
-                        {getDeptString(item.dept)}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <span
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold ${getStatusColor(
-                            item.status
-                          )}`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-white/80 font-medium">
-                        {item.assignee}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <span
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold ${getPriorityColor(
-                            item.priority
-                          )}`}
-                        >
-                          {item.priority}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-white/70 font-medium">
-                        {item.created_at ? (() => {
-                          const date = new Date(item.created_at);
-
-                          const day = date.getDate();
-                          const month = date.toLocaleString("en-US", {
-                            month: "long",
-                          });
-                          const year = date.getFullYear();
-
-                          let hours = date.getHours();
-                          let minutes = date.getMinutes();
-                          const ampm = hours >= 12 ? "P.M" : "A.M";
-                          hours = hours % 12 || 12;
-                          minutes = minutes.toString().padStart(2, "0");
-
-                          return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
-                        })() : "-"}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-white/70 font-medium">
-                        {item.completed_at ? (() => {
-                          const date = new Date(item.completed_at);
-
-                          const day = date.getDate();
-                          const month = date.toLocaleString("en-US", {
-                            month: "long",
-                          });
-                          const year = date.getFullYear();
-
-                          let hours = date.getHours();
-                          let minutes = date.getMinutes();
-                          const ampm = hours >= 12 ? "P.M" : "A.M";
-                          hours = hours % 12 || 12;
-                          minutes = minutes.toString().padStart(2, "0");
-
-                          return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
-                        })() : "-"}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-white/70 font-medium">
-                        {item.dueDate ? (() => {
-                          const date = new Date(item.dueDate);
-
-                          const day = date.getDate();
-                          const month = date.toLocaleString("en-US", {
-                            month: "long",
-                          });
-                          const year = date.getFullYear();
-
-                          let hours = date.getHours();
-                          let minutes = date.getMinutes();
-                          const ampm = hours >= 12 ? "P.M" : "A.M";
-                          hours = hours % 12 || 12;
-                          minutes = minutes.toString().padStart(2, "0");
-
-                          return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
-                        })() : "-"}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-white/80 font-medium">
-                        {item.followUp || "-"}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => onView && onView(item)}
-                          className="text-green-400 hover:text-green-300 transition p-2 hover:bg-white/5 rounded"
-                          title="View Task Details"
-                        >
-                          <Eye size={18} />
-                        </button>
-                      </td>
-                    </tr>
+                            {onFetchHierarchy && (
+                              <button
+                                onClick={() => toggleHierarchy(item.id)}
+                                className={`transition p-2 hover:bg-white/5 rounded ${hierarchyRows[item.id]
+                                    ? 'text-cyan-400 bg-cyan-500/10'
+                                    : 'text-cyan-400/60 hover:text-cyan-300'
+                                  }`}
+                                title="View Delegation Hierarchy"
+                              >
+                                <GitBranch size={18} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      {/* Expandable hierarchy row */}
+                      {hierarchyRows[item.id] && renderHierarchyRow(item.id)}
+                    </React.Fragment>
                   ))
                 ) : (
                   <tr>
@@ -583,8 +778,8 @@ const Table = ({ data = [], onView }) => {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`px-4 py-2 rounded-lg transition text-sm font-semibold ${currentPage === page
-                            ? "bg-red-600 text-white border border-red-500 shadow-lg"
-                            : "bg-white/5 backdrop-blur-sm border border-white/20 hover:bg-white/10 text-white"
+                          ? "bg-red-600 text-white border border-red-500 shadow-lg"
+                          : "bg-white/5 backdrop-blur-sm border border-white/20 hover:bg-white/10 text-white"
                           }`}
                       >
                         {page}

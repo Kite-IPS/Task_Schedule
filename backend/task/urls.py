@@ -9,6 +9,7 @@ urlpatterns = [
     path('tasks/create/', views.create_task, name='create-task'),
     path('tasks/history/', views.get_task_history, name='get-task-history'),
     path('tasks/<int:task_id>/comments/', views.get_task_comments, name='get-task-comments'),
+    path('tasks/<int:task_id>/delegation-history/', views.get_task_delegation_history, name='get-task-delegation-history'),
     path('tasks/comments/', views.get_all_follow_comments, name='get-all-follow-comments'),
     
     # Admin only
