@@ -26,7 +26,7 @@ const Users = () => {
   });
 
   const roles = ["admin", "staff", "hod", "faculty"];
-  const departments = ["CSE", "IT", "AIDS", "MECH","CSBS","S&H", "ECE", "AIML", "CYS", "RA", "OFFICE", "IQSC", "OTHERS","MBA","INNOVATION TEAM","PLACEMENT"];
+  const departments = ["CSE", "IT", "AIDS", "MECH", "CSBS", "S&H", "ECE", "AIML", "CYS", "RA", "OFFICE", "IQAC", "OTHERS", "MBA", "INNOVATION TEAM", "PLACEMENT"];
 
   const navigate = useNavigate();
 
@@ -50,8 +50,8 @@ const Users = () => {
     fetchUsers();
   }, []);
 
-    // Filter users
-    useEffect(() => {
+  // Filter users
+  useEffect(() => {
     let filtered = users.filter((user) => {
       const matchesSearch =
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,7 +104,7 @@ const Users = () => {
   const handleCreateUser = async () => {
     // Password is required for all roles except faculty
     const passwordRequired = formData.role.toLowerCase() !== 'faculty';
-    
+
     if (
       formData.name &&
       formData.role &&
@@ -113,11 +113,11 @@ const Users = () => {
     ) {
       try {
         const response = await axiosInstance.post(API_PATH.USER.CREATE, formData);
-        
+
         // Add the new user to local state
         const newUser = response.data.user || response.data;
         setUsers([...users, newUser]);
-        
+
         alert('User created successfully!');
         closeModal();
       } catch (error) {
@@ -138,10 +138,10 @@ const Users = () => {
       try {
         // API call to update user
         await axiosInstance.put(API_PATH.USER.UPDATE(selectedUser.id), formData);
-        
+
         // Update local state after successful API call
         setUsers(users.map((u) => (u.id === selectedUser.id ? { ...selectedUser, ...formData } : u)));
-        
+
         alert('User updated successfully!');
         closeModal();
       } catch (error) {
@@ -158,10 +158,10 @@ const Users = () => {
       try {
         // API call to delete user
         await axiosInstance.delete(API_PATH.USER.DELETE(id));
-        
+
         // Update local state after successful API call
         setUsers(users.filter((u) => u.id !== id));
-        
+
         alert('User deleted successfully!');
       } catch (error) {
         console.error('Error deleting user:', error);
@@ -192,7 +192,7 @@ const Users = () => {
       CYS: "bg-rose-500/20 text-rose-300 border-rose-500/30",
       RA: "bg-amber-500/20 text-amber-300 border-amber-500/30",
       OFFICE: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-      IQSC: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+      IQAC: "bg-violet-500/20 text-violet-300 border-violet-500/30",
       OTHERS: "bg-gray-500/20 text-gray-300 border-gray-500/30",
     };
     return colors[dept] || "bg-gray-500/20 text-gray-300 border-gray-500/30";
@@ -203,7 +203,7 @@ const Users = () => {
       <div className="w-[90%] md:w-[80%] mx-auto py-6">
         {/* Breadcrumb */}
         <div className="flex gap-1 items-center my-4 text-white/70">
-          <button 
+          <button
             className="hover:text-red-400 cursor-pointer transition-colors"
             onClick={() => navigate('/admin-panel/dashboard')}
           >
@@ -368,11 +368,10 @@ const Users = () => {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-2 rounded-lg transition-all ${
-                      currentPage === page
+                    className={`px-3 py-2 rounded-lg transition-all ${currentPage === page
                         ? "bg-red-600 text-white border border-red-500"
                         : "border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white"
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>
