@@ -54,7 +54,7 @@ class User(AbstractUser):
         ('PLACEMENT', 'Placement Department'),
         ('RA', 'Robotics & Automation'),
         ('S&H', 'Science & Humanities'),
-        ('IQAC', 'iqac')
+        ('IQSC', 'iqsc')
     ]
     
     username = None  # Remove username field

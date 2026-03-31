@@ -71,7 +71,7 @@ const Assignment = () => {
     { code: "CYS", name: "CYS" },
     { code: "RA", name: "RA" },
     { code: "OFFICE", name: "OFFICE" },
-    { code: "IQAC", name: "IQAC" },
+    { code: "IQSC", name: "IQSC" },
     { code: "OTHERS", name: "OTHERS" },
     { code: "MBA", name: "MBA" },
     { code: "INNOVATION TEAM", name: "INNOVATION TEAM" },
@@ -677,22 +677,22 @@ const Assignment = () => {
               {data.hierarchy.map((step, index) => (
                 <React.Fragment key={index}>
                   <div className={`flex-shrink-0 min-w-[180px] max-w-[220px] rounded-lg border px-3 py-2.5 ${step.type === 'created' ? 'bg-green-500/10 border-green-500/25' :
-                    step.type === 'assigned' ? 'bg-blue-500/10 border-blue-500/25' :
-                      step.type === 'delegated' ? 'bg-purple-500/10 border-purple-500/25' :
-                        'bg-gray-500/10 border-gray-500/25'
+                      step.type === 'assigned' ? 'bg-blue-500/10 border-blue-500/25' :
+                        step.type === 'delegated' ? 'bg-purple-500/10 border-purple-500/25' :
+                          'bg-gray-500/10 border-gray-500/25'
                     }`}>
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border ${step.type === 'created' ? 'bg-green-500/20 border-green-500/40 text-green-300' :
-                        step.type === 'assigned' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' :
-                          step.type === 'delegated' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' :
-                            'bg-gray-500/20 border-gray-500/40 text-gray-300'
+                          step.type === 'assigned' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' :
+                            step.type === 'delegated' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' :
+                              'bg-gray-500/20 border-gray-500/40 text-gray-300'
                         }`}>
                         {step.step}
                       </div>
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${step.type === 'created' ? 'bg-green-500/20 text-green-300' :
-                        step.type === 'assigned' ? 'bg-blue-500/20 text-blue-300' :
-                          step.type === 'delegated' ? 'bg-purple-500/20 text-purple-300' :
-                            'bg-gray-500/20 text-gray-300'
+                          step.type === 'assigned' ? 'bg-blue-500/20 text-blue-300' :
+                            step.type === 'delegated' ? 'bg-purple-500/20 text-purple-300' :
+                              'bg-gray-500/20 text-gray-300'
                         }`}>
                         {step.label}
                       </span>
@@ -988,8 +988,8 @@ const Assignment = () => {
                           <button
                             onClick={() => toggleHierarchy(task.id)}
                             className={`transition p-1 hover:bg-white/5 rounded ${hierarchyRows[task.id]
-                              ? 'text-cyan-400 bg-cyan-500/10'
-                              : 'text-cyan-400/60 hover:text-cyan-300'
+                                ? 'text-cyan-400 bg-cyan-500/10'
+                                : 'text-cyan-400/60 hover:text-cyan-300'
                               }`}
                             title="View Delegation Hierarchy"
                           >
