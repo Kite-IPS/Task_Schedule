@@ -71,7 +71,7 @@ const Assignment = () => {
     { code: "CYS", name: "CYS" },
     { code: "RA", name: "RA" },
     { code: "OFFICE", name: "OFFICE" },
-    { code: "IQSC", name: "IQSC" },
+    { code: "IQAC", name: "IQAC" },
     { code: "OTHERS", name: "OTHERS" },
     { code: "MBA", name: "MBA" },
     { code: "INNOVATION TEAM", name: "INNOVATION TEAM" },

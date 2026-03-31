@@ -26,7 +26,7 @@ const Users = () => {
   });
 
   const roles = ["admin", "staff", "hod", "faculty"];
-  const departments = ["CSE", "IT", "AIDS", "MECH","CSBS","S&H", "ECE", "AIML", "CYS", "RA", "OFFICE", "IQSC", "OTHERS","MBA","INNOVATION TEAM","PLACEMENT"];
+  const departments = ["CSE", "IT", "AIDS", "MECH","CSBS","S&H", "ECE", "AIML", "CYS", "RA", "OFFICE", "IQAC", "OTHERS","MBA","INNOVATION TEAM","PLACEMENT"];
 
   const navigate = useNavigate();
 
@@ -192,7 +192,7 @@ const Users = () => {
       CYS: "bg-rose-500/20 text-rose-300 border-rose-500/30",
       RA: "bg-amber-500/20 text-amber-300 border-amber-500/30",
       OFFICE: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-      IQSC: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+      IQAC: "bg-violet-500/20 text-violet-300 border-violet-500/30",
       OTHERS: "bg-gray-500/20 text-gray-300 border-gray-500/30",
     };
     return colors[dept] || "bg-gray-500/20 text-gray-300 border-gray-500/30";
