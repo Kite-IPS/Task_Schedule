@@ -191,9 +191,11 @@ const FacultyDashboard = () => {
           assignee: formData.assignee, // Array of emails
           department: [...new Set(selectedDepartments)], // Unique departments
           priority: formData.priority || 'medium',
-          status: formData.status || 'pending',
+          status: (user?.role === 'admin' || user?.is_superuser) ? "ongoing" : (formData.status || "pending"),
           due_date: formData.dueDate,
-          created_by: formData.createdBy || currentUser?.email || ""
+          created_by: isAdmin ? 
+            `${user?.name || user?.email}${user?.role ? ` (${user.role === 'admin' ? 'Principal' : user.role.charAt(0).toUpperCase() + user.role.slice(1)})` : ""}` : 
+            (formData.createdBy || currentUser?.email || "")
         };
 
         const response = await axiosInstance.post(API_PATH.TASK.CREATE, taskData);
@@ -376,17 +378,19 @@ const FacultyDashboard = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-1">Created By</label>
-                  <input
-                    type="text"
-                    name="createdBy"
-                    value={formData.createdBy}
-                    onChange={handleInputChange}
-                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
-                    placeholder="Enter the name of the person creating this task"
-                  />
-                </div>
+                {!isAdmin && (
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-1">Created By</label>
+                    <input
+                      type="text"
+                      name="createdBy"
+                      value={formData.createdBy}
+                      onChange={handleInputChange}
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
+                      placeholder="Enter the name of the person creating this task"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-white/90 mb-1">
@@ -516,21 +520,23 @@ const FacultyDashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="md:col-span-1">
-                    <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                    >
-                      {statuses.map((status) => (
-                        <option key={status.code} value={status.code} className="bg-gray-900">
-                          {status.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    {!(user?.role === 'admin' || user?.is_superuser) && (
+                      <div className="md:col-span-1">
+                        <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
+                        <select
+                          name="status"
+                          value={formData.status}
+                          onChange={handleInputChange}
+                          className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                        >
+                          {statuses.map((status) => (
+                            <option key={status.code} value={status.code} className="bg-gray-900">
+                              {status.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
                   <div className="md:col-span-1">
                     <label className="block text-sm font-medium text-white/90 mb-1">Priority</label>

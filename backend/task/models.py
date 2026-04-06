@@ -23,7 +23,7 @@ class Task(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ongoing')
     due_date = models.DateTimeField()
     
     completed_at = models.DateTimeField(null=True, blank=True)  

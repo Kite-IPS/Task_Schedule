@@ -42,6 +42,8 @@ const Assignment = () => {
   const [commentsLoading, setCommentsLoading] = useState(false);  // Loading state
   const [commentsModalOpen, setCommentsModalOpen] = useState(false);  // NEW: Modal state for comments
   const [selectedCommentTask, setSelectedCommentTask] = useState(null);  // Track task for comments modal
+  const [newComment, setNewComment] = useState("");  // NEW: State for the input field
+  const [addingComment, setAddingComment] = useState(false);  // NEW: Loading state for adding comment
   const [assigneeDropdownOpen, setAssigneeDropdownOpen] = useState(false);  // Dropdown state for assignee selection
 
   const statuses = [
@@ -212,12 +214,32 @@ const Assignment = () => {
     setCommentsModalOpen(true);
     fetchTaskComments(task.id);
   };
+  
+  // NEW: Add comment function
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !selectedCommentTask) return;
+    
+    setAddingComment(true);
+    try {
+      const detailPath = API_PATH.TASK.DETAIL(selectedCommentTask.id).replace(/\/$/, '');
+      await axiosInstance.post(`${detailPath}/comments/`, { comment: newComment });
+      setNewComment("");
+      // Refresh comments
+      fetchTaskComments(selectedCommentTask.id);
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      alert("Failed to add comment: " + (error.response?.data?.error || error.message));
+    } finally {
+      setAddingComment(false);
+    }
+  };
 
   // Close comments modal
   const closeCommentsModal = () => {
     setCommentsModalOpen(false);
     setSelectedCommentTask(null);
     setTaskComments([]);
+    setNewComment("");
   };
 
   // Modal functions
@@ -370,9 +392,11 @@ const Assignment = () => {
           assignee: formData.assignee, // Array of emails
           department: [...new Set(selectedDepartments)], // Unique departments
           priority: formData.priority || "medium",
-          status: formData.status || "pending",
+          status: (user?.role === 'admin' || user?.is_superuser) ? "ongoing" : (formData.status || "pending"),
           due_date: formData.dueDate,
-          created_by: formData.createdBy,
+          created_by: isAdmin ? 
+            `${user?.name || user?.email}${user?.role ? ` (${user.role === 'admin' ? 'Principal' : user.role.charAt(0).toUpperCase() + user.role.slice(1)})` : ""}` : 
+            formData.createdBy,
           reminder1: formData.reminder1 || null,  // NEW: Include reminder1
           reminder2: formData.reminder2 || null,  // NEW: Include reminder2
         }
@@ -712,8 +736,8 @@ const Assignment = () => {
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Status</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Priority</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Due Date</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Reminder 1</th>  {/* NEW: Column for Reminder 1 */}
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Reminder 2</th>  {/* NEW: Column for Reminder 2 */}
+                {/* <th className="px-4 py-3 text-left text-sm font-semibold text-white">Reminder 1</th> */}
+                {/* <th className="px-4 py-3 text-left text-sm font-semibold text-white">Reminder 2</th> */}
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Created Date</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Completed Time</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white">Action</th>
@@ -752,12 +776,12 @@ const Assignment = () => {
                       return formatDateForDisplay(task.dueDate)
                     })()}
                   </td>
-                  <td className="px-4 py-3 text-sm text-white/80">  {/* NEW: Reminder 1 display */}
+                  {/* <td className="px-4 py-3 text-sm text-white/80">
                     {formatDateForDisplay(task.reminder1)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-white/80">  {/* NEW: Reminder 2 display */}
+                  <td className="px-4 py-3 text-sm text-white/80">
                     {formatDateForDisplay(task.reminder2)}
-                  </td>
+                  </td> */}
                   <td className="px-4 py-3 text-sm text-white/80">
                     {(() => {
                       const formatDateForDisplay = (dateString) => {
@@ -973,6 +997,7 @@ const Assignment = () => {
                 </div>
                 {/* NEW: Display Reminders in View Mode */}
                 <div className="grid grid-cols-2 gap-4">
+                  {/* Reminder display commented out as requested
                   <div>
                     <h3 className="text-sm font-semibold text-white/90 mb-1">Reminder 1</h3>
                     <p className="text-white">{formatDateForDisplay(formData.reminder1)}</p>
@@ -981,6 +1006,7 @@ const Assignment = () => {
                     <h3 className="text-sm font-semibold text-white/90 mb-1">Reminder 2</h3>
                     <p className="text-white">{formatDateForDisplay(formData.reminder2)}</p>
                   </div>
+                  */}
                 </div>
                 <div className="flex justify-end mt-6">
                   <button
@@ -1018,17 +1044,19 @@ const Assignment = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-white/90 mb-1">Created By</label>
-                    <input
-                      type="text"
-                      name="createdBy"
-                      value={formData.createdBy}
-                      onChange={handleInputChange}
-                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
-                      placeholder="Enter the name of the person creating this task"
-                    />
-                  </div>
+                  {!isAdmin && (
+                    <div>
+                      <label className="block text-sm font-medium text-white/90 mb-1">Created By</label>
+                      <input
+                        type="text"
+                        name="createdBy"
+                        value={formData.createdBy}
+                        onChange={handleInputChange}
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
+                        placeholder="Enter the name of the person creating this task"
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-white/90 mb-1">
@@ -1148,21 +1176,24 @@ const Assignment = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="md:col-span-1">
-                      <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
-                      <select
-                        name="status"
-                        value={formData.status}
-                        onChange={handleInputChange}
-                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                      >
-                        {statuses.map((status) => (
-                          <option key={status.code} value={status.code} className="bg-gray-900">
-                            {status.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {/* Hide status field for Admin ONLY during task creation */}
+                    {!(modalMode === "create" && (user?.role === 'admin' || user?.is_superuser)) && (
+                      <div className="md:col-span-1">
+                        <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
+                        <select
+                          name="status"
+                          value={formData.status}
+                          onChange={handleInputChange}
+                          className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                        >
+                          {statuses.map((status) => (
+                            <option key={status.code} value={status.code} className="bg-gray-900">
+                              {status.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
                     <div className="md:col-span-1">
                       <label className="block text-sm font-medium text-white/90 mb-1">Priority</label>
@@ -1192,7 +1223,7 @@ const Assignment = () => {
                     </div>
                   </div>
 
-                  {/* NEW: Reminder Inputs */}
+                  {/* NEW: Reminder Inputs (Commented Out as requested)
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-white/90 mb-1">Reminder 1</label>
@@ -1215,9 +1246,10 @@ const Assignment = () => {
                       />
                     </div>
                   </div>
+                  */}
 
-                  {/* Follow-up comment (for edit mode) */}
-                  {modalMode === "edit" && (
+                  {/* Follow-up comment removed from Edit Modal for Admins as it's now in the dedicated modal */}
+                  {modalMode === "edit" && !isAdmin && (
                     <div>
                       <label className="block text-sm font-medium text-white/90 mb-1">Follow-up Comment</label>
                       <textarea
@@ -1272,13 +1304,13 @@ const Assignment = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               {commentsLoading ? (
                 <p className="text-white/60 text-sm text-center py-4">Loading comments...</p>
               ) : taskComments.length === 0 ? (
                 <p className="text-white/60 text-sm italic text-center py-4">No comments yet.</p>
               ) : (
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
                   {taskComments.map((comment) => (
                     <div key={comment.id} className="bg-white/5 p-3 rounded-lg text-sm border border-white/10">
                       <p className="text-white mb-1">{comment.comment}</p>
@@ -1289,13 +1321,39 @@ const Assignment = () => {
                   ))}
                 </div>
               )}
+
+              {/* Add Comment Section */}
+              <div className="border-t border-white/10 pt-4 mt-2">
+                <label className="block text-xs font-semibold text-white/70 uppercase mb-2">Add New Comment</label>
+                <div className="space-y-2">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Enter your follow-up comment here..."
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-sm resize-none min-h-[60px]"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleAddComment}
+                      disabled={addingComment || !newComment.trim()}
+                      className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                        addingComment || !newComment.trim()
+                          ? "bg-gray-600 cursor-not-allowed opacity-50"
+                          : "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/20"
+                      }`}
+                    >
+                      {addingComment ? "Adding..." : "Post Comment"}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="flex justify-end mt-6">
+            <div className="flex justify-end mt-4">
               <button
                 onClick={closeCommentsModal}
-                className="px-4 py-2 bg-white/10 border border-white/20 hover:bg-indigo-600 text-white rounded-lg transition font-medium"
+                className="px-4 py-2 text-sm bg-white/10 border border-white/20 hover:bg-white/20 text-white rounded-lg transition font-bold"
               >
                 Close
               </button>

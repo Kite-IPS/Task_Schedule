@@ -565,38 +565,64 @@ def get_task_history(request):
         'follow_comments': comments  # Dedicated list of comments from broader query
     })
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def get_task_comments(request, task_id):
-    """Get follow-up comments for a specific task"""
+    """Get or add follow-up comments for a specific task"""
     try:
         task = Task.objects.get(id=task_id)
-        # Permission check - HODs cannot see follow-up comments
-        if request.user.role == 'hod':
-            return Response({'error': 'HODs do not have access to follow-up comments'}, status=status.HTTP_403_FORBIDDEN)
         
-        # Fetch history entries with follow_comments
-        history = TaskHistory.objects.filter(
-            task_id=task_id,
-            action='updated',
-            details__follow_comment__isnull=False
-        ).select_related('performed_by').order_by('-timestamp')
-        
-        follow_comments = [{
-            'id': entry.id,
-            'task_id': task_id,
-            'comment': entry.details['follow_comment'],
-            'performed_by': entry.performed_by.email if entry.performed_by else 'System',
-            'timestamp': entry.timestamp,
-        } for entry in history]
-        
-        return Response({'follow_comments': follow_comments})
+        # Handle POST request (Add a new comment)
+        if request.method == 'POST':
+            follow_comment = request.data.get('comment', '').strip()
+            if not follow_comment:
+                return Response({'error': 'Comment cannot be empty'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create a history entry to store the comment
+            # Note: The system currently treats follow-up comments as 'updated' actions in history
+            history_entry = TaskHistory.objects.create(
+                task=task,
+                action='updated',
+                performed_by=request.user,
+                details={'follow_comment': follow_comment},
+                comment=follow_comment
+            )
+            
+            return Response({
+                'id': history_entry.id,
+                'task_id': task_id,
+                'comment': follow_comment,
+                'performed_by': request.user.email,
+                'timestamp': history_entry.timestamp,
+            }, status=status.HTTP_201_CREATED)
+            
+        # Handle GET request (Fetch existing comments)
+        else:
+            # Fetch history entries with follow_comments
+            history = TaskHistory.objects.filter(
+                task_id=task_id,
+                action='updated',
+                details__follow_comment__isnull=False
+            ).select_related('performed_by').order_by('-timestamp')
+            
+            follow_comments = [{
+                'id': entry.id,
+                'task_id': task_id,
+                'comment': entry.details.get('follow_comment'),
+                'performed_by': entry.performed_by.email if entry.performed_by else 'System',
+                'timestamp': entry.timestamp,
+            } for entry in history if 'follow_comment' in entry.details]
+            
+            return Response({'follow_comments': follow_comments})
+            
     except Task.DoesNotExist:
         return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         logger.error(f"Error in get_task_comments: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return Response(
-            {'error': 'Failed to fetch comments', 'detail': str(e)},
+            {'error': 'Failed to process comments', 'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
         

@@ -4,8 +4,27 @@ from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
 from staff.models import User  # Import User model for HOD lookup
+def get_signature_details(name_str):
+    """Extracts name and role, mapping 'Admin' to 'Principal' where needed"""
+    import re
+    if not name_str:
+        return "Task Management System", "", "KGiSL Institute of Technology"
+    
+    # Try to find name and role in brackets
+    match = re.search(r'^(.*?)\s*\(([^)]*)\)$', str(name_str))
+    if match:
+        name = match.group(1).strip()
+        role = match.group(2).strip()
+        # Map Admin specifically to Principal as requested
+        designation = "Principal" if role.lower() == "admin" else role
+        return name, designation, "KGiSL Institute of Technology"
+    
+    # Fallback if no brackets
+    return str(name_str).strip(), "Principal", "KGiSL Institute of Technology"
+
 def get_task_assignment_html(task, assignee):
-    initiated_by = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    raw_initiator = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    name, designation, institution = get_signature_details(raw_initiator)
     return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
         <h2 style="color: #2c3e50;">New Task Assigned</h2>
@@ -16,14 +35,20 @@ def get_task_assignment_html(task, assignee):
             <p><strong>Description:</strong> {task.description}</p>
             <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
             <p><strong>Priority:</strong> {task.priority}</p>
-            <p><strong>Initiated by:</strong> {initiated_by}</p>
+            <p><strong>Initiated by:</strong> {name}</p>
         </div>
         <p>Please begin working on this task at your earliest convenience. If you have any questions or require clarification, feel free to reach out.</p> 
-        <p style="margin-top: 24px;">Kind regards,<br><strong>Task Management System</strong></p>
+        <p style="margin-top: 24px;">
+            Best regards,<br>
+            <strong>{name}</strong>,<br>
+            {designation},<br>
+            {institution}.
+        </p>
     </div>
     """
 def get_task_assignment_hod_html(task, staff_name):
-    initiated_by = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    raw_initiator = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    name, designation, institution = get_signature_details(raw_initiator)
     return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
         <h2 style="color: #2c3e50;">Task Assignment Notification</h2>
@@ -34,14 +59,20 @@ def get_task_assignment_hod_html(task, staff_name):
             <p><strong>Description:</strong> {task.description}</p>
             <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
             <p><strong>Priority:</strong> {task.priority}</p>
-            <p><strong>Initiated by:</strong> {initiated_by}</p>
+            <p><strong>Initiated by:</strong> {name}</p>
         </div>
         <p>Kindly note this assignment for departmental tracking and review.</p> 
-        <p style="margin-top: 24px;">Best regards,<br><strong>Task Management System</strong></p>
+        <p style="margin-top: 24px;">
+            Best regards,<br>
+            <strong>{name}</strong>,<br>
+            {designation},<br>
+            {institution}.
+        </p>
     </div>
     """
 def get_deadline_reminder_html(task, assignee, hours_left):
-    initiated_by = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    raw_initiator = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    name, designation, institution = get_signature_details(raw_initiator)
     return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
         <h2 style="color: #e67e22;">Task Deadline Reminder</h2>
@@ -52,14 +83,20 @@ def get_deadline_reminder_html(task, assignee, hours_left):
             <p><strong>Description:</strong> {task.description}</p>
             <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
             <p><strong>Priority:</strong> {task.priority}</p>
-            <p><strong>Initiated by:</strong> {initiated_by}</p>
+            <p><strong>Initiated by:</strong> {name}</p>
         </div>
         <p>Please ensure to complete the task on time. Thank you for your diligence.</p> 
-        <p style="margin-top: 24px;">Warm regards,<br><strong>Task Management System</strong></p>
+        <p style="margin-top: 24px;">
+            Best regards,<br>
+            <strong>{name}</strong>,<br>
+            {designation},<br>
+            {institution}.
+        </p>
     </div>
     """
 def get_overdue_html(task, assignee):
-    initiated_by = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    raw_initiator = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    name, designation, institution = get_signature_details(raw_initiator)
     return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
         <h2 style="color: #dc3545;">Task Overdue Notice</h2>
@@ -70,10 +107,15 @@ def get_overdue_html(task, assignee):
             <p><strong>Description:</strong> {task.description}</p>
             <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
             <p><strong>Priority:</strong> {task.priority}</p>
-            <p><strong>Initiated by:</strong> {initiated_by}</p>
+            <p><strong>Initiated by:</strong> {name}</p>
         </div>
         <p>Please prioritize completing this task as soon as possible and update the task status accordingly.</p> 
-        <p style="margin-top: 24px;">Sincerely,<br><strong>Task Management System</strong></p>
+        <p style="margin-top: 24px;">
+            Best regards,<br>
+            <strong>{name}</strong>,<br>
+            {designation},<br>
+            {institution}.
+        </p>
     </div>
     """
 def send_task_assignment_email(task, assignee):
