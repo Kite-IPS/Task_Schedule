@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useContext } from "react"
-import { Plus, Edit, Trash2, X, Home, Eye, MessageSquarePlus, ChevronDown, GitBranch } from "lucide-react"
+import { useState, useMemo, useEffect, useContext } from "react"
+import { Plus, Edit, Trash2, X, Home, Eye, MessageSquarePlus, ChevronDown } from "lucide-react"
 import BaseLayout from "../../Components/Layouts/BaseLayout"
 import { useNavigate } from "react-router-dom"
 import axiosInstance from "../../Utils/axiosInstance"
@@ -43,9 +43,6 @@ const Assignment = () => {
   const [commentsModalOpen, setCommentsModalOpen] = useState(false);  // NEW: Modal state for comments
   const [selectedCommentTask, setSelectedCommentTask] = useState(null);  // Track task for comments modal
   const [assigneeDropdownOpen, setAssigneeDropdownOpen] = useState(false);  // Dropdown state for assignee selection
-  const [hierarchyRows, setHierarchyRows] = useState({});  // Track which rows have hierarchy expanded
-  const [hierarchyData, setHierarchyData] = useState({});  // Cache hierarchy data per task
-  const [hierarchyLoading, setHierarchyLoading] = useState({});  // Loading state per task
 
   const statuses = [
     { code: "pending", name: "Pending" },
@@ -592,182 +589,12 @@ const Assignment = () => {
     }
   }
 
-  // Fetch delegation hierarchy for a task - returns data
-  const fetchDelegationHistory = async (taskId) => {
-    try {
-      const response = await axiosInstance.get(API_PATH.TASK.DELEGATION_HISTORY(taskId));
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching delegation history:', error);
-      return null;
-    }
-  };
-
-  // Toggle hierarchy row in the table
-  const toggleHierarchy = async (taskId) => {
-    const isCurrentlyOpen = hierarchyRows[taskId];
-    if (isCurrentlyOpen) {
-      setHierarchyRows(prev => ({ ...prev, [taskId]: false }));
-      return;
-    }
-    setHierarchyRows(prev => ({ ...prev, [taskId]: true }));
-    if (!hierarchyData[taskId]) {
-      setHierarchyLoading(prev => ({ ...prev, [taskId]: true }));
-      try {
-        const data = await fetchDelegationHistory(taskId);
-        setHierarchyData(prev => ({ ...prev, [taskId]: data }));
-      } catch (error) {
-        setHierarchyData(prev => ({ ...prev, [taskId]: null }));
-      } finally {
-        setHierarchyLoading(prev => ({ ...prev, [taskId]: false }));
-      }
-    }
-  };
-
-  // Render expanded hierarchy row
-  const renderHierarchyRow = (taskId) => {
-    const isLoading = hierarchyLoading[taskId];
-    const data = hierarchyData[taskId];
-    const colSpan = 12;
-
-    if (isLoading) {
-      return (
-        <tr key={`hierarchy-${taskId}`}>
-          <td colSpan={colSpan} className="px-0 py-0">
-            <div className="mx-4 mb-3 p-4 bg-gradient-to-r from-cyan-500/5 to-purple-500/5 border border-cyan-500/20 rounded-xl">
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-500"></div>
-                <span className="text-white/50 text-sm">Loading delegation hierarchy...</span>
-              </div>
-            </div>
-          </td>
-        </tr>
-      );
-    }
-
-    if (!data || !data.hierarchy || data.hierarchy.length === 0) {
-      return (
-        <tr key={`hierarchy-${taskId}`}>
-          <td colSpan={colSpan} className="px-0 py-0">
-            <div className="mx-4 mb-3 p-4 bg-white/3 border border-white/10 rounded-xl">
-              <div className="flex items-center gap-2">
-                <GitBranch size={14} className="text-white/30" />
-                <span className="text-white/40 text-sm">No delegation history — this task has not been delegated by any HOD.</span>
-              </div>
-            </div>
-          </td>
-        </tr>
-      );
-    }
-
-    return (
-      <tr key={`hierarchy-${taskId}`}>
-        <td colSpan={colSpan} className="px-0 py-0">
-          <div className="mx-4 mb-3 p-4 bg-gradient-to-r from-cyan-500/5 to-purple-500/5 border border-cyan-500/20 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <GitBranch size={14} className="text-cyan-400" />
-              <span className="text-sm font-semibold text-cyan-300">Delegation Hierarchy</span>
-              {data.total_delegations > 0 && (
-                <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30">
-                  {data.total_delegations} delegation(s)
-                </span>
-              )}
-            </div>
-            <div className="flex items-stretch gap-0 overflow-x-auto pb-2">
-              {data.hierarchy.map((step, index) => (
-                <React.Fragment key={index}>
-                  <div className={`flex-shrink-0 min-w-[180px] max-w-[220px] rounded-lg border px-3 py-2.5 ${step.type === 'created' ? 'bg-green-500/10 border-green-500/25' :
-                      step.type === 'assigned' ? 'bg-blue-500/10 border-blue-500/25' :
-                        step.type === 'delegated' ? 'bg-purple-500/10 border-purple-500/25' :
-                          'bg-gray-500/10 border-gray-500/25'
-                    }`}>
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border ${step.type === 'created' ? 'bg-green-500/20 border-green-500/40 text-green-300' :
-                          step.type === 'assigned' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' :
-                            step.type === 'delegated' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' :
-                              'bg-gray-500/20 border-gray-500/40 text-gray-300'
-                        }`}>
-                        {step.step}
-                      </div>
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${step.type === 'created' ? 'bg-green-500/20 text-green-300' :
-                          step.type === 'assigned' ? 'bg-blue-500/20 text-blue-300' :
-                            step.type === 'delegated' ? 'bg-purple-500/20 text-purple-300' :
-                              'bg-gray-500/20 text-gray-300'
-                        }`}>
-                        {step.label}
-                      </span>
-                    </div>
-                    <p className="text-white/70 text-xs">
-                      By: <span className="text-white font-medium text-xs">{step.performed_by?.name || 'System'}</span>
-                    </p>
-                    {step.performed_by?.role && (
-                      <p className="text-white/30 text-[10px]">{step.performed_by.role}{step.performed_by.department ? ` • ${step.performed_by.department}` : ''}</p>
-                    )}
-                    {step.timestamp && (
-                      <p className="text-white/25 text-[10px] mt-1">
-                        {new Date(step.timestamp).toLocaleDateString('en-US', {
-                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                        })}
-                      </p>
-                    )}
-                    {step.type === 'delegated' && step.delegated_to && step.delegated_to.length > 0 && (
-                      <div className="mt-1.5 border-t border-purple-500/15 pt-1.5">
-                        <p className="text-white/40 text-[10px] mb-1">Delegated to:</p>
-                        <div className="flex flex-col gap-0.5">
-                          {step.delegated_to.map((person, i) => (
-                            <span key={i} className="text-purple-300 text-[11px]">
-                              • {person.name || person.email}
-                              {person.department && <span className="text-purple-400/50 ml-1">({person.department})</span>}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  {index < data.hierarchy.length - 1 && (
-                    <div className="flex items-center px-1 flex-shrink-0">
-                      <div className="w-6 h-0.5 bg-white/15"></div>
-                      <div className="w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-white/25"></div>
-                    </div>
-                  )}
-                </React.Fragment>
-              ))}
-              {data.current_assignees && data.current_assignees.length > 0 && (
-                <>
-                  <div className="flex items-center px-1 flex-shrink-0">
-                    <div className="w-6 h-0.5 bg-cyan-500/25"></div>
-                    <div className="w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-cyan-500/40"></div>
-                  </div>
-                  <div className="flex-shrink-0 min-w-[180px] max-w-[220px] rounded-lg border bg-cyan-500/10 border-cyan-500/25 px-3 py-2.5">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border bg-cyan-500/20 border-cyan-500/40 text-cyan-300">✓</div>
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Current Assignees</span>
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      {data.current_assignees.map((person, i) => (
-                        <span key={i} className="text-cyan-300 text-[11px]">
-                          • {person.name}
-                          {person.department && <span className="text-cyan-400/50 ml-1">({person.department})</span>}
-                          <span className="text-cyan-400/30 ml-1">· {person.role}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </td>
-      </tr>
-    );
-  };
-
   return (
     <BaseLayout>
       <div className="w-[90%] md:w-[80%] mx-auto py-6">
         {/* Breadcrumb */}
         <div className="flex gap-1 items-center my-4 text-white/70">
-          <button
+          <button 
             className="hover:text-red-400 cursor-pointer transition-colors"
             onClick={() => navigate(isAdmin ? "/admin-panel/dashboard" : "/faculty/dashboard")}
           >
@@ -894,26 +721,64 @@ const Assignment = () => {
             </thead>
             <tbody>
               {paginatedTasks.map((task, index) => (
-                <React.Fragment key={task.id}>
-                  <tr className={`border-b border-white/10 hover:bg-white/5 transition-colors ${hierarchyRows[task.id] ? 'bg-white/3' : ''}`}>
-                    <td className="px-4 py-3 text-sm text-white/80">{startIndex + index + 1}</td>
-                    <td className="px-4 py-3 text-sm text-white font-medium">{task.title}</td>
-                    <td className="px-4 py-3 text-sm text-white/80">{task.assignee}</td>
-                    <td className="px-4 py-3 text-sm text-white/80">{task.department}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(task.status)}`}>
-                        {task.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-white/80">
-                      {(() => {
+                <tr key={task.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
+                  <td className="px-4 py-3 text-sm text-white/80">{startIndex + index + 1}</td>
+                  <td className="px-4 py-3 text-sm text-white font-medium">{task.title}</td>
+                  <td className="px-4 py-3 text-sm text-white/80">{task.assignee}</td>
+                  <td className="px-4 py-3 text-sm text-white/80">{task.department}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(task.status)}`}>
+                      {task.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                      {task.priority}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-white/80">
+                    {(() => {
+                      const formatDateForDisplay = (dateString) => {
+                        if (!dateString) return "No due date"
+                        const date = new Date(dateString)
+                        return date.toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      }
+                      return formatDateForDisplay(task.dueDate)
+                    })()}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-white/80">  {/* NEW: Reminder 1 display */}
+                    {formatDateForDisplay(task.reminder1)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-white/80">  {/* NEW: Reminder 2 display */}
+                    {formatDateForDisplay(task.reminder2)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-white/80">
+                    {(() => {
+                      const formatDateForDisplay = (dateString) => {
+                        if (!dateString) return "No date"
+                        const date = new Date(dateString)
+                        return date.toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      }
+                      return formatDateForDisplay(task.createdAt)
+                    })()}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-white/80">
+                    {task.status === "Completed" && task.completedAt
+                      ? (() => {
                         const formatDateForDisplay = (dateString) => {
-                          if (!dateString) return "No due date"
+                          if (!dateString) return "-"
                           const date = new Date(dateString)
                           return date.toLocaleDateString("en-US", {
                             year: "numeric",
@@ -923,99 +788,44 @@ const Assignment = () => {
                             minute: "2-digit",
                           })
                         }
-                        return formatDateForDisplay(task.dueDate)
-                      })()}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-white/80">  {/* NEW: Reminder 1 display */}
-                      {formatDateForDisplay(task.reminder1)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-white/80">  {/* NEW: Reminder 2 display */}
-                      {formatDateForDisplay(task.reminder2)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-white/80">
-                      {(() => {
-                        const formatDateForDisplay = (dateString) => {
-                          if (!dateString) return "No date"
-                          const date = new Date(dateString)
-                          return date.toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        }
-                        return formatDateForDisplay(task.createdAt)
-                      })()}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-white/80">
-                      {task.status === "Completed" && task.completedAt
-                        ? (() => {
-                          const formatDateForDisplay = (dateString) => {
-                            if (!dateString) return "-"
-                            const date = new Date(dateString)
-                            return date.toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          }
-                          return formatDateForDisplay(task.completedAt)
-                        })()
-                        : "-"}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex gap-1 justify-center">
-                        <button
-                          onClick={() => openViewModal(task)}
-                          className="text-green-400 hover:text-green-300 transition p-1 hover:bg-white/5 rounded"
-                          title="View Description"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        {/* Follow Up Button - Now opens modal */}
-                        <button
-                          onClick={() => openCommentsModal(task)}
-                          className="text-indigo-400 hover:text-indigo-300 transition p-1 hover:bg-white/5 rounded"
-                          title="Follow-Up Comments"
-                        >
-                          <MessageSquarePlus size={18} />
-                        </button>
-                        {/* Hierarchy button - Admin/Staff only */}
-                        {isAdmin && (
-                          <button
-                            onClick={() => toggleHierarchy(task.id)}
-                            className={`transition p-1 hover:bg-white/5 rounded ${hierarchyRows[task.id]
-                                ? 'text-cyan-400 bg-cyan-500/10'
-                                : 'text-cyan-400/60 hover:text-cyan-300'
-                              }`}
-                            title="View Delegation Hierarchy"
-                          >
-                            <GitBranch size={18} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => openEditModal(task)}
-                          className="text-blue-400 hover:text-blue-300 transition p-1 hover:bg-white/5 rounded"
-                          title="Edit"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTask(task.id)}
-                          className="text-red-400 hover:text-red-300 transition p-1 hover:bg-white/5 rounded"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  {/* Expandable hierarchy row */}
-                  {hierarchyRows[task.id] && renderHierarchyRow(task.id)}
-                </React.Fragment>
+                        return formatDateForDisplay(task.completedAt)
+                      })()
+                      : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex gap-2 justify-center">
+                      <button
+                        onClick={() => openViewModal(task)}
+                        className="text-green-400 hover:text-green-300 transition p-1 hover:bg-white/5 rounded"
+                        title="View Description"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      {/* Follow Up Button - Now opens modal */}
+                      <button
+                        onClick={() => openCommentsModal(task)}
+                        className="text-indigo-400 hover:text-indigo-300 transition p-1 hover:bg-white/5 rounded"
+                        title="Follow-Up Comments"
+                      >
+                        <MessageSquarePlus size={18} />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(task)}
+                        className="text-blue-400 hover:text-blue-300 transition p-1 hover:bg-white/5 rounded"
+                        title="Edit"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="text-red-400 hover:text-red-300 transition p-1 hover:bg-white/5 rounded"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
@@ -1172,7 +982,6 @@ const Assignment = () => {
                     <p className="text-white">{formatDateForDisplay(formData.reminder2)}</p>
                   </div>
                 </div>
-
                 <div className="flex justify-end mt-6">
                   <button
                     onClick={closeModal}
@@ -1294,13 +1103,14 @@ const Assignment = () => {
                                 <div
                                   key={user.email}
                                   onClick={() => handleAssigneeToggle(user.email)}
-                                  className={`flex items-center gap-2 text-white/80 cursor-pointer hover:bg-white/10 px-3 py-2 rounded-lg transition-colors ${formData.assignee.includes(user.email) ? 'bg-red-500/20 border border-red-500/30' : ''
-                                    }`}
+                                  className={`flex items-center gap-2 text-white/80 cursor-pointer hover:bg-white/10 px-3 py-2 rounded-lg transition-colors ${
+                                    formData.assignee.includes(user.email) ? 'bg-red-500/20 border border-red-500/30' : ''
+                                  }`}
                                 >
                                   <input
                                     type="checkbox"
                                     checked={formData.assignee.includes(user.email)}
-                                    onChange={() => { }}
+                                    onChange={() => {}}
                                     className="accent-red-500 pointer-events-none"
                                   />
                                   <div className="flex-1 min-w-0">
@@ -1434,8 +1244,8 @@ const Assignment = () => {
                     onClick={modalMode === "create" ? handleCreateTask : handleUpdateTask}
                     disabled={createLoading}
                     className={`flex-1 px-4 py-2 text-white rounded-lg transition font-medium ${createLoading
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700"
+                        ? "bg-gray-600 cursor-not-allowed"
+                        : "bg-red-600 hover:bg-red-700"
                       }`}
                   >
                     {createLoading ? (modalMode === "create" ? "Creating..." : "Processing...") : (modalMode === "create" ? "Create" : "Update Task")}

@@ -141,11 +141,8 @@ def get_task(request, task_id):
                     # Admin and Staff can edit everything
                     can_edit = True
                 elif user.role == 'hod':
-                    # HOD can delegate tasks to faculty in their department and add follow-up comments
-                    if task.assignments.filter(department=user.department).exists():
-                        can_edit = True
-                    else:
-                        can_edit = False
+                    # HOD can only view, not edit
+                    can_edit = False
                 elif user.role == 'faculty':
                     # Faculty can only view, not edit
                     can_edit = False
@@ -216,27 +213,15 @@ def get_task(request, task_id):
                     task.completed_at = None
             
             # Handle assignee and department updates
-            is_delegation = False
-            delegation_details = {}
             try:
                 if 'assignee' in request.data:
                     from staff.models import User
-                    
-                    # Capture old assignees before clearing
-                    old_assignments = list(task.assignments.select_related('assignee').all())
-                    old_assignee_info = [{
-                        'email': a.assignee.email,
-                        'name': a.assignee.get_full_name() or a.assignee.email,
-                        'department': a.department,
-                        'role': a.assignee.role
-                    } for a in old_assignments]
                     
                     # Clear existing assignments
                     task.assignments.all().delete()
                     
                     # Create new assignments
                     assignees = request.data['assignee']
-                    new_assignee_info = []
                     
                     logger.info(f"Updating assignees: {assignees}")
                     
@@ -244,17 +229,13 @@ def get_task(request, task_id):
                     for email in assignees:
                         try:
                             user_obj = User.objects.get(email=email)
+                            # Use the user's department from their profile
+                            # unique_together constraint allows only one assignment per task-assignee pair
                             TaskAssignment.objects.create(
                                 task=task,
                                 assignee=user_obj,
-                                department=user_obj.department or 'GENERAL'
+                                department=user_obj.department or 'GENERAL'  # Fallback to GENERAL if no department
                             )
-                            new_assignee_info.append({
-                                'email': user_obj.email,
-                                'name': user_obj.get_full_name() or user_obj.email,
-                                'department': user_obj.department,
-                                'role': user_obj.role
-                            })
                             logger.info(f"Assigned {email} with department {user_obj.department}")
                         except User.DoesNotExist:
                             logger.warning(f"Warning: User with email {email} not found")
@@ -262,29 +243,6 @@ def get_task(request, task_id):
                         except Exception as e:
                             logger.error(f"Error creating assignment for {email}: {str(e)}")
                             continue
-                    
-                    # Track assignee changes
-                    old_emails = sorted([a['email'] for a in old_assignee_info])
-                    new_emails = sorted([a['email'] for a in new_assignee_info])
-                    if old_emails != new_emails:
-                        changes['assignees'] = {
-                            'old': [a['name'] for a in old_assignee_info],
-                            'new': [a['name'] for a in new_assignee_info]
-                        }
-                    
-                    # If the user is HOD, mark this as a delegation
-                    if user.role == 'hod':
-                        is_delegation = True
-                        delegation_details = {
-                            'delegated_by': {
-                                'email': user.email,
-                                'name': user.get_full_name() or user.email,
-                                'role': user.role,
-                                'department': user.department
-                            },
-                            'delegated_to': new_assignee_info,
-                            'previous_assignees': old_assignee_info
-                        }
             except Exception as e:
                 logger.error(f"Error handling assignees: {str(e)}")
                 return Response({'error': 'Error updating assignees', 'detail': str(e)}, status=500)
@@ -292,7 +250,7 @@ def get_task(request, task_id):
             # Capture follow_comment and decide if to save
             follow_comment = request.data.get('follow_comment', '').strip()
             has_changes = bool(changes)
-            should_save = has_changes or bool(follow_comment) or is_delegation
+            should_save = has_changes or bool(follow_comment)
             
             if should_save:
                 task.save()
@@ -306,14 +264,10 @@ def get_task(request, task_id):
                     history_details['follow_comment'] = follow_comment
                     logger.info(f"Follow comment saved for task {task.id}: {follow_comment}")
                 
-                # If delegation, add delegation details
-                if is_delegation:
-                    history_details['delegation'] = delegation_details
-                
-                # Create history entry with appropriate action type
+                # Create history entry
                 TaskHistory.objects.create(
                     task=task,
-                    action='delegated' if is_delegation else 'updated',
+                    action='updated',
                     performed_by=request.user,
                     details=history_details
                 )
@@ -577,12 +531,8 @@ def get_task_history(request):
             task__assignments__department=user.department
         ).distinct()[:10]
         
-        # HOD can now see follow-up comments for their department tasks
-        comment_history = TaskHistory.objects.filter(
-            action='updated',
-            details__follow_comment__isnull=False,
-            task__assignments__department=user.department
-        ).select_related('task', 'performed_by').order_by('-timestamp').distinct()[:20]
+        # HODs do not see follow-up comments as per updated requirements
+        comment_history = TaskHistory.objects.none()
     else:  # staff
         # Staff sees all task history
         history = TaskHistory.objects.select_related(
@@ -621,10 +571,9 @@ def get_task_comments(request, task_id):
     """Get follow-up comments for a specific task"""
     try:
         task = Task.objects.get(id=task_id)
-        # Permission check - HODs can see follow-up comments only for their department tasks
+        # Permission check - HODs cannot see follow-up comments
         if request.user.role == 'hod':
-            if not task.assignments.filter(department=request.user.department).exists():
-                return Response({'error': 'You can only view comments for tasks in your department'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': 'HODs do not have access to follow-up comments'}, status=status.HTTP_403_FORBIDDEN)
         
         # Fetch history entries with follow_comments
         history = TaskHistory.objects.filter(
@@ -683,11 +632,8 @@ def get_all_follow_comments(request):
                 action='updated'
             ).filter(comment_filter)
         elif user.role == 'hod':
-            # HODs can now see follow-up comments for their department tasks
-            query = TaskHistory.objects.filter(
-                action='updated',
-                task__assignments__department=user.department
-            ).filter(comment_filter).distinct()
+            # HODs do not see follow-up comments as per updated requirements
+            query = TaskHistory.objects.none()
         else:
             # Faculty sees comments on tasks assigned to them
             query = TaskHistory.objects.filter(
@@ -733,129 +679,5 @@ def get_all_follow_comments(request):
         logger.error(f"Error in get_all_follow_comments: {str(e)}")
         return Response(
             {'error': 'Failed to fetch comments', 'detail': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_task_delegation_history(request, task_id):
-    """Get the full delegation hierarchy for a task - Admin/Staff only"""
-    try:
-        user = request.user
-        
-        # Only admin and staff can view delegation hierarchy
-        if user.role not in ['admin', 'staff'] and not user.is_superuser:
-            return Response(
-                {'error': 'Only Admin and Staff can view delegation hierarchy'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        task = Task.objects.get(id=task_id)
-        
-        # Build the hierarchy chain
-        hierarchy = []
-        
-        # 1. Task creation event
-        created_history = TaskHistory.objects.filter(
-            task=task, action='created'
-        ).select_related('performed_by').first()
-        
-        hierarchy.append({
-            'step': 1,
-            'type': 'created',
-            'label': 'Task Created',
-            'performed_by': {
-                'name': created_history.performed_by.get_full_name() if created_history and created_history.performed_by else task.created_by,
-                'email': created_history.performed_by.email if created_history and created_history.performed_by else '',
-                'role': created_history.performed_by.role if created_history and created_history.performed_by else 'admin',
-            } if created_history else {
-                'name': task.created_by or 'System',
-                'email': '',
-                'role': 'admin'
-            },
-            'timestamp': created_history.timestamp if created_history else task.created_at,
-            'details': created_history.details if created_history else {}
-        })
-        
-        # 2. Initial assignment (from the 'assigned' action in history)
-        assigned_history = TaskHistory.objects.filter(
-            task=task, action='assigned'
-        ).select_related('performed_by').order_by('timestamp')
-        
-        for idx, entry in enumerate(assigned_history):
-            assigned_to = []
-            if entry.details:
-                # Try to get assignee info from details
-                if 'assignee' in entry.details:
-                    assignee_data = entry.details['assignee']
-                    if isinstance(assignee_data, list):
-                        assigned_to = assignee_data
-                    elif isinstance(assignee_data, str):
-                        assigned_to = [assignee_data]
-                if 'assignees' in entry.details:
-                    assigned_to = entry.details['assignees']
-            
-            hierarchy.append({
-                'step': len(hierarchy) + 1,
-                'type': 'assigned',
-                'label': 'Initially Assigned',
-                'performed_by': {
-                    'name': entry.performed_by.get_full_name() if entry.performed_by else 'System',
-                    'email': entry.performed_by.email if entry.performed_by else '',
-                    'role': entry.performed_by.role if entry.performed_by else 'admin',
-                },
-                'assigned_to': assigned_to,
-                'timestamp': entry.timestamp,
-                'details': entry.details or {}
-            })
-        
-        # 3. All delegation events (HOD delegations)
-        delegation_history = TaskHistory.objects.filter(
-            task=task, action='delegated'
-        ).select_related('performed_by').order_by('timestamp')
-        
-        for entry in delegation_history:
-            delegation_data = entry.details.get('delegation', {}) if entry.details else {}
-            
-            hierarchy.append({
-                'step': len(hierarchy) + 1,
-                'type': 'delegated',
-                'label': 'Delegated by HOD',
-                'performed_by': delegation_data.get('delegated_by', {
-                    'name': entry.performed_by.get_full_name() if entry.performed_by else 'Unknown',
-                    'email': entry.performed_by.email if entry.performed_by else '',
-                    'role': entry.performed_by.role if entry.performed_by else 'hod',
-                }),
-                'delegated_to': delegation_data.get('delegated_to', []),
-                'previous_assignees': delegation_data.get('previous_assignees', []),
-                'timestamp': entry.timestamp,
-                'details': entry.details or {}
-            })
-        
-        # 4. Current state
-        current_assignments = task.assignments.select_related('assignee').all()
-        current_assignees = [{
-            'email': a.assignee.email,
-            'name': a.assignee.get_full_name() or a.assignee.email,
-            'department': a.department,
-            'role': a.assignee.role,
-        } for a in current_assignments]
-        
-        return Response({
-            'task_id': task.id,
-            'task_title': task.title,
-            'created_by': task.created_by,
-            'hierarchy': hierarchy,
-            'current_assignees': current_assignees,
-            'total_delegations': delegation_history.count(),
-        })
-        
-    except Task.DoesNotExist:
-        return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        logger.error(f"Error in get_task_delegation_history: {str(e)}")
-        return Response(
-            {'error': 'Failed to fetch delegation history', 'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

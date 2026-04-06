@@ -26,12 +26,12 @@ const AdminDashboard = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-
+  
   // Check if user is HOD or Admin - making sure admin sees comments
   const isHOD = user?.role === 'hod';
   // Use both 'admin' role and is_superuser flag to identify admins
   const isAdmin = user?.role === 'admin' || user?.is_superuser === true;
-
+  
   // Log user role for debugging
   useEffect(() => {
     console.log('User data:', user);
@@ -115,17 +115,6 @@ const AdminDashboard = () => {
     setSelectedTask(null);
   };
 
-  // Fetch delegation hierarchy - returns data for Table component
-  const fetchDelegationHistory = async (taskId) => {
-    try {
-      const response = await axiosInstance.get(API_PATH.TASK.DELEGATION_HISTORY(taskId));
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching delegation history:', error);
-      return null;
-    }
-  };
-
   // Reset Password Functions
   const closeResetPasswordModal = () => {
     setIsResetPasswordModalOpen(false);
@@ -138,12 +127,12 @@ const AdminDashboard = () => {
       alert("Please fill in both password fields");
       return;
     }
-
+    
     if (newPassword !== confirmPassword) {
       alert("Passwords do not match");
       return;
     }
-
+    
     if (newPassword.length < 6) {
       alert("Password must be at least 6 characters long");
       return;
@@ -154,7 +143,7 @@ const AdminDashboard = () => {
       await axiosInstance.post(API_PATH.USER.RESET_PASSWORD(user.id), {
         password: newPassword
       });
-
+      
       alert("Password reset successfully!");
       closeResetPasswordModal();
     } catch (error) {
@@ -180,7 +169,7 @@ const AdminDashboard = () => {
     const fetchAllTasks = async () => {
       try {
         const response = await axiosInstance.get(API_PATH.TASK.ALL);
-
+        
         // Transform API data to match Table component expectations
         if (response.data.tasks && Array.isArray(response.data.tasks)) {
           const transformedData = response.data.tasks.map(task => ({
@@ -197,7 +186,7 @@ const AdminDashboard = () => {
           }));
           setData(transformedData);
         } else if (Array.isArray(response.data)) {
-          setData(response.data);
+        setData(response.data);
         } else {
           console.error('Unexpected data structure:', response.data);
           setData([]);
@@ -213,7 +202,7 @@ const AdminDashboard = () => {
         // Get recent activities
         const activityResponse = await axiosInstance.get(API_PATH.TASK.HISTORY);
         setRecentActivities(activityResponse.data.activities || []);
-
+        
         // Get follow-up comments for admins and staff (not HODs)
         if (isAdmin || (user?.role === 'staff')) {
           try {
@@ -327,14 +316,14 @@ const AdminDashboard = () => {
             </button>
           )}
           <button className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm"
-            onClick={exportToExcel}
+          onClick={exportToExcel}
           >
             Export Data <Download className="w-4 h-4" />
           </button>
         </div>
       </div>
       <div className="w-[90%] md:w-[80%] mx-auto my-4">
-        <Table data={data} onView={openViewModal} onFetchHierarchy={fetchDelegationHistory} />
+        <Table data={data} onView={openViewModal} />
       </div>
 
       {/* Recent Activities Section - Only visible for admins and staff */}
@@ -345,12 +334,12 @@ const AdminDashboard = () => {
             <Activity className="text-red-400" size={24} />
             <h2 className="text-xl font-bold text-white">Recent Follow-up Comments {isAdmin ? '(Admin View)' : ''}</h2>
           </div>
-
+          
           <div className="grid gap-4">
             {followComments.length > 0 ? (
               followComments.map((comment, index) => (
-                <div
-                  key={comment.id || index}
+                <div 
+                  key={comment.id || index} 
                   className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-lg hover:bg-white/10 transition-all"
                 >
                   <div className="flex justify-between mb-2">
@@ -423,20 +412,22 @@ const AdminDashboard = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <h3 className="text-sm font-semibold text-white/90 mb-1">Status</h3>
-                  <span className={`px-2 py-1 rounded text-xs font-medium inline-block ${selectedTask.status?.toLowerCase() === 'completed' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                  <span className={`px-2 py-1 rounded text-xs font-medium inline-block ${
+                    selectedTask.status?.toLowerCase() === 'completed' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
                     selectedTask.status?.toLowerCase() === 'pending' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
-                      'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                    }`}>
+                    'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                  }`}>
                     {selectedTask.status}
                   </span>
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-white/90 mb-1">Priority</h3>
-                  <span className={`px-2 py-1 rounded text-xs font-medium inline-block ${selectedTask.priority?.toLowerCase() === 'urgent' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
+                  <span className={`px-2 py-1 rounded text-xs font-medium inline-block ${
+                    selectedTask.priority?.toLowerCase() === 'urgent' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
                     selectedTask.priority?.toLowerCase() === 'high' ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' :
-                      selectedTask.priority?.toLowerCase() === 'medium' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
-                        'bg-gray-500/20 text-gray-300 border border-gray-500/30'
-                    }`}>
+                    selectedTask.priority?.toLowerCase() === 'medium' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
+                    'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                  }`}>
                     {selectedTask.priority}
                   </span>
                 </div>
