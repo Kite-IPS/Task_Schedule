@@ -230,7 +230,7 @@ const Assignment = () => {
       status: "pending",
       priority: "medium",
       dueDate: "",
-      createdBy: currentUser ? currentUser.full_name || currentUser.name || currentUser.email : "",
+      createdBy: isAdmin ? (currentUser?.full_name || currentUser?.name || currentUser?.email || "") : (currentUser ? currentUser.full_name || currentUser.name || currentUser.email : ""),
       follow_comment: "",  // Reset comment
       reminder1: "",  // NEW: Reset reminder1
       reminder2: "",  // NEW: Reset reminder2
@@ -372,7 +372,7 @@ const Assignment = () => {
           priority: formData.priority || "medium",
           status: formData.status || "pending",
           due_date: formData.dueDate,
-          created_by: formData.createdBy,
+          created_by: isAdmin ? (currentUser?.full_name || currentUser?.name || currentUser?.email || "") : formData.createdBy,
           reminder1: formData.reminder1 || null,  // NEW: Include reminder1
           reminder2: formData.reminder2 || null,  // NEW: Include reminder2
         }
@@ -1018,17 +1018,20 @@ const Assignment = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-white/90 mb-1">Created By</label>
-                    <input
-                      type="text"
-                      name="createdBy"
-                      value={formData.createdBy}
-                      onChange={handleInputChange}
-                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
-                      placeholder="Enter the name of the person creating this task"
-                    />
-                  </div>
+                  {/* Created By - hidden for admin (auto-filled with admin's name) */}
+                  {!isAdmin && (
+                    <div>
+                      <label className="block text-sm font-medium text-white/90 mb-1">Created By</label>
+                      <input
+                        type="text"
+                        name="createdBy"
+                        value={formData.createdBy}
+                        onChange={handleInputChange}
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
+                        placeholder="Enter the name of the person creating this task"
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-white/90 mb-1">

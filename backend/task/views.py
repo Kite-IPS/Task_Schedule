@@ -330,8 +330,15 @@ def create_task(request):
     )
     serializer.is_valid(raise_exception=True)
     
-    # Create the task with the provided created_by name
-    task = serializer.save()
+    # For admin users, auto-fill created_by with their name
+    user = request.user
+    if user.role == 'admin' or user.is_superuser:
+        admin_name = user.get_full_name() or user.email
+        task = serializer.save(created_by=admin_name)
+    else:
+        # For non-admin, use what they provided or fallback to their name
+        created_by = serializer.validated_data.get('created_by') or user.get_full_name() or user.email
+        task = serializer.save(created_by=created_by)
     
     # Send email notifications to assigned staff and their HODs
     for assignment in task.assignments.all():

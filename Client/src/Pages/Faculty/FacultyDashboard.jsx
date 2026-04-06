@@ -118,7 +118,7 @@ const FacultyDashboard = () => {
       status: "pending",
       priority: "medium",
       dueDate: "",
-      createdBy: currentUser?.email || "",
+      createdBy: isAdmin ? (user?.name || user?.email || "") : (currentUser?.email || ""),
     });
     setDepartmentFilter("all");
     setIsModalOpen(true);
@@ -193,7 +193,7 @@ const FacultyDashboard = () => {
           priority: formData.priority || 'medium',
           status: formData.status || 'pending',
           due_date: formData.dueDate,
-          created_by: formData.createdBy || currentUser?.email || ""
+          created_by: isAdmin ? (user?.name || user?.email || "") : (formData.createdBy || currentUser?.email || "")
         };
 
         const response = await axiosInstance.post(API_PATH.TASK.CREATE, taskData);
@@ -376,17 +376,20 @@ const FacultyDashboard = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-1">Created By</label>
-                  <input
-                    type="text"
-                    name="createdBy"
-                    value={formData.createdBy}
-                    onChange={handleInputChange}
-                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
-                    placeholder="Enter the name of the person creating this task"
-                  />
-                </div>
+                {/* Created By - hidden for admin (auto-filled with admin's name) */}
+                {!isAdmin && (
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-1">Created By</label>
+                    <input
+                      type="text"
+                      name="createdBy"
+                      value={formData.createdBy}
+                      onChange={handleInputChange}
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
+                      placeholder="Enter the name of the person creating this task"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-white/90 mb-1">

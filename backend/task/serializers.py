@@ -85,7 +85,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
     department = serializers.ListField(child=serializers.CharField())
     assignee = serializers.ListField(child=serializers.EmailField())
     attachment = serializers.FileField(required=False, allow_null=True)
-    created_by = serializers.CharField(required=True, max_length=255,
+    created_by = serializers.CharField(required=False, allow_blank=True, max_length=255,
                                      help_text="Name of the person who requested this task")
     reminder1 = serializers.DateTimeField(required=False, allow_null=True)
     reminder2 = serializers.DateTimeField(required=False, allow_null=True)
