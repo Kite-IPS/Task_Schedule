@@ -67,9 +67,30 @@ const Users = () => {
     setCurrentPage(1);
   }, [searchTerm, roleFilter, departmentFilter, users]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  // Pagination logic: show limited pages
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage === totalPages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+    }
+    return pageNumbers;
+  };
+
   const paginatedUsers = filteredUsers.slice(
     startIndex,
     startIndex + itemsPerPage
@@ -364,7 +385,7 @@ const Users = () => {
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                {getPageNumbers().map((page) => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
