@@ -24,6 +24,7 @@ const Assignment = () => {
   const [tasksLoading, setTasksLoading] = useState(true)
   const [users, setUsers] = useState([])
   const [usersLoading, setUsersLoading] = useState(false)
+  const [admins, setAdmins] = useState([]) // NEW: Store Admin users for Staff role selection
   const [departmentFilter, setDepartmentFilter] = useState("all")
   const [currentUser, setCurrentUser] = useState(null)
   const [formData, setFormData] = useState({
@@ -95,14 +96,21 @@ const Assignment = () => {
         const response = await axiosInstance.get(API_PATH.USER.ALL)
         const resdata = response.data.users
 
-        // Filter to show only faculty and hod roles
-        const filteredUsers = (response.data.users || []).filter(
+        // Filter to show only faculty and hod roles for assignees
+        const facultyUsers = (response.data.users || []).filter(
           (user) => user.role === "faculty" || user.role === "hod",
         )
-        setUsers(filteredUsers)
+        setUsers(facultyUsers)
+
+        // Filter to show only admin roles for Staff selection
+        const adminUsers = (response.data.users || []).filter(
+          (user) => user.role === "admin",
+        )
+        setAdmins(adminUsers)
       } catch (error) {
         console.error("Error fetching users:", error)
         setUsers([])
+        setAdmins([])
       } finally {
         setUsersLoading(false)
       }
@@ -412,17 +420,22 @@ const Assignment = () => {
           return
         }
 
+        const isStaffOnly = user?.role?.toLowerCase() === 'staff';
+        const isAdminRole = user?.role?.toLowerCase() === 'admin';
+
         const taskData = {
           title: formData.title,
           description: formData.description,
           assignee: formData.assignee, // Array of emails
           department: [...new Set(selectedDepartments)], // Unique departments
           priority: formData.priority || "medium",
-          status: (user?.role === 'admin' || user?.is_superuser) ? "ongoing" : (formData.status || "pending"),
+          status: (isAdminRole || user?.is_superuser) ? "ongoing" : (formData.status || "pending"),
           due_date: formData.dueDate,
-          created_by: isAdmin ? 
-            `${user?.name || user?.email}${user?.role ? ` (${user.role === 'admin' ? 'Principal' : user.role.charAt(0).toUpperCase() + user.role.slice(1)})` : ""}` : 
-            formData.createdBy,
+          created_by: isStaffOnly ? 
+            (formData.createdBy || `${user?.name || user?.email} (Staff)`) : 
+            (isAdminRole ? 
+              `${user?.name || user?.email} (Principal)` : 
+              (isAdmin ? `${user?.name || user?.email} (${user?.role})` : formData.createdBy)),
           reminder1: formData.reminder1 || null,  // NEW: Include reminder1
           reminder2: formData.reminder2 || null,  // NEW: Include reminder2
         }
@@ -1022,17 +1035,36 @@ const Assignment = () => {
                     />
                   </div>
 
-                  {!isAdmin && (
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-1">Created By</label>
-                      <input
-                        type="text"
-                        name="createdBy"
-                        value={formData.createdBy}
-                        onChange={handleInputChange}
-                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
-                        placeholder="Enter the name of the person creating this task"
-                      />
+                  {(user?.role?.toLowerCase() === 'staff' || !isAdmin) && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-white/90">Created By</label>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {user?.role?.toLowerCase() === 'staff' && (
+                          <select
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                setFormData(prev => ({ ...prev, createdBy: e.target.value }))
+                              }
+                            }}
+                            className="bg-white/5 border border-white/20 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm text-white min-w-[140px]"
+                          >
+                            <option value="" className="bg-gray-900">Select Admin...</option>
+                            {admins.map(admin => (
+                              <option key={admin.email} value={`${admin.name || admin.full_name} (Principal)`} className="bg-gray-900">
+                                {admin.name || admin.full_name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                        <input
+                          type="text"
+                          name="createdBy"
+                          value={formData.createdBy}
+                          onChange={handleInputChange}
+                          className="flex-1 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm text-white placeholder-white/40"
+                          placeholder="Or type name manually"
+                        />
+                      </div>
                     </div>
                   )}
 
