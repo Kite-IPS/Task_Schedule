@@ -12,8 +12,29 @@ services:
       - db_data:/app/data
     env_file:
       - ./backend/.env
+    environment:
+      - TZ=Asia/Kolkata
     ports:
       - "8000:8000"
+    networks:
+      - task_schedule_network
+
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scheduler
+    command: python scheduler.py
+    restart: always
+    volumes:
+      - ./backend:/app
+      - db_data:/app/data
+    env_file:
+      - ./backend/.env
+    environment:
+      - TZ=Asia/Kolkata
+    depends_on:
+      - backend
     networks:
       - task_schedule_network
 

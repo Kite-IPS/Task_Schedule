@@ -4,6 +4,13 @@ from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
 from staff.models import User  # Import User model for HOD lookup
+
+def format_date(dt):
+    """Converts UTC datetime to local timezone (Asia/Kolkata) and formats it"""
+    if not dt:
+        return "No date set"
+    local_dt = timezone.localtime(dt)
+    return local_dt.strftime('%B %d, %Y, %I:%M %p')
 def get_signature_details(name_str):
     """Extracts name and role, mapping 'Admin' to 'Principal' where needed"""
     import re
@@ -33,7 +40,7 @@ def get_task_assignment_html(task, assignee):
         <div style="border-left: 4px solid #007bff; padding-left: 12px; margin: 16px 0;">
             <p><strong>Title:</strong> {task.title}</p>
             <p><strong>Description:</strong> {task.description}</p>
-            <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
+            <p><strong>Due Date:</strong> {format_date(task.due_date)}</p>
             <p><strong>Priority:</strong> {task.priority}</p>
             <p><strong>Initiated by:</strong> {name}</p>
         </div>
@@ -57,7 +64,7 @@ def get_task_assignment_hod_html(task, staff_name):
         <div style="border-left: 4px solid #007bff; padding-left: 12px; margin: 16px 0;">
             <p><strong>Title:</strong> {task.title}</p>
             <p><strong>Description:</strong> {task.description}</p>
-            <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
+            <p><strong>Due Date:</strong> {format_date(task.due_date)}</p>
             <p><strong>Priority:</strong> {task.priority}</p>
             <p><strong>Initiated by:</strong> {name}</p>
         </div>
@@ -70,18 +77,29 @@ def get_task_assignment_hod_html(task, staff_name):
         </p>
     </div>
     """
-def get_deadline_reminder_html(task, assignee, hours_left):
+def get_deadline_reminder_html(task, assignee):
     raw_initiator = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
     name, designation, institution = get_signature_details(raw_initiator)
+    
+    time_diff = task.due_date - timezone.now()
+    total_seconds = int(time_diff.total_seconds())
+    
+    if total_seconds > 86400:
+        time_display = f"<strong>{total_seconds // 86400} days</strong>"
+    elif total_seconds > 3600:
+        time_display = f"<strong>{total_seconds // 3600} hours</strong>"
+    else:
+        time_display = f"<strong>{max(0, total_seconds // 60)} minutes</strong>"
+
     return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
         <h2 style="color: #e67e22;">Task Deadline Reminder</h2>
         <p>Dear {assignee.get_full_name()},</p>
-        <p>This is a friendly reminder that your task deadline is approaching. You have approximately <strong>{hours_left} hours</strong> remaining.</p>
+        <p>This is a friendly reminder that your task deadline is approaching. You have approximately {time_display} remaining.</p>
         <div style="border-left: 4px solid #f39c12; padding-left: 12px; margin: 16px 0;">
             <p><strong>Title:</strong> {task.title}</p>
             <p><strong>Description:</strong> {task.description}</p>
-            <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
+            <p><strong>Due Date:</strong> {format_date(task.due_date)}</p>
             <p><strong>Priority:</strong> {task.priority}</p>
             <p><strong>Initiated by:</strong> {name}</p>
         </div>
@@ -105,7 +123,7 @@ def get_overdue_html(task, assignee):
         <div style="border-left: 4px solid #dc3545; padding-left: 12px; margin: 16px 0;">
             <p><strong>Title:</strong> {task.title}</p>
             <p><strong>Description:</strong> {task.description}</p>
-            <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
+            <p><strong>Due Date:</strong> {format_date(task.due_date)}</p>
             <p><strong>Priority:</strong> {task.priority}</p>
             <p><strong>Initiated by:</strong> {name}</p>
         </div>
@@ -152,9 +170,7 @@ def send_deadline_reminder_email(task, assignee):
     """Send deadline reminder email."""
     try:
         subject = task.title  # ✅ Only title
-        time_left = task.due_date - timezone.now()
-        hours_left = int(time_left.total_seconds() / 3600)
-        html_message = get_deadline_reminder_html(task, assignee, hours_left)
+        html_message = get_deadline_reminder_html(task, assignee)
         send_mail(
             subject=subject,
             message='',
@@ -185,7 +201,8 @@ def send_overdue_notification(task, assignee):
 
 def get_status_update_html(task, assignee, old_status, new_status):
     """Generate HTML for status update email."""
-    initiated_by = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    raw_initiator = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    name, designation, institution = get_signature_details(raw_initiator)
     
     # Format status for better readability
     def format_status(status_value):
@@ -210,14 +227,88 @@ def get_status_update_html(task, assignee, old_status, new_status):
         <div style="border-left: 4px solid {status_color}; padding-left: 12px; margin: 16px 0;">
             <p><strong>Title:</strong> {task.title}</p>
             <p><strong>Description:</strong> {task.description}</p>
-            <p><strong>Due Date:</strong> {task.due_date.strftime('%B %d, %Y, %I:%M %p')}</p>
+            <p><strong>Due Date:</strong> {format_date(task.due_date)}</p>
             <p><strong>Priority:</strong> {task.priority}</p>
-            <p><strong>Initiated by:</strong> {initiated_by}</p>
+            <p><strong>Initiated by:</strong> {name}</p>
         </div>
         <p>Please review this update and take any necessary actions.</p> 
-        <p style="margin-top: 24px;">Regards,<br><strong>Task Management System</strong></p>
+        <p style="margin-top: 24px;">
+            Best regards,<br>
+            <strong>{name}</strong>,<br>
+            {designation},<br>
+            {institution}.
+        </p>
     </div>
     """
+
+def get_daily_reminder_html(task, assignee):
+    """Generate HTML for daily reminder email."""
+    raw_initiator = task.created_by.get_full_name() if hasattr(task.created_by, "get_full_name") else str(task.created_by)
+    name, designation, institution = get_signature_details(raw_initiator)
+    
+    time_diff = task.due_date - timezone.now()
+    total_seconds = int(time_diff.total_seconds())
+    
+    if total_seconds > 86400:
+        time_display = f"<strong>{total_seconds // 86400} days</strong>"
+    elif total_seconds > 3600:
+        time_display = f"<strong>{total_seconds // 3600} hours</strong>"
+    else:
+        time_display = f"<strong>{max(0, total_seconds // 60)} minutes</strong>"
+
+    return f"""
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #333;">
+        <h2 style="color: #2c3e50;">Task Reminder</h2>
+        <p>Dear {assignee.get_full_name()},</p>
+        <p>This is your reminder for the task assigned to you. You have approximately {time_display} remaining before the deadline.</p>
+        <div style="border-left: 4px solid #007bff; padding-left: 12px; margin: 16px 0;">
+            <p><strong>Title:</strong> {task.title}</p>
+            <p><strong>Description:</strong> {task.description}</p>
+            <p><strong>Due Date:</strong> {format_date(task.due_date)}</p>
+            <p><strong>Priority:</strong> {task.priority}</p>
+            <p><strong>Initiated by:</strong> {name}</p>
+        </div>
+        <p>Please continue working on this task and ensure its completion by the deadline.</p> 
+        <p style="margin-top: 24px;">
+            Best regards,<br>
+            <strong>{name}</strong>,<br>
+            {designation},<br>
+            {institution}.
+        </p>
+    </div>
+    """
+
+def send_daily_8am_reminders():
+    """Find all active tasks and send daily reminders to assignees."""
+    from .models import Task
+    now = timezone.now()
+    
+    # Find active tasks (pending or ongoing) that are not overdue
+    tasks = Task.objects.filter(
+        due_date__gt=now
+    ).filter(
+        Q(status='pending') | Q(status='ongoing')
+    ).prefetch_related('assignments__assignee')
+    
+    count = 0
+    for task in tasks:
+        for assignment in task.assignments.all():
+            try:
+                subject = f"Daily Reminder: {task.title}"
+                html_message = get_daily_reminder_html(task, assignment.assignee)
+                send_mail(
+                    subject=subject,
+                    message='',
+                    html_message=html_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[assignment.assignee.email],
+                    fail_silently=False
+                )
+                count += 1
+            except Exception as e:
+                print(f"Error sending daily reminder for task {task.id}: {str(e)}")
+    
+    return count
 
 def send_status_update_email(task, assignee, old_status, new_status):
     """Send email about task status updates."""
