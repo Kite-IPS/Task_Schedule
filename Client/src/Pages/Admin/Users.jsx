@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Plus, Edit, Trash2, X, Home } from "lucide-react";
+import { Plus, Edit, Trash2, X, Home, Filter } from "lucide-react";
 import BaseLayout from "../../Components/Layouts/BaseLayout";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../Utils/axiosInstance";
@@ -24,6 +24,15 @@ const Users = () => {
     email: "",
     password: "",
   });
+  const [showFilters, setShowFilters] = useState(false);
+  const isFiltered = roleFilter !== "All" || departmentFilter !== "All" || searchTerm !== "";
+
+  const resetFilters = () => {
+    setRoleFilter("All");
+    setDepartmentFilter("All");
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
 
   const roles = ["admin", "staff", "hod", "faculty"];
   const departments = ["CSE", "IT", "AIDS", "MECH","CSBS","S&H", "ECE", "AIML", "CYS", "RA", "OFFICE", "IQAC", "OTHERS","MBA","INNOVATION TEAM","PLACEMENT"];
@@ -91,6 +100,8 @@ const Users = () => {
     return pageNumbers;
   };
 
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedUsers = filteredUsers.slice(
     startIndex,
     startIndex + itemsPerPage
@@ -241,53 +252,75 @@ const Users = () => {
         </div>
 
         {/* Header with Create Button */}
-        <div className="flex justify-between items-center my-6">
-          <h1 className="text-2xl font-bold text-white">Users Management</h1>
+        <div className="flex justify-between items-center my-6 gap-2">
+          <h1 className="text-[18px] md:text-2xl font-bold text-white">Users</h1>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105"
+            className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-3 py-2 md:px-4 md:py-2 rounded-xl transition-all shadow-lg hover:scale-105 text-sm md:text-base"
           >
-            <Plus size={20} />
-            Create User
+            <Plus size={18} className="md:w-5 md:h-5" />
+            <span className="hidden xs:inline">Create User</span>
+            <span className="inline xs:hidden">Create</span>
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-xl shadow-lg mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40 col-span-1 md:col-span-2"
-            />
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+        <div className="mb-6 flex flex-wrap items-center gap-2 md:gap-3">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex flex-1 md:flex-none items-center justify-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white rounded-xl transition-all shadow-lg hover:scale-105 text-sm md:text-base font-medium"
+          >
+            <Filter className="w-4 h-4" />
+            {showFilters ? "Hide Filters" : "Show Filters"}
+          </button>
+          {isFiltered && (
+            <button
+              onClick={resetFilters}
+              className="flex flex-1 md:flex-none items-center justify-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-xl transition-all shadow-lg hover:scale-105 text-sm md:text-base font-medium"
             >
-              <option value="All" className="bg-gray-900">All Roles</option>
-              {roles.map((role) => (
-                <option key={role} value={role} className="bg-gray-900">
-                  {role}
-                </option>
-              ))}
-            </select>
-            <select
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-            >
-              <option value="All" className="bg-gray-900">All Departments</option>
-              {departments.map((dept) => (
-                <option key={dept} value={dept} className="bg-gray-900">
-                  {dept}
-                </option>
-              ))}
-            </select>
-          </div>
+              <X className="w-4 h-4" />
+              Clear Filters
+            </button>
+          )}
         </div>
+
+        {/* Filters */}
+        {showFilters && (
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-xl shadow-lg mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40 col-span-1 sm:col-span-2 lg:col-span-2"
+              />
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+              >
+                <option value="All" className="bg-gray-900">All Roles</option>
+                {roles.map((role) => (
+                  <option key={role} value={role} className="bg-gray-900">
+                    {role}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+                className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+              >
+                <option value="All" className="bg-gray-900">All Departments</option>
+                {departments.map((dept) => (
+                  <option key={dept} value={dept} className="bg-gray-900">
+                    {dept}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Loading State */}
         {loading ? (

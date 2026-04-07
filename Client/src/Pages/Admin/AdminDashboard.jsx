@@ -272,53 +272,53 @@ const AdminDashboard = () => {
           Dashboard
         </button>
       </div>
-      <div className="w-[90%] md:w-[80%] mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 my-10">
-        <div className="h-[100px] md:h-auto flex flex-col justify-center py-4 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg">
-          <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Total Tasks</h2>
-          <p className="font-bold text-green-400 text-[18px] md:text-5xl">
+      <div className="w-[90%] md:w-[80%] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 my-6 md:my-10">
+        <div className="flex flex-col items-center justify-center py-6 md:py-10 px-4 md:px-6 text-center text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg group">
+          <h2 className="font-semibold mb-2 text-white/70 text-xs md:text-xl uppercase tracking-wider group-hover:text-white transition-colors">Total Tasks</h2>
+          <p className="font-extrabold text-green-400 text-3xl md:text-5xl drop-shadow-sm group-hover:scale-110 transition-transform">
             {loading ? '...' : stats.total_task}
           </p>
         </div>
-        <div className="h-[100px] md:h-auto flex flex-col justify-center py-4 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg">
-          <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Total Completed Tasks</h2>
-          <p className="font-bold text-blue-400 text-[18px] md:text-5xl">
+        <div className="flex flex-col items-center justify-center py-6 md:py-10 px-4 md:px-6 text-center text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg group">
+          <h2 className="font-semibold mb-2 text-white/70 text-xs md:text-xl uppercase tracking-wider group-hover:text-white transition-colors">Total Completed Tasks</h2>
+          <p className="font-extrabold text-blue-400 text-3xl md:text-5xl drop-shadow-sm group-hover:scale-110 transition-transform">
             {loading ? '...' : stats.completed_task}
           </p>
         </div>
-        <div className="h-[100px] md:h-auto flex flex-col justify-center py-4 md:py-10 px-4 md:px-6 text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg col-span-2 md:col-span-1">
-          <h2 className="font-semibold mb-1 text-white/80 text-[17px] md:text-xl">Total On-Going Tasks</h2>
-          <p className="font-bold text-orange-400 text-[18px] md:text-5xl">
+        <div className="flex flex-col items-center justify-center py-6 md:py-10 px-4 md:px-8 text-center text-white bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl cursor-pointer hover:scale-105 hover:bg-white/10 transition-all shadow-lg group">
+          <h2 className="font-semibold mb-2 text-white/70 text-xs md:text-xl uppercase tracking-wider group-hover:text-white transition-colors">Total On-Going Tasks</h2>
+          <p className="font-extrabold text-orange-400 text-3xl md:text-5xl drop-shadow-sm group-hover:scale-110 transition-transform">
             {loading ? '...' : stats.ongoing_task}
           </p>
         </div>
       </div>
-      <div className="w-[90%] md:w-[80%] mx-auto my-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        <h1 className="text-xl md:text-2xl font-bold text-white">Tasks Table:</h1>
-        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+      <div className="w-[90%] md:w-[80%] mx-auto my-4 flex flex-col md:flex-row items-center justify-between gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-white self-start md:self-center">Tasks Table:</h1>
+        <div className="grid grid-cols-1 sm:flex sm:flex-wrap sm:items-center gap-2 w-full md:w-auto">
           <button
-            className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm"
+            className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2.5 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-2 text-sm"
             onClick={() => navigate("/admin-panel/tasks")}
           >
             <List className="w-4 h-4" /> Manage Tasks
           </button>
           <button
-            className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm"
+            className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2.5 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-2 text-sm"
             onClick={() => navigate("/admin-panel/users")}
           >
-            View Users <UsersRound className="w-4 h-4" />
+            <UsersRound className="w-4 h-4" /> Users
           </button>
           {user?.role === 'admin' && (
             <button
-              className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-yellow-600 hover:border-yellow-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm"
+              className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-yellow-600 hover:border-yellow-500 text-white px-4 py-2.5 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-2 text-sm"
               onClick={() => setIsResetPasswordModalOpen(true)}
             >
-              <KeyRound className="w-4 h-4" /> Reset Password
+              <KeyRound className="w-4 h-4" /> Reset 
             </button>
           )}
-          <button className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-1 text-xs md:text-sm"
+          <button className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-4 py-2.5 rounded-xl transition-all shadow-lg hover:scale-105 flex items-center justify-center gap-2 text-sm sm:ml-auto md:ml-0"
           onClick={exportToExcel}
           >
-            Export Data <Download className="w-4 h-4" />
+            <Download className="w-4 h-4" /> Export
           </button>
         </div>
       </div>

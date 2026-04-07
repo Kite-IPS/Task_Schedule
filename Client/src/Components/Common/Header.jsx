@@ -13,28 +13,28 @@ const Header = () => {
     }
 
     return (
-        <div className='w-full text-white flex items-center justify-center px-4 py-4 md:py-5 backdrop-blur-md bg-white/5 border-b border-white/10'>
-            <div className='w-full max-w-7xl flex items-center justify-between gap-4'>
-                <h1 className='text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold whitespace-nowrap tracking-tight'>
+        <div className='w-full text-white flex items-center justify-center px-4 py-3 md:py-5 backdrop-blur-md bg-white/5 border-b border-white/10'>
+            <div className='w-full max-w-7xl flex items-center justify-between gap-2 md:gap-4'>
+                <h1 className='text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold whitespace-nowrap tracking-tight'>
                     Task Scheduler
                 </h1>
 
                 {user && (
                     <div className='flex items-center gap-2 sm:gap-3 md:gap-5 flex-wrap justify-end'>
-                        {/* Show role on mobile at 14px; keep same on larger screens */}
-                        <h2 className='text-[14px] sm:text-[16px] font-semibold text-white/80'>
-                            Role: <span className='text-white'>{user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}</span>
-                        </h2>
-                        {/* Hide username on xs, show on sm+ */}
-                        <h2 className='text-[14px] sm:text-[16px] font-semibold text-white/80'>
-                            Name: <span className='text-white'>{user.name ? user.name.charAt(0).toUpperCase() + user.name.slice(1) : ''}</span>
-                        </h2>
+                        <div className='flex flex-col sm:flex-row items-end sm:items-center gap-0 sm:gap-4'>
+                            <h2 className='text-[11px] sm:text-[14px] md:text-[16px] font-semibold text-white/80'>
+                                Role: <span className='text-white uppercase'>{user.role || ''}</span>
+                            </h2>
+                            <h2 className='text-[11px] sm:text-[14px] md:text-[16px] font-semibold text-white/80'>
+                                Name: <span className='text-white'>{user.name || ''}</span>
+                            </h2>
+                        </div>
                         <button 
-                            className='px-3 sm:px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg flex items-center gap-1 cursor-pointer hover:bg-red-600 hover:border-red-500 transition-all duration-300 text-xs sm:text-sm font-medium flex-shrink-0 backdrop-blur-sm'
+                            className='px-2 sm:px-4 py-1.5 md:py-2 bg-white/10 border border-white/20 text-white rounded-lg flex items-center gap-1 cursor-pointer hover:bg-red-600 hover:border-red-500 transition-all duration-300 text-xs sm:text-sm font-medium flex-shrink-0 backdrop-blur-sm'
                             onClick={handleLogout}
                         >
-                            <span className='hidden sm:inline'>Logout</span>
-                            <LogOut size={16} className='sm:size-5' />
+                            <span className='hidden xs:inline'>Logout</span>
+                            <LogOut size={14} className='md:size-5' />
                         </button>
                     </div>
                 )}

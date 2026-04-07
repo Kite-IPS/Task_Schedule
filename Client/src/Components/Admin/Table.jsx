@@ -172,10 +172,10 @@ const Table = ({ data = [], onView }) => {
     <div className="w-full">
       <div className="mx-auto">
         {/* Filter Section */}
-        <div className="mb-6 flex items-center gap-3">
+        <div className="mb-6 flex flex-wrap items-center gap-2 md:gap-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white rounded-xl transition-all shadow-lg hover:scale-105 font-medium"
+            className="flex flex-1 md:flex-none items-center justify-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white rounded-xl transition-all shadow-lg hover:scale-105 text-sm md:text-base font-medium"
           >
             <Filter className="w-4 h-4" />
             {showFilters ? "Hide Filters" : "Show Filters"}
@@ -183,7 +183,7 @@ const Table = ({ data = [], onView }) => {
           {isFiltered && (
             <button
               onClick={resetFilters}
-              className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-xl transition-all shadow-lg hover:scale-105 font-medium"
+              className="flex flex-1 md:flex-none items-center justify-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-xl transition-all shadow-lg hover:scale-105 text-sm md:text-base font-medium"
             >
               <X className="w-4 h-4" />
               Clear Filters
@@ -205,7 +205,7 @@ const Table = ({ data = [], onView }) => {
                 <select
                   value={filters.dept}
                   onChange={(e) => handleFilterChange("dept", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
+                  className="w-full px-4 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
                 >
                   <option value="" className="bg-gray-900">All Departments</option>
                   {uniqueDepts.map((dept) => (
@@ -223,7 +223,7 @@ const Table = ({ data = [], onView }) => {
                 <select
                   value={filters.status}
                   onChange={(e) => handleFilterChange("status", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
+                  className="w-full px-4 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
                 >
                   <option value="" className="bg-gray-900">All Status</option>
                   {uniqueStatuses.map((status) => (
@@ -243,7 +243,7 @@ const Table = ({ data = [], onView }) => {
                   onChange={(e) =>
                     handleFilterChange("priority", e.target.value)
                   }
-                  className="w-full px-4 py-2.5 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
+                  className="w-full px-4 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
                 >
                   <option value="" className="bg-gray-900">All Priorities</option>
                   {uniquePriorities.map((priority) => (
@@ -263,7 +263,7 @@ const Table = ({ data = [], onView }) => {
                   onChange={(e) =>
                     handleFilterChange("assignee", e.target.value)
                   }
-                  className="w-full px-4 py-2.5 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
+                  className="w-full px-4 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
                 >
                   <option value="" className="bg-gray-900">All Assignees</option>
                   {uniqueAssignees.map((assignee) => (
@@ -283,7 +283,7 @@ const Table = ({ data = [], onView }) => {
                   onChange={(e) =>
                     handleFilterChange("createdDate", e.target.value)
                   }
-                  className="w-full px-4 py-2.5 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
+                  className="w-full px-4 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
                 >
                   <option value="" className="bg-gray-900">All Dates</option>
                   {uniqueCreatedDates.map((date) => (
@@ -303,7 +303,7 @@ const Table = ({ data = [], onView }) => {
                   onChange={(e) =>
                     handleFilterChange("followUp", e.target.value)
                   }
-                  className="w-full px-4 py-2.5 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
+                  className="w-full px-4 py-2 border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-white transition"
                 >
                   <option value="" className="bg-gray-900">All Follow Ups</option>
                   {uniqueFollowUps.map((followUp) => (
@@ -324,7 +324,7 @@ const Table = ({ data = [], onView }) => {
               <thead className="bg-white/5 border-b border-white/10">
                 <tr>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("id")}
                   >
                     <div className="flex items-center gap-2">
@@ -332,7 +332,7 @@ const Table = ({ data = [], onView }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("title")}
                   >
                     <div className="flex items-center gap-2">
@@ -340,7 +340,7 @@ const Table = ({ data = [], onView }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("description")}
                   >
                     <div className="flex items-center gap-2">
@@ -348,7 +348,7 @@ const Table = ({ data = [], onView }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("dept")}
                   >
                     <div className="flex items-center gap-2">
@@ -356,7 +356,7 @@ const Table = ({ data = [], onView }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("status")}
                   >
                     <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ const Table = ({ data = [], onView }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("assignee")}
                   >
                     <div className="flex items-center gap-2">
@@ -372,7 +372,7 @@ const Table = ({ data = [], onView }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("priority")}
                   >
                     <div className="flex items-center gap-2">
@@ -380,7 +380,7 @@ const Table = ({ data = [], onView }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("created_at")}
                   >
                     <div className="flex items-center gap-2">
@@ -388,7 +388,7 @@ const Table = ({ data = [], onView }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("completed_at")}
                   >
                     <div className="flex items-center gap-2">
@@ -396,7 +396,7 @@ const Table = ({ data = [], onView }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("dueDate")}
                   >
                     <div className="flex items-center gap-2">
@@ -404,7 +404,7 @@ const Table = ({ data = [], onView }) => {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("followUp")}
                   >
                     <div className="flex items-center gap-2">
@@ -425,13 +425,13 @@ const Table = ({ data = [], onView }) => {
                       key={item.id}
                       className="border-b border-white/10 hover:bg-white/5 transition-colors"
                     >
-                      <td className="px-6 py-4 text-sm font-semibold text-white/80">
+                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm font-semibold text-white/80">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
-                      <td className="px-6 py-4 text-sm text-white font-semibold">
+                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white font-semibold">
                         {item.title}
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/70">
+                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/70">
                         {getDisplayedText(item.description || '', item.id)}
                         {item.description &&
                           item.description.split(" ").length > 7 && (
@@ -445,10 +445,10 @@ const Table = ({ data = [], onView }) => {
                             </button>
                           )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/80 font-medium">
+                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/80 font-medium">
                         {getDeptString(item.dept)}
                       </td>
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm">
                         <span
                           className={`px-3 py-1.5 rounded-full text-xs font-bold ${getStatusColor(
                             item.status
@@ -457,10 +457,10 @@ const Table = ({ data = [], onView }) => {
                           {item.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/80 font-medium">
+                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/80 font-medium max-w-[120px] md:max-w-none overflow-hidden text-ellipsis md:whitespace-normal leading-tight">
                         {item.assignee}
                       </td>
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm">
                         <span
                           className={`px-3 py-1.5 rounded-full text-xs font-bold ${getPriorityColor(
                             item.priority
@@ -469,7 +469,7 @@ const Table = ({ data = [], onView }) => {
                           {item.priority}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/70 font-medium">
+                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/70 font-medium">
                         {item.created_at ? (() => {
                           const date = new Date(item.created_at);
 
@@ -488,7 +488,7 @@ const Table = ({ data = [], onView }) => {
                           return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
                         })() : "-"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/70 font-medium">
+                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/70 font-medium">
                         {item.completed_at ? (() => {
                           const date = new Date(item.completed_at);
 
@@ -507,7 +507,7 @@ const Table = ({ data = [], onView }) => {
                           return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
                         })() : "-"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/70 font-medium">
+                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/70 font-medium">
                         {item.dueDate ? (() => {
                           const date = new Date(item.dueDate);
 

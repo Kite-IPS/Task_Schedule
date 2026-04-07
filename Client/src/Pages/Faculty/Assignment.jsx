@@ -667,15 +667,15 @@ const Assignment = () => {
         </div>
 
         {/* Header with Create Button */}
-        <div className="flex justify-between items-center my-6">
-          <h1 className="text-[18px] md:text-2xl font-bold text-white">Task Management</h1>
+        <div className="flex justify-between items-center my-6 gap-2">
+          <h1 className="text-[18px] md:text-2xl font-bold text-white">Tasks</h1>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-3 py-2 md:px-4 md:py-2 rounded-xl transition-all shadow-lg hover:scale-105 text-sm md:text-base"
+            className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-red-600 hover:border-red-500 text-white px-3 py-2 md:px-4 md:py-2 rounded-xl transition-all shadow-lg hover:scale-105 text-sm md:text-base font-medium whitespace-nowrap"
           >
             <Plus className="w-4 h-4 md:w-5 md:h-5" />
-            <span className="hidden sm:inline">Create Task</span>
-            <span className="inline sm:hidden">Create</span>
+            <span className="hidden xs:inline">Create Task</span>
+            <span className="inline xs:hidden">Create</span>
           </button>
         </div>
 
@@ -687,12 +687,12 @@ const Assignment = () => {
               placeholder="Search by title or assignee..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
+              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm text-white placeholder-white/40"
             />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm text-white"
             >
               <option value="All" className="bg-gray-900">
                 All Status
@@ -706,7 +706,7 @@ const Assignment = () => {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm text-white"
             >
               <option value="All" className="bg-gray-900">
                 All Priorities
@@ -752,133 +752,85 @@ const Assignment = () => {
 
         {/* Table */}
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-white/5 border-b border-white/10">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">S.No</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Title</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Assignee</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Department</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Status</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Priority</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Due Date</th>
-                {/* <th className="px-4 py-3 text-left text-sm font-semibold text-white">Reminder 1</th> */}
-                {/* <th className="px-4 py-3 text-left text-sm font-semibold text-white">Reminder 2</th> */}
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Created Date</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Completed Time</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-white">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedTasks.map((task, index) => (
-                <tr key={task.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
-                  <td className="px-4 py-3 text-sm text-white/80">{startIndex + index + 1}</td>
-                  <td className="px-4 py-3 text-sm text-white font-medium">{task.title}</td>
-                  <td className="px-4 py-3 text-sm text-white/80">{task.assignee}</td>
-                  <td className="px-4 py-3 text-sm text-white/80">{task.department}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(task.status)}`}>
-                      {task.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                      {task.priority}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white/80">
-                    {(() => {
-                      const formatDateForDisplay = (dateString) => {
-                        if (!dateString) return "No due date"
-                        const date = new Date(dateString)
-                        return date.toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      }
-                      return formatDateForDisplay(task.dueDate)
-                    })()}
-                  </td>
-                  {/* <td className="px-4 py-3 text-sm text-white/80">
-                    {formatDateForDisplay(task.reminder1)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white/80">
-                    {formatDateForDisplay(task.reminder2)}
-                  </td> */}
-                  <td className="px-4 py-3 text-sm text-white/80">
-                    {(() => {
-                      const formatDateForDisplay = (dateString) => {
-                        if (!dateString) return "No date"
-                        const date = new Date(dateString)
-                        return date.toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      }
-                      return formatDateForDisplay(task.createdAt)
-                    })()}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white/80">
-                    {task.status === "Completed" && task.completedAt
-                      ? (() => {
-                        const formatDateForDisplay = (dateString) => {
-                          if (!dateString) return "-"
-                          const date = new Date(dateString)
-                          return date.toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        }
-                        return formatDateForDisplay(task.completedAt)
-                      })()
-                      : "-"}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex gap-2 justify-center">
-                      <button
-                        onClick={() => openViewModal(task)}
-                        className="text-green-400 hover:text-green-300 transition p-1 hover:bg-white/5 rounded"
-                        title="View Description"
-                      >
-                        <Eye size={18} />
-                      </button>
-                      {/* Follow Up Button - Now opens modal */}
-                      <button
-                        onClick={() => openCommentsModal(task)}
-                        className="text-indigo-400 hover:text-indigo-300 transition p-1 hover:bg-white/5 rounded"
-                        title="Follow-Up Comments"
-                      >
-                        <MessageSquarePlus size={18} />
-                      </button>
-                      <button
-                        onClick={() => openEditModal(task)}
-                        className="text-blue-400 hover:text-blue-300 transition p-1 hover:bg-white/5 rounded"
-                        title="Edit"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTask(task.id)}
-                        className="text-red-400 hover:text-red-300 transition p-1 hover:bg-white/5 rounded"
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-white/5 border-b border-white/10">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-white">S.No</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Title</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Assignee</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Department</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Status</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Priority</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Due Date</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Created Date</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Completed Time</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-white text-center">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginatedTasks.map((task, index) => (
+                  <tr key={task.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
+                    <td className="px-3 py-2 text-xs text-white/80">{startIndex + index + 1}</td>
+                    <td className="px-3 py-2 text-xs text-white font-medium">{task.title}</td>
+                    <td className="px-3 py-2 text-[10px] md:text-xs text-white/70 leading-tight max-w-[150px]">{task.assignee}</td>
+                    <td className="px-3 py-2 text-xs text-white/80">{task.department}</td>
+                    <td className="px-3 py-2 text-xs">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getStatusColor(task.status)}`}>
+                        {task.status}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-xs">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getPriorityColor(task.priority)}`}>
+                        {task.priority}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-xs text-white/80">
+                      {formatDateForDisplay(task.dueDate)}
+                    </td>
+                    <td className="px-3 py-2 text-xs text-white/80">
+                      {formatDateForDisplay(task.createdAt)}
+                    </td>
+                    <td className="px-3 md:px-4 py-2 text-xs text-white/80">
+                      {task.status === "Completed" && task.completedAt ? formatDateForDisplay(task.completedAt) : "-"}
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <div className="flex gap-1.5 justify-center">
+                        <button
+                          onClick={() => openViewModal(task)}
+                          className="text-green-400 hover:text-green-300 transition p-1 hover:bg-white/5 rounded"
+                          title="View Description"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => openCommentsModal(task)}
+                          className="text-indigo-400 hover:text-indigo-300 transition p-1 hover:bg-white/5 rounded"
+                          title="Follow-Up Comments"
+                        >
+                          <MessageSquarePlus size={18} />
+                        </button>
+                        <button
+                          onClick={() => openEditModal(task)}
+                          className="text-blue-400 hover:text-blue-300 transition p-1 hover:bg-white/5 rounded"
+                          title="Edit"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="text-red-400 hover:text-red-300 transition p-1 hover:bg-white/5 rounded"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {filteredTasks.length === 0 && (
             <div className="text-center py-8 text-white/50">No tasks found. Try adjusting your filters.</div>
@@ -1034,10 +986,10 @@ const Assignment = () => {
                   </div>
                   */}
                 </div>
-                <div className="flex justify-end mt-6">
+                <div className="flex justify-center mt-6">
                   <button
                     onClick={closeModal}
-                    className="px-4 py-2 bg-white/10 border border-white/20 hover:bg-red-600 text-white rounded-lg transition font-medium"
+                    className="w-full sm:w-auto px-10 py-2.5 bg-white/10 border border-white/20 hover:bg-red-600 hover:border-red-500 text-white rounded-xl transition-all font-bold shadow-lg hover:scale-105 active:scale-95"
                   >
                     Close
                   </button>
@@ -1317,55 +1269,72 @@ const Assignment = () => {
 
       {/* NEW: Comments Modal - Non-interfering centered popup */}
       {commentsModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl w-[90%] md:w-[500px] p-6 max-h-[80vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl w-full max-w-[500px] p-5 md:p-6 max-h-[85vh] overflow-y-auto flex flex-col">
             {/* Modal Header */}
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-white">
-                Follow-Up Comments for: {selectedCommentTask?.title}
-              </h2>
-              <button onClick={closeCommentsModal} className="text-white/70 hover:text-white transition">
-                <X size={24} />
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex-1 mr-2">
+                <h2 className="text-xl font-bold text-white leading-tight">Follow-Up Comments</h2>
+                {selectedCommentTask && (
+                  <p className="text-red-400 font-semibold text-sm mt-1">Task: {selectedCommentTask.title}</p>
+                )}
+              </div>
+              <button onClick={closeCommentsModal} className="text-white/70 hover:text-white transition p-1 hover:bg-white/10 rounded-lg shrink-0">
+                <X size={20} />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="space-y-4">
-              {commentsLoading ? (
-                <p className="text-white/60 text-sm text-center py-4">Loading comments...</p>
-              ) : taskComments.length === 0 ? (
-                <p className="text-white/60 text-sm italic text-center py-4">No comments yet.</p>
-              ) : (
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                  {taskComments.map((comment) => (
-                    <div key={comment.id} className="bg-white/5 p-3 rounded-lg text-sm border border-white/10">
-                      <p className="text-white mb-1">{comment.comment}</p>
-                      <small className="text-white/60 block">
-                        By {comment.performed_by} on {new Date(comment.timestamp).toLocaleString()}
-                      </small>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="flex-1 min-h-[100px] mb-4">
+                {commentsLoading ? (
+                  <div className="flex flex-col items-center justify-center h-full text-white/40 italic text-sm">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-500 mb-2"></div>
+                    Loading comments...
+                  </div>
+                ) : taskComments.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-white/40 italic text-sm bg-white/5 rounded-xl border border-dashed border-white/10 p-4 text-center">
+                    No comments yet. Be the first to add one!
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                    {taskComments.map((comment) => (
+                      <div key={comment.id} className="bg-white/5 p-3 rounded-xl text-sm border border-white/10 hover:border-white/20 transition-colors">
+                        <p className="text-white/90 mb-2 leading-relaxed">{comment.comment}</p>
+                        <div className="flex items-center justify-between text-[11px] text-white/40 font-medium">
+                          <span className="bg-red-500/10 text-red-300 px-2 py-0.5 rounded-full">{comment.performed_by}</span>
+                          <span>{new Date(comment.timestamp).toLocaleDateString()} at {new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Add Comment Section */}
-              <div className="border-t border-white/10 pt-4 mt-2">
-                <label className="block text-xs font-semibold text-white/70 uppercase mb-2">Add New Comment</label>
-                <div className="space-y-2">
+              <div className="border-t border-white/10 pt-5 mt-auto">
+                <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2 px-1">Add New Comment</label>
+                <div className="space-y-3">
                   <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Enter your follow-up comment here..."
-                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-sm resize-none min-h-[60px]"
+                    placeholder="Type your message here..."
+                    className="w-full border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500/50 text-white text-sm resize-none min-h-[80px] transition-all placeholder:text-white/20"
                   />
-                  <div className="flex justify-end">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={closeCommentsModal}
+                      className="px-4 py-2.5 text-sm bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl transition-all font-semibold"
+                    >
+                      Close
+                    </button>
                     <button
                       onClick={handleAddComment}
                       disabled={addingComment || !newComment.trim()}
-                      className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                      className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all ${
                         addingComment || !newComment.trim()
-                          ? "bg-gray-600 cursor-not-allowed opacity-50"
-                          : "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/20"
+                          ? "bg-gray-800 text-white/30 cursor-not-allowed border border-white/5"
+                          : "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/40 hover:scale-[1.02]"
                       }`}
                     >
                       {addingComment ? "Adding..." : "Post Comment"}
@@ -1373,16 +1342,6 @@ const Assignment = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={closeCommentsModal}
-                className="px-4 py-2 text-sm bg-white/10 border border-white/20 hover:bg-white/20 text-white rounded-lg transition font-bold"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>
