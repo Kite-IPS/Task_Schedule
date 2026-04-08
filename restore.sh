@@ -42,7 +42,13 @@ docker cp "$BACKUP_FOLDER/database.json" backend:/app/data/restore.json
 
 # 3. Clear old data and load backup
 docker exec backend python manage.py flush --no-input
-docker exec backend python manage.py loaddata /app/data/restore.json
+docker exec backend python manage.py shell -c "from django.contrib.contenttypes.models import ContentType; ContentType.objects.all().delete()"
+
+if ! docker exec backend python manage.py loaddata /app/data/restore.json; then
+    echo "ERROR: Data restore failed!"
+    docker exec backend rm -f /app/data/restore.json
+    exit 1
+fi
 
 # 4. Restore media files
 if [ -d "$BACKUP_FOLDER/media" ]; then
