@@ -355,25 +355,25 @@ const FacultyDashboard = () => {
             <>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs md:text-sm font-medium text-white/90 mb-1">Title *</label>
+                  <label className="block text-sm font-medium text-white/90 mb-1">Title *</label>
                   <input
                     type="text"
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
-                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-xs md:text-sm placeholder-white/40"
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
                     placeholder="Enter task title"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs md:text-sm font-medium text-white/90 mb-1">Description *</label>
+                  <label className="block text-sm font-medium text-white/90 mb-1">Description *</label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-xs md:text-sm placeholder-white/40 resize-none"
+                    className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40 resize-none"
                     placeholder="Enter task description"
                   />
                 </div>
@@ -522,12 +522,12 @@ const FacultyDashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {!(user?.role === 'admin' || user?.is_superuser) && (
                       <div className="md:col-span-1">
-                        <label className="block text-xs md:text-sm font-medium text-white/90 mb-1">Status</label>
+                        <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
                         <select
                           name="status"
                           value={formData.status}
                           onChange={handleInputChange}
-                          className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-xs md:text-sm"
+                          className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                         >
                           {statuses.map((status) => (
                             <option key={status.code} value={status.code} className="bg-gray-900">
@@ -539,12 +539,12 @@ const FacultyDashboard = () => {
                     )}
 
                   <div className="md:col-span-1">
-                    <label className="block text-xs md:text-sm font-medium text-white/90 mb-1">Priority</label>
+                    <label className="block text-sm font-medium text-white/90 mb-1">Priority</label>
                     <select
                       name="priority"
                       value={formData.priority}
                       onChange={handleInputChange}
-                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-xs md:text-sm"
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                     >
                       {priorities.map((priority) => (
                         <option key={priority.code} value={priority.code} className="bg-gray-900">
@@ -555,13 +555,13 @@ const FacultyDashboard = () => {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-xs md:text-sm font-medium text-white/90 mb-1">Due Date *</label>
+                    <label className="block text-sm font-medium text-white/90 mb-1">Due Date *</label>
                     <input
                       type="datetime-local"
                       name="dueDate"
                       value={formData.dueDate}
                       onChange={handleInputChange}
-                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-xs md:text-sm"
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                     />
                   </div>
                 </div>
