@@ -337,22 +337,22 @@ const Users = () => {
               <table className="w-full">
                 <thead className="bg-white/5 border-b border-white/10">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                    <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-semibold text-white">
                       S.No
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                    <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-semibold text-white">
                       Name
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                    <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-semibold text-white">
                       Role
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                    <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-semibold text-white">
                       Department
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+                    <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-semibold text-white">
                       Email
                     </th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold text-white">
+                    <th className="px-2 py-2 md:px-4 md:py-3 text-center text-[10px] md:text-sm font-semibold text-white">
                       Action
                     </th>
                   </tr>
@@ -363,36 +363,36 @@ const Users = () => {
                       key={user.id}
                       className="border-b border-white/10 hover:bg-white/5 transition-colors"
                     >
-                      <td className="px-4 py-3 text-sm text-white/80">
+                      <td className="px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm text-white/80">
                         {startIndex + index + 1}
                       </td>
-                      <td className="px-4 py-3 text-sm text-white font-medium">
+                      <td className="px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm text-white font-medium break-words max-w-[100px] md:max-w-none">
                         {user.name}
                       </td>
-                      <td className="px-4 py-3 text-sm text-white/80">
+                      <td className="px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm text-white/80">
                         <span className="capitalize">{user.role}</span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-white/80">
+                      <td className="px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm text-white/80">
                         {user.department || '-'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-white/70">
+                      <td className="px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm text-white/70 break-all max-w-[120px] md:max-w-none">
                         {user.email}
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex gap-2 justify-center">
+                      <td className="px-2 py-2 md:px-4 md:py-3 text-center">
+                        <div className="flex gap-1 md:gap-2 justify-center">
                           <button
                             onClick={() => openViewModal(user)}
                             className="text-green-400 hover:text-green-300 transition p-1 hover:bg-white/5 rounded"
                             title="Edit"
                           >
-                            <Edit size={18} />
+                            <Edit className="w-4 h-4 md:w-[18px] md:h-[18px]" />
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
                             className="text-red-400 hover:text-red-300 transition p-1 hover:bg-white/5 rounded"
                             title="Delete"
                           >
-                            <Trash2 size={18} />
+                            <Trash2 className="w-4 h-4 md:w-[18px] md:h-[18px]" />
                           </button>
                         </div>
                       </td>

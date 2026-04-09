@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useContext } from "react"
-import { Plus, Edit, Trash2, X, Home, Eye, MessageSquarePlus, ChevronDown } from "lucide-react"
+import { Plus, Edit, Trash2, X, Home, Eye, MessageSquarePlus, ChevronDown, Search } from "lucide-react"
 import BaseLayout from "../../Components/Layouts/BaseLayout"
 import { useNavigate } from "react-router-dom"
 import axiosInstance from "../../Utils/axiosInstance"
@@ -695,17 +695,20 @@ const Assignment = () => {
         {/* Filters */}
         <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-xl shadow-lg mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <input
-              type="text"
-              placeholder="Search by title or assignee..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm text-white placeholder-white/40"
-            />
+            <div className="relative group">
+              <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-red-400 transition-colors" size={18} />
+              <input
+                type="text"
+                placeholder="Search by title or assignee..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full border border-white/20 bg-white/5 backdrop-blur-md rounded-xl pl-10 md:pl-12 pr-4 py-2 md:py-3 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/30 transition-all text-[10px] md:text-sm"
+              />
+            </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm text-white"
+              className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-4 md:py-3 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-[10px] md:text-sm font-medium"
             >
               <option value="All" className="bg-gray-900">
                 All Status
@@ -719,7 +722,7 @@ const Assignment = () => {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm text-white"
+              className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-4 md:py-3 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-[10px] md:text-sm font-medium"
             >
               <option value="All" className="bg-gray-900">
                 All Priorities
@@ -733,7 +736,7 @@ const Assignment = () => {
             <select
               value={createdDateFilter}
               onChange={(e) => setCreatedDateFilter(e.target.value)}
-              className="border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+              className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-4 md:py-3 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-[10px] md:text-sm font-medium"
             >
               <option value="All" className="bg-gray-900">
                 All Created Dates
@@ -769,73 +772,73 @@ const Assignment = () => {
             <table className="w-full">
               <thead className="bg-white/5 border-b border-white/10">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-white">S.No</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Title</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Assignee</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Department</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Status</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Priority</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Due Date</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Created Date</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-white">Completed Time</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-white text-center">Action</th>
+                  <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-bold text-white uppercase tracking-wider">S.No</th>
+                  <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-bold text-white uppercase tracking-wider">Title</th>
+                  <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-bold text-white uppercase tracking-wider">Assignee</th>
+                  <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-bold text-white uppercase tracking-wider">Department</th>
+                  <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-bold text-white uppercase tracking-wider">Status</th>
+                  <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-bold text-white uppercase tracking-wider">Priority</th>
+                  <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-bold text-white uppercase tracking-wider">Due Date</th>
+                  <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-bold text-white uppercase tracking-wider">Created Date</th>
+                  <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-bold text-white uppercase tracking-wider">Completed Time</th>
+                  <th className="px-2 py-2 md:px-4 md:py-3 text-left text-[10px] md:text-sm font-bold text-white text-center uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedTasks.map((task, index) => (
                   <tr key={task.id} className="border-b border-white/10 hover:bg-white/5 transition-colors">
-                    <td className="px-3 py-2 text-xs text-white/80">{startIndex + index + 1}</td>
-                    <td className="px-3 py-2 text-xs text-white font-medium">{task.title}</td>
-                    <td className="px-3 py-2 text-[10px] md:text-xs text-white/70 leading-tight max-w-[150px]">{task.assignee}</td>
-                    <td className="px-3 py-2 text-xs text-white/80">{task.department}</td>
-                    <td className="px-3 py-2 text-xs">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getStatusColor(task.status)}`}>
+                    <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/80">{(startIndex + index + 1)}</td>
+                    <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white font-bold">{task.title}</td>
+                    <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/70 leading-tight min-w-[100px] md:min-w-[150px]">{task.assignee}</td>
+                    <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/80">{task.department}</td>
+                    <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm">
+                      <span className={`px-2 py-0.5 md:px-4 md:py-1.5 rounded-lg text-[8px] md:text-xs font-bold shadow-md ${getStatusColor(task.status)}`}>
                         {task.status}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-xs">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getPriorityColor(task.priority)}`}>
+                    <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm">
+                      <span className={`px-2 py-0.5 md:px-4 md:py-1.5 rounded-lg text-[8px] md:text-xs font-bold shadow-md ${getPriorityColor(task.priority)}`}>
                         {task.priority}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-xs text-white/80">
+                    <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/80">
                       {formatDateForDisplay(task.dueDate)}
                     </td>
-                    <td className="px-3 py-2 text-xs text-white/80">
+                    <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/80">
                       {formatDateForDisplay(task.createdAt)}
                     </td>
-                    <td className="px-3 md:px-4 py-2 text-xs text-white/80">
+                    <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/80 font-semibold">
                       {task.status === "Completed" && task.completedAt ? formatDateForDisplay(task.completedAt) : "-"}
                     </td>
-                    <td className="px-3 py-2 text-center">
-                      <div className="flex gap-1.5 justify-center">
+                    <td className="px-2 py-2 md:px-4 md:py-4 text-center">
+                      <div className="flex gap-1 md:gap-3 justify-center">
                         <button
                           onClick={() => openViewModal(task)}
-                          className="text-green-400 hover:text-green-300 transition p-1 hover:bg-white/5 rounded"
+                          className="text-green-400 hover:text-green-300 transition p-1 md:p-2 hover:bg-white/10 rounded-lg shadow-sm"
                           title="View Description"
                         >
-                          <Eye size={18} />
+                          <Eye className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                         <button
                           onClick={() => openCommentsModal(task)}
-                          className="text-indigo-400 hover:text-indigo-300 transition p-1 hover:bg-white/5 rounded"
+                          className="text-indigo-400 hover:text-indigo-300 transition p-1 md:p-2 hover:bg-white/10 rounded-lg shadow-sm"
                           title="Follow-Up Comments"
                         >
-                          <MessageSquarePlus size={18} />
+                          <MessageSquarePlus className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                         <button
                           onClick={() => openEditModal(task)}
-                          className="text-blue-400 hover:text-blue-300 transition p-1 hover:bg-white/5 rounded"
+                          className="text-blue-400 hover:text-blue-300 transition p-1 md:p-2 hover:bg-white/10 rounded-lg shadow-sm"
                           title="Edit"
                         >
-                          <Edit size={18} />
+                          <Edit className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteTask(task.id)}
-                          className="text-red-400 hover:text-red-300 transition p-1 hover:bg-white/5 rounded"
+                          className="text-red-400 hover:text-red-300 transition p-1 md:p-2 hover:bg-white/10 rounded-lg shadow-sm"
                           title="Delete"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                       </div>
                     </td>
@@ -1012,25 +1015,25 @@ const Assignment = () => {
               <>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-white/90 mb-1">Title *</label>
+                    <label className="block text-xs md:text-sm font-medium text-white/90 mb-1">Title *</label>
                     <input
                       type="text"
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40"
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-xs md:text-sm placeholder-white/40"
                       placeholder="Enter task title"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-white/90 mb-1">Description *</label>
+                    <label className="block text-xs md:text-sm font-medium text-white/90 mb-1">Description *</label>
                     <textarea
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
-                      rows={3}
-                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-white/40 resize-none"
+                      rows={6}
+                      className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-xs md:text-sm placeholder-white/40 resize-none"
                       placeholder="Enter task description"
                     />
                   </div>
@@ -1189,12 +1192,12 @@ const Assignment = () => {
                     {/* Hide status field for Admin ONLY during task creation */}
                     {!(modalMode === "create" && (user?.role === 'admin' || user?.is_superuser)) && (
                       <div className="md:col-span-1">
-                        <label className="block text-sm font-medium text-white/90 mb-1">Status</label>
+                        <label className="block text-xs md:text-sm font-medium text-white/90 mb-1">Status</label>
                         <select
                           name="status"
                           value={formData.status}
                           onChange={handleInputChange}
-                          className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                          className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-xs md:text-sm"
                         >
                           {statuses.map((status) => (
                             <option key={status.code} value={status.code} className="bg-gray-900">
@@ -1206,12 +1209,12 @@ const Assignment = () => {
                     )}
 
                     <div className="md:col-span-1">
-                      <label className="block text-sm font-medium text-white/90 mb-1">Priority</label>
+                      <label className="block text-xs md:text-sm font-medium text-white/90 mb-1">Priority</label>
                       <select
                         name="priority"
                         value={formData.priority}
                         onChange={handleInputChange}
-                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-xs md:text-sm"
                       >
                         {priorities.map((priority) => (
                           <option key={priority.code} value={priority.code} className="bg-gray-900">
@@ -1222,13 +1225,13 @@ const Assignment = () => {
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-white/90 mb-1">Due Date *</label>
+                      <label className="block text-xs md:text-sm font-medium text-white/90 mb-1">Due Date *</label>
                       <input
                         type="datetime-local"
                         name="dueDate"
                         value={formData.dueDate}
                         onChange={handleInputChange}
-                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-xs md:text-sm"
                       />
                     </div>
                   </div>

@@ -324,95 +324,95 @@ const Table = ({ data = [], onView }) => {
               <thead className="bg-white/5 border-b border-white/10">
                 <tr>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("id")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       S.No <SortIcon columnKey="id" />
                     </div>
                   </th>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("title")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       Task <SortIcon columnKey="title" />
                     </div>
                   </th>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("description")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       Description <SortIcon columnKey="description" />
                     </div>
                   </th>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("dept")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       Department <SortIcon columnKey="dept" />
                     </div>
                   </th>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("status")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       Status <SortIcon columnKey="status" />
                     </div>
                   </th>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("assignee")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       Assignee <SortIcon columnKey="assignee" />
                     </div>
                   </th>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("priority")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       Priority <SortIcon columnKey="priority" />
                     </div>
                   </th>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("created_at")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       Created Date <SortIcon columnKey="created_at" />
                     </div>
                   </th>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("completed_at")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       Completed Date <SortIcon columnKey="completed_at" />
                     </div>
                   </th>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("dueDate")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       Due Date <SortIcon columnKey="dueDate" />
                     </div>
                   </th>
                   <th
-                    className="px-2 md:px-6 py-2 md:py-3.5 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
+                    className="px-2 py-2 md:px-4 md:py-4 text-left text-[10px] md:text-sm font-bold text-white cursor-pointer hover:bg-white/10 transition"
                     onClick={() => handleSort("followUp")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 md:gap-2">
                       Follow Up <SortIcon columnKey="followUp" />
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-center text-sm font-bold text-white"
+                    className="px-2 py-2 md:px-4 md:py-4 text-center text-[10px] md:text-sm font-bold text-white"
                   >
                     Actions
                   </th>
@@ -425,19 +425,19 @@ const Table = ({ data = [], onView }) => {
                       key={item.id}
                       className="border-b border-white/10 hover:bg-white/5 transition-colors"
                     >
-                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm font-semibold text-white/80">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm font-bold text-white/80">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
-                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white font-semibold">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white font-bold">
                         {item.title}
                       </td>
-                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/70">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/70">
                         {getDisplayedText(item.description || '', item.id)}
                         {item.description &&
                           item.description.split(" ").length > 7 && (
                             <button
                               onClick={() => toggleReadMore(item.id)}
-                              className="ml-2 text-red-400 hover:text-red-300 font-semibold"
+                              className="ml-2 text-red-400 hover:text-red-300 font-bold"
                             >
                               {expandedRows[item.id]
                                 ? "Read Less"
@@ -445,31 +445,31 @@ const Table = ({ data = [], onView }) => {
                             </button>
                           )}
                       </td>
-                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/80 font-medium">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/80 font-bold">
                         {getDeptString(item.dept)}
                       </td>
-                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm">
                         <span
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold ${getStatusColor(
+                          className={`px-2 py-1 md:px-4 md:py-2 rounded-full text-[8px] md:text-xs font-bold shadow-md ${getStatusColor(
                             item.status
                           )}`}
                         >
                           {item.status}
                         </span>
                       </td>
-                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/80 font-medium max-w-[120px] md:max-w-none overflow-hidden text-ellipsis md:whitespace-normal leading-tight">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/80 font-bold leading-tight">
                         {item.assignee}
                       </td>
-                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm">
                         <span
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold ${getPriorityColor(
+                          className={`px-2 py-1 md:px-4 md:py-2 rounded-full text-[8px] md:text-xs font-bold shadow-md ${getPriorityColor(
                             item.priority
                           )}`}
                         >
                           {item.priority}
                         </span>
                       </td>
-                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/70 font-medium">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/70 font-semibold">
                         {item.created_at ? (() => {
                           const date = new Date(item.created_at);
 
@@ -488,7 +488,7 @@ const Table = ({ data = [], onView }) => {
                           return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
                         })() : "-"}
                       </td>
-                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/70 font-medium">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/70 font-semibold">
                         {item.completed_at ? (() => {
                           const date = new Date(item.completed_at);
 
@@ -507,7 +507,7 @@ const Table = ({ data = [], onView }) => {
                           return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
                         })() : "-"}
                       </td>
-                      <td className="px-2 md:px-6 py-2 md:py-3 text-[10px] md:text-sm text-white/70 font-medium">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/70 font-semibold">
                         {item.dueDate ? (() => {
                           const date = new Date(item.dueDate);
 
@@ -526,16 +526,16 @@ const Table = ({ data = [], onView }) => {
                           return `${day}-${month}-${year} (${hours}:${minutes} ${ampm})`;
                         })() : "-"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/80 font-medium">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-[10px] md:text-sm text-white/80 font-bold">
                         {item.followUp || "-"}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-2 py-2 md:px-4 md:py-4 text-center">
                         <button
                           onClick={() => onView && onView(item)}
-                          className="text-green-400 hover:text-green-300 transition p-2 hover:bg-white/5 rounded"
+                          className="text-green-400 hover:text-green-300 transition p-1 md:p-2 hover:bg-white/10 rounded-lg shadow-sm"
                           title="View Task Details"
                         >
-                          <Eye size={18} />
+                          <Eye className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                       </td>
                     </tr>
