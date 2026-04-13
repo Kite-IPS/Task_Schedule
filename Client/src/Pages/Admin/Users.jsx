@@ -34,7 +34,12 @@ const Users = () => {
     setCurrentPage(1);
   };
 
-  const roles = ["admin", "staff", "hod", "faculty"];
+  const roles = [
+    { value: "admin", label: "Admin" },
+    { value: "staff", label: "Staff" },
+    { value: "hod", label: "Hod" },
+    { value: "faculty", label: "Faculty" },
+  ];
   const departments = ["CSE", "IT", "AIDS", "MECH","CSBS","S&H", "ECE", "AIML", "CYS", "RA", "OFFICE", "IQAC", "OTHERS","MBA","INNOVATION TEAM","PLACEMENT"];
 
   const navigate = useNavigate();
@@ -301,8 +306,8 @@ const Users = () => {
               >
                 <option value="All" className="bg-gray-900">All Roles</option>
                 {roles.map((role) => (
-                  <option key={role} value={role} className="bg-gray-900">
-                    {role}
+                  <option key={role.value} value={role.value} className="bg-gray-900">
+                    {role.label}
                   </option>
                 ))}
               </select>
@@ -525,8 +530,8 @@ const Users = () => {
                 >
                   <option value="" className="bg-gray-900">Select Role</option>
                   {roles.map((role) => (
-                    <option key={role} value={role} className="bg-gray-900">
-                      {role}
+                    <option key={role.value} value={role.value} className="bg-gray-900">
+                      {role.label}
                     </option>
                   ))}
                 </select>
