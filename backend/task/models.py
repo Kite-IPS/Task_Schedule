@@ -35,6 +35,9 @@ class Task(models.Model):
     reminder1 = models.DateTimeField(null=True, blank=True, help_text="First reminder date and time")
     reminder2 = models.DateTimeField(null=True, blank=True, help_text="Second reminder date and time")
     
+    # CC emails list
+    cc_emails = models.JSONField(default=list, blank=True, help_text="List of extra emails to CC")
+    
     # Parent task for hierarchical delegation
     parent_task = models.ForeignKey(
         'self',

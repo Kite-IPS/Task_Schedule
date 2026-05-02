@@ -212,6 +212,10 @@ def get_task(request, task_id):
                 elif task.status != 'completed' and task.completed_at:
                     task.completed_at = None
             
+            if 'cc_emails' in request.data and task.cc_emails != request.data['cc_emails']:
+                changes['cc_emails'] = {'old': task.cc_emails, 'new': request.data['cc_emails']}
+                task.cc_emails = request.data['cc_emails']
+            
             # Handle assignee and department updates
             try:
                 if 'assignee' in request.data:
@@ -411,7 +415,11 @@ def update_task(request, task_id):
                 old_values['reminder2'] = str(task.reminder2) if task.reminder2 else None
                 task.reminder2 = new_reminder2
                 changes['reminder2'] = {'old': old_values['reminder2'], 'new': str(new_reminder2) if new_reminder2 else None}
-                changes['reminder2'] = {'old': old_values['reminder2'], 'new': str(new_reminder2)}
+        
+        if 'cc_emails' in request.data and task.cc_emails != request.data['cc_emails']:
+            old_values['cc_emails'] = task.cc_emails
+            task.cc_emails = request.data['cc_emails']
+            changes['cc_emails'] = {'old': old_values['cc_emails'], 'new': task.cc_emails}
         
         # NEW: Capture follow_comment
         follow_comment = request.data.get('follow_comment', '').strip()

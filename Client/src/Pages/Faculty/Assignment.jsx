@@ -31,6 +31,7 @@ const Assignment = () => {
     title: "",
     description: "",
     assignee: [],
+    cc_emails: [],
     status: "pending",
     priority: "medium",
     dueDate: "",
@@ -46,6 +47,8 @@ const Assignment = () => {
   const [newComment, setNewComment] = useState("");  // NEW: State for the input field
   const [addingComment, setAddingComment] = useState(false);  // NEW: Loading state for adding comment
   const [assigneeDropdownOpen, setAssigneeDropdownOpen] = useState(false);  // Dropdown state for assignee selection
+  const [ccDropdownOpen, setCcDropdownOpen] = useState(false);  // Dropdown state for CC selection
+
 
   const statuses = [
     { code: "pending", name: "Pending" },
@@ -139,6 +142,7 @@ const Assignment = () => {
           createdAt: task.created_at,
           createdBy: task.created_by || task.createdBy || "Unknown",
           rawAssignee: task.assignee || [], // Keep raw data for editing
+          rawCcEmails: task.cc_emails || [], // Keep raw cc_emails
           rawDepartment: task.department || [],
           rawStatus: task.status,
           rawPriority: task.priority,
@@ -283,6 +287,7 @@ const Assignment = () => {
       title: "",
       description: "",
       assignee: [],
+      cc_emails: [],
       status: "pending",
       priority: "medium",
       dueDate: "",
@@ -302,6 +307,7 @@ const Assignment = () => {
     setFormData({
       ...task,
       assignee: task.rawAssignee || [],
+      cc_emails: task.rawCcEmails || [],
       status: task.rawStatus || task.status.toLowerCase(),
       priority: task.rawPriority || task.priority.toLowerCase(),
       createdBy: task.createdBy || "Unknown",
@@ -342,6 +348,7 @@ const Assignment = () => {
       title: task.title,
       description: task.description,
       assignee: task.rawAssignee ? task.rawAssignee.map((a) => a.email) : [],
+      cc_emails: task.rawCcEmails || [],
       status: task.rawStatus || task.status.toLowerCase(),
       priority: task.rawPriority || task.priority.toLowerCase(),
       dueDate: formatDateForInput(task.dueDate),
@@ -359,6 +366,7 @@ const Assignment = () => {
       title: "",
       description: "",
       assignee: [],
+      cc_emails: [],
       status: "pending",
       priority: "medium",
       dueDate: "",
@@ -369,7 +377,8 @@ const Assignment = () => {
     })
     setDepartmentFilter("all")
     setSelectedTask(null)
-    setAssigneeDropdownOpen(false)  // Close assignee dropdown
+    setAssigneeDropdownOpen(false)
+    setCcDropdownOpen(false)
   }
 
   const handleInputChange = (e) => {
@@ -382,6 +391,14 @@ const Assignment = () => {
       const isSelected = prev.assignee.includes(email)
       const newAssignees = isSelected ? prev.assignee.filter((e) => e !== email) : [...prev.assignee, email]
       return { ...prev, assignee: newAssignees }
+    })
+  }
+
+  const handleCCToggle = (email) => {
+    setFormData((prev) => {
+      const isSelected = prev.cc_emails.includes(email)
+      const newCCs = isSelected ? prev.cc_emails.filter((e) => e !== email) : [...prev.cc_emails, email]
+      return { ...prev, cc_emails: newCCs }
     })
   }
 
@@ -427,6 +444,7 @@ const Assignment = () => {
           title: formData.title,
           description: formData.description,
           assignee: formData.assignee, // Array of emails
+          cc_emails: formData.cc_emails, // Array of emails for CC
           department: [...new Set(selectedDepartments)], // Unique departments
           priority: formData.priority || "medium",
           status: (isAdminRole || user?.is_superuser) ? "ongoing" : (formData.status || "pending"),
@@ -464,6 +482,7 @@ const Assignment = () => {
           createdAt: task.created_at,
           createdBy: task.created_by || task.createdBy || "Unknown",
           rawAssignee: task.assignee || [],
+          rawCcEmails: task.cc_emails || [],
           rawDepartment: task.department || [],
           rawStatus: task.status,
           rawPriority: task.priority,
@@ -913,13 +932,24 @@ const Assignment = () => {
                     {formData.description}
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <h3 className="text-sm font-semibold text-white/90 mb-1">Assignee(s)</h3>
                     <p className="text-white">
                       {Array.isArray(formData.assignee) && formData.assignee.length > 0
                         ? formData.assignee.map((a) => a.full_name || a.email || a).join(", ")
                         : selectedTask?.assignee || "Unassigned"}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">CC Recipient(s)</h3>
+                    <p className="text-white">
+                      {Array.isArray(formData.cc_emails) && formData.cc_emails.length > 0
+                        ? formData.cc_emails.map((e) => {
+                            const u = users.find(user => user.email === e) || admins.find(user => user.email === e);
+                            return u ? u.name || e : e;
+                          }).join(", ")
+                        : "None"}
                     </p>
                   </div>
                   <div>
@@ -1179,6 +1209,123 @@ const Assignment = () => {
                               type="button"
                               onClick={() => setAssigneeDropdownOpen(false)}
                               className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Done
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-1">
+                      CC Recipient(s) {formData.cc_emails.length > 0 && `(${formData.cc_emails.length} selected)`}
+                    </label>
+
+                    {/* Selected CC Tags */}
+                    {formData.cc_emails.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.cc_emails.map((email) => {
+                          const selectedUser = users.find((u) => u.email === email) || admins.find((u) => u.email === email)
+                          return (
+                            <span
+                              key={email}
+                              className="inline-flex items-center gap-1 bg-blue-500/20 text-blue-300 px-2 py-1 rounded-lg text-xs border border-blue-500/30"
+                            >
+                              {selectedUser?.name || email}
+                              <button
+                                type="button"
+                                onClick={() => handleCCToggle(email)}
+                                className="hover:text-white ml-1"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {/* Dropdown Container */}
+                    <div className="relative">
+                      {/* Dropdown Trigger Button */}
+                      <button
+                        type="button"
+                        onClick={() => setCcDropdownOpen(!ccDropdownOpen)}
+                        className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white flex items-center justify-between"
+                      >
+                        <span className="text-white/60">
+                          {formData.cc_emails.length === 0 ? "Select CC recipients..." : `${formData.cc_emails.length} recipients selected`}
+                        </span>
+                        <ChevronDown className={`w-4 h-4 transition-transform ${ccDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* Dropdown Content */}
+                      {ccDropdownOpen && (
+                        <div className="absolute z-40 w-full mt-1 border border-white/20 bg-gray-900 backdrop-blur-md rounded-lg shadow-xl">
+                          {/* Department Filter inside Dropdown */}
+                          <div className="p-2 border-b border-white/10">
+                            <select
+                              value={departmentFilter}
+                              onChange={(e) => setDepartmentFilter(e.target.value)}
+                              className="w-full border border-white/20 bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-sm"
+                            >
+                              <option value="all" className="bg-gray-900">
+                                All Departments
+                              </option>
+                              {departments.map((dept) => (
+                                <option key={dept.code} value={dept.code} className="bg-gray-900">
+                                  {dept.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Faculty List */}
+                          <div className="max-h-48 overflow-y-auto p-2">
+                            {usersLoading ? (
+                              <p className="text-white/70 text-center py-2">Loading users...</p>
+                            ) : [...getFilteredUsers(), ...admins].length > 0 ? (
+                              [...getFilteredUsers(), ...admins].filter((v,i,a)=>a.findIndex(t=>(t.email===v.email))===i).map((user) => (
+                                <div
+                                  key={user.email}
+                                  onClick={() => handleCCToggle(user.email)}
+                                  className={`flex items-center gap-2 text-white/80 cursor-pointer hover:bg-white/10 px-3 py-2 rounded-lg transition-colors ${
+                                    formData.cc_emails.includes(user.email) ? 'bg-blue-500/20 border border-blue-500/30' : ''
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={formData.cc_emails.includes(user.email)}
+                                    onChange={() => {}}
+                                    className="accent-blue-500 pointer-events-none"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-semibold truncate">{user.name}</span>
+                                      <span className="text-xs px-1.5 py-0.5 bg-white/10 rounded text-white/60">
+                                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-white/50 truncate">{user.email}</p>
+                                  </div>
+                                  <span className="text-xs text-white/50 bg-white/5 px-2 py-1 rounded">
+                                    {user.department || 'N/A'}
+                                  </span>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-white/60 text-center py-2">No users found.</p>
+                            )}
+                          </div>
+
+                          {/* Done Button */}
+                          <div className="p-2 border-t border-white/10">
+                            <button
+                              type="button"
+                              onClick={() => setCcDropdownOpen(false)}
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium transition-colors"
                             >
                               Done
                             </button>

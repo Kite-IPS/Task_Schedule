@@ -1,4 +1,4 @@
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from django.utils import timezone
 from django.db.models import Q
@@ -142,27 +142,26 @@ def send_task_assignment_email(task, assignee):
         subject = task.title  # ✅ Subject is always the title
         html_message = get_task_assignment_html(task, assignee)
         recipient_list = [assignee.email]
-        # Include HOD
-        if assignee.department:
-            hod = User.objects.filter(department=assignee.department, role='hod').first()
-            if hod and hod.email:
-                recipient_list.append(hod.email)
-        # Include all admins
-        admin_emails = User.objects.filter(
-            Q(role='admin') | Q(is_superuser=True)
-        ).values_list('email', flat=True).distinct()
-        recipient_list.extend(admin_emails)
+        cc_list = []
+        
+        # Include custom CC emails
+        if task.cc_emails:
+            cc_list.extend(task.cc_emails)
+        
         # Remove duplicates / invalids
-        recipient_list = list(set(filter(None, recipient_list)))
-        print(f"Sending email for task '{task.title}' to: {recipient_list}")
-        send_mail(
+        cc_list = list(set(filter(None, cc_list)))
+        
+        print(f"Sending email for task '{task.title}' to: {recipient_list} with CC: {cc_list}")
+        
+        email = EmailMessage(
             subject=subject,
-            message='',
-            html_message=html_message,
+            body=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=recipient_list,
-            fail_silently=False
+            to=recipient_list,
+            cc=cc_list
         )
+        email.content_subtype = "html"
+        email.send(fail_silently=False)
     except Exception as e:
         if settings.DEBUG:
             print(f"Error sending task assignment email: {str(e)}")
@@ -316,31 +315,24 @@ def send_status_update_email(task, assignee, old_status, new_status):
         subject = f"Status Update: {task.title}"
         html_message = get_status_update_html(task, assignee, old_status, new_status)
         recipient_list = [assignee.email]
+        cc_list = []
         
-        # Include HOD for important status changes
-        if assignee.department:
-            hod = User.objects.filter(department=assignee.department, role='hod').first()
-            if hod and hod.email:
-                recipient_list.append(hod.email)
-        
-        # Always include admin for completed or overdue status
-        if new_status in ['completed', 'overdue']:
-            admin_emails = User.objects.filter(
-                Q(role='admin') | Q(is_superuser=True)
-            ).values_list('email', flat=True).distinct()
-            recipient_list.extend(admin_emails)
+        # Include custom CC emails
+        if task.cc_emails:
+            cc_list.extend(task.cc_emails)
         
         # Remove duplicates / invalids
-        recipient_list = list(set(filter(None, recipient_list)))
+        cc_list = list(set(filter(None, cc_list)))
         
-        send_mail(
+        email = EmailMessage(
             subject=subject,
-            message='',
-            html_message=html_message,
+            body=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=recipient_list,
-            fail_silently=True
+            to=recipient_list,
+            cc=cc_list
         )
+        email.content_subtype = "html"
+        email.send(fail_silently=True)
         return True
     except Exception as e:
         if settings.DEBUG:

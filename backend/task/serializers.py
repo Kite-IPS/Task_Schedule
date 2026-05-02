@@ -28,7 +28,7 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'department', 'assignee',
             'priority', 'status', 'due_date', 'created_by', 'created_at', 
-            'completed_at', 'reminder1', 'reminder2'
+            'completed_at', 'reminder1', 'reminder2', 'cc_emails'
         ]
     
     def get_department(self, obj):
@@ -54,7 +54,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'department', 'assignee',
             'priority', 'status', 'due_date', 'created_by', 'created_at',
-            'completed_at', 'reminder1', 'reminder2', 'history', 'attachments'
+            'completed_at', 'reminder1', 'reminder2', 'cc_emails', 'history', 'attachments'
         ]
     
     def get_department(self, obj):
@@ -84,6 +84,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 class TaskCreateSerializer(serializers.ModelSerializer):
     department = serializers.ListField(child=serializers.CharField())
     assignee = serializers.ListField(child=serializers.EmailField())
+    cc_emails = serializers.ListField(child=serializers.EmailField(), required=False, default=list)
     attachment = serializers.FileField(required=False, allow_null=True)
     created_by = serializers.CharField(required=True, max_length=255,
                                      help_text="Name of the person who requested this task")
@@ -93,7 +94,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = [
-            'title', 'description', 'department', 'assignee',
+            'title', 'description', 'department', 'assignee', 'cc_emails',
             'priority', 'status', 'due_date', 'attachment',
             'created_by', 'reminder1', 'reminder2'
         ]
