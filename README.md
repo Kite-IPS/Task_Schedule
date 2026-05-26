@@ -1,4 +1,4 @@
-# Task Schedule Application
+# Task Scheduler Application
 
 A task scheduling application with Django backend and React frontend.
 
